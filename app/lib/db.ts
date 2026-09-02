@@ -4,10 +4,30 @@ import type { AppState, StoredPhoto, V3Backup } from './types';
 const DB_NAME = 'asoul-diary-v3';
 const DB_VERSION = 1;
 const STATE_KEY = 'main';
+const DB_OPEN_TIMEOUT_MS = 4000;
 
 function openDatabase(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
+    if (typeof indexedDB === 'undefined') {
+      reject(new Error('当前浏览器不支持本地数据库'));
+      return;
+    }
+
     const request = indexedDB.open(DB_NAME, DB_VERSION);
+    let settled = false;
+    const timeout = window.setTimeout(() => {
+      if (settled) return;
+      settled = true;
+      reject(new Error('打开本地数据库超时'));
+    }, DB_OPEN_TIMEOUT_MS);
+
+    const fail = (error: unknown) => {
+      if (settled) return;
+      settled = true;
+      window.clearTimeout(timeout);
+      reject(error);
+    };
+
     request.onupgradeneeded = () => {
       const database = request.result;
       if (!database.objectStoreNames.contains('state')) database.createObjectStore('state');
@@ -15,8 +35,17 @@ function openDatabase(): Promise<IDBDatabase> {
         database.createObjectStore('photos', { keyPath: 'id' });
       }
     };
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error);
+    request.onsuccess = () => {
+      if (settled) {
+        request.result.close();
+        return;
+      }
+      settled = true;
+      window.clearTimeout(timeout);
+      resolve(request.result);
+    };
+    request.onerror = () => fail(request.error);
+    request.onblocked = () => fail(new Error('本地数据库正被另一个页面占用'));
   });
 }
 

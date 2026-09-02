@@ -2,16 +2,16 @@ import type { Metadata, Viewport } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Asoul一个魂生活日记 v3',
+  title: 'Asoul一个魂生活日记',
   description: '躺着也能轻松记录的温馨生活日记。',
-  applicationName: 'Asoul一个魂生活日记 v3',
+  applicationName: 'Asoul一个魂生活日记',
   manifest: '/manifest.webmanifest',
   icons: {
     icon: [
-      { url: '/icon-192.png', sizes: '192x192', type: 'image/png' },
-      { url: '/icon-512.png', sizes: '512x512', type: 'image/png' },
+      { url: '/icon-safe-192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/icon-safe-512.png', sizes: '512x512', type: 'image/png' },
     ],
-    apple: '/icon-192.png',
+    apple: '/icon-safe-192.png',
   },
   appleWebApp: {
     capable: true,

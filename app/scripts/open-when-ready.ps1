@@ -1,10 +1,14 @@
-$endpoint = 'http://localhost:3000/'
+param(
+  [int]$Port = 33881
+)
+
+$endpoint = "http://127.0.0.1:$Port/"
 $deadline = (Get-Date).AddSeconds(90)
 
 while ((Get-Date) -lt $deadline) {
   $client = [System.Net.Sockets.TcpClient]::new()
   try {
-    $connected = $client.ConnectAsync('127.0.0.1', 3000).Wait(1000)
+    $connected = $client.ConnectAsync('127.0.0.1', $Port).Wait(1000)
     if ($connected -and $client.Connected) {
       $client.Dispose()
       Start-Process $endpoint
