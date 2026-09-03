@@ -24,7 +24,7 @@
   align-items: center;
   gap: 11px;
   padding: 17px 51px 17px 14px;
-  border-color: color-mix(in srgb, var(--card-accent), white 68%);
+  border-color: rgb(225 218 221 / 72%);
   border-radius: 22px;
   background: color-mix(in srgb, var(--card-accent), white 94%);
   box-shadow: 0 12px 28px
@@ -129,7 +129,7 @@
   position: relative;
   overflow: hidden;
   padding: 18px 16px 14px;
-  border-color: color-mix(in srgb, var(--card-accent), white 68%);
+  border-color: rgb(225 218 221 / 72%);
   border-radius: 24px;
   background: color-mix(in srgb, var(--card-accent), white 95%);
 }
@@ -903,13 +903,6 @@
     box-shadow 180ms ease,
     transform 180ms ease;
 }
-.growth-carousel > [data-carousel-card].is-active {
-  border-color: color-mix(in srgb, var(--card-accent), white 38%);
-  box-shadow:
-    0 16px 34px color-mix(in srgb, var(--card-accent), transparent 83%),
-    inset 0 0 0 1px color-mix(in srgb, var(--card-accent), white 52%);
-}
-
 .countdown-card {
   display: block;
   min-height: 248px;
@@ -1091,6 +1084,7 @@
   color: var(--card-accent);
   font-size: 16px;
   font-weight: 900;
+  text-align: center;
   box-shadow: none;
 }
 .progress-adjust-note {

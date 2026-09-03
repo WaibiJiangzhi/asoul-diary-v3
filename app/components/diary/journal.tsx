@@ -19,6 +19,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import {
   Drawer,
   DrawerContent,
@@ -64,8 +65,19 @@ export function JournalView({
   const [taskPickerOpen, setTaskPickerOpen] = useState(false);
   const [calendarMonth, setCalendarMonth] = useState(fromDateKey(selectedDate));
   const [photoUrls, setPhotoUrls] = useState<Record<string, string>>({});
+  const [activePhotoId, setActivePhotoId] = useState<string | null>(null);
   const photoIds = entry?.photoIds ?? [];
   const photoKey = photoIds.join('|');
+  const activePhotoIndex = activePhotoId ? photoIds.indexOf(activePhotoId) : -1;
+  const activePhotoUrl = activePhotoId ? photoUrls[activePhotoId] : undefined;
+
+  const moveActivePhoto = (direction: -1 | 1) => {
+    if (!photoIds.length) return;
+    const currentIndex = Math.max(0, activePhotoIndex);
+    const nextIndex =
+      (currentIndex + direction + photoIds.length) % photoIds.length;
+    setActivePhotoId(photoIds[nextIndex]);
+  };
 
   useEffect(() => {
     let alive = true;
@@ -278,16 +290,23 @@ export function JournalView({
         </div>
         {photoIds.length > 0 && (
           <div className="photo-grid">
-            {photoIds.map((id) => (
+            {photoIds.map((id, index) => (
               <figure key={id}>
                 {photoUrls[id] ? (
-                  <Image
-                    src={photoUrls[id]}
-                    alt="日记照片"
-                    fill
-                    sizes="(max-width: 560px) 30vw, 160px"
-                    unoptimized
-                  />
+                  <button
+                    className="photo-open"
+                    type="button"
+                    aria-label={`查看第 ${index + 1} 张照片`}
+                    onClick={() => setActivePhotoId(id)}
+                  >
+                    <Image
+                      src={photoUrls[id]}
+                      alt="日记照片"
+                      fill
+                      sizes="(max-width: 560px) 30vw, 160px"
+                      unoptimized
+                    />
+                  </button>
                 ) : (
                   <span className="photo-loading">
                     <ImageIcon />
@@ -306,6 +325,64 @@ export function JournalView({
           </div>
         )}
       </section>
+
+      <Dialog
+        open={!!activePhotoUrl}
+        onOpenChange={(open) => !open && setActivePhotoId(null)}
+      >
+        <DialogContent
+          className="photo-viewer"
+          showCloseButton={false}
+          aria-describedby={undefined}
+        >
+          <DialogTitle className="sr-only">查看日记照片</DialogTitle>
+          {activePhotoUrl && (
+            <div className="photo-viewer-stage">
+              <Image
+                src={activePhotoUrl}
+                alt={`第 ${activePhotoIndex + 1} 张日记照片`}
+                fill
+                sizes="100vw"
+                unoptimized
+              />
+            </div>
+          )}
+          <Button
+            className="photo-viewer-close"
+            variant="secondary"
+            size="icon"
+            aria-label="关闭照片"
+            onClick={() => setActivePhotoId(null)}
+          >
+            <X />
+          </Button>
+          {photoIds.length > 1 && (
+            <>
+              <Button
+                className="photo-viewer-previous"
+                variant="secondary"
+                size="icon"
+                aria-label="上一张照片"
+                onClick={() => moveActivePhoto(-1)}
+              >
+                <ArrowLeft />
+              </Button>
+              <Button
+                className="photo-viewer-next"
+                variant="secondary"
+                size="icon"
+                aria-label="下一张照片"
+                onClick={() => moveActivePhoto(1)}
+              >
+                <ArrowRight />
+              </Button>
+            </>
+          )}
+          <span className="photo-viewer-count">
+            {activePhotoIndex + 1} / {photoIds.length}
+          </span>
+        </DialogContent>
+      </Dialog>
 
       {entry && hasEntry && (
         <div className="journal-page-tools">
@@ -380,14 +457,14 @@ function RecentDiaryList({
 function BilibiliTags() {
   const tags = [
     {
-      name: '贝极星空间站的日常',
-      href: 'https://www.bilibili.com/v/topic/detail?topic_id=32780',
-      color: 'bella',
-    },
-    {
       name: '嘉心糖的手帐本',
       href: 'https://www.bilibili.com/v/topic/detail?topic_id=36443',
       color: 'jiaran',
+    },
+    {
+      name: '贝极星空间站的日常',
+      href: 'https://www.bilibili.com/v/topic/detail?topic_id=32780',
+      color: 'bella',
     },
     {
       name: '乃琳夸夸群',

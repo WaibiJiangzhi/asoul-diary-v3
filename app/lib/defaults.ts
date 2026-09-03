@@ -6,8 +6,8 @@ export const ACCENT_THEMES: {
   feeling: string;
   color: CardColor;
 }[] = [
-  { id: 'bella', name: '贝拉红', feeling: '温暖有活力', color: '#DB7D74' },
   { id: 'jiaran', name: '嘉然粉', feeling: '柔软又温馨', color: '#E799B0' },
+  { id: 'bella', name: '贝拉红', feeling: '温暖有活力', color: '#DB7D74' },
   { id: 'nailin', name: '乃琳蓝', feeling: '安静的夜色', color: '#576690' },
 ];
 

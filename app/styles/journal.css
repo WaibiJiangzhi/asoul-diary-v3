@@ -173,6 +173,14 @@
   color: #b8696d;
   font-size: 10px;
 }
+.has-wallpaper .journal-delete {
+  padding-inline: 12px;
+  border: 1px solid rgb(255 255 255 / 76%);
+  border-radius: 999px;
+  background: rgb(255 252 250 / 76%);
+  box-shadow: 0 6px 18px rgb(44 35 45 / 14%);
+  backdrop-filter: blur(4px);
+}
 .journal-delete svg {
   width: 15px;
 }
@@ -275,7 +283,16 @@
   background: #f1ebea;
   box-shadow: 0 7px 18px rgb(66 50 58 / 8%);
 }
-.photo-grid figure > img {
+.photo-open {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: zoom-in;
+}
+.photo-open > img {
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -303,6 +320,72 @@
 }
 .photo-loading svg {
   width: 22px;
+}
+
+body:has(.photo-viewer) [data-slot='dialog-overlay'] {
+  background: rgb(27 23 31 / 84%);
+  backdrop-filter: blur(10px);
+}
+.photo-viewer {
+  width: 100vw;
+  max-width: none;
+  height: 100dvh;
+  padding: max(54px, env(safe-area-inset-top)) 12px
+    max(60px, env(safe-area-inset-bottom));
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  color: white;
+}
+.photo-viewer-stage {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  touch-action: pinch-zoom;
+}
+.photo-viewer-stage img {
+  object-fit: contain;
+}
+.photo-viewer-close,
+.photo-viewer-previous,
+.photo-viewer-next {
+  position: absolute;
+  z-index: 2;
+  border: 1px solid rgb(255 255 255 / 48%);
+  border-radius: 50%;
+  background: rgb(255 252 250 / 88%);
+  color: #4c4550;
+  box-shadow: 0 7px 20px rgb(0 0 0 / 22%);
+  backdrop-filter: blur(8px);
+}
+.photo-viewer-close {
+  top: max(12px, env(safe-area-inset-top));
+  right: 12px;
+}
+.photo-viewer-previous,
+.photo-viewer-next {
+  top: 50%;
+  transform: translateY(-50%);
+}
+.photo-viewer-previous {
+  left: 12px;
+}
+.photo-viewer-next {
+  right: 12px;
+}
+.photo-viewer-count {
+  position: absolute;
+  bottom: max(18px, env(safe-area-inset-bottom));
+  left: 50%;
+  z-index: 2;
+  padding: 6px 11px;
+  border-radius: 999px;
+  background: rgb(35 30 38 / 66%);
+  color: white;
+  font-size: 11px;
+  font-weight: 800;
+  transform: translateX(-50%);
 }
 
 .diary-task-section {
