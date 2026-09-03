@@ -17,7 +17,6 @@ import {
 
 import { Button } from '@/components/ui/button';
 import { ACCENT_THEMES, WALLPAPERS } from '@/lib/defaults';
-import { formatFullDate } from '@/lib/date';
 import type { AppState, AppTab } from '@/lib/types';
 
 export function PaperBinding() {
@@ -31,21 +30,12 @@ export function PaperBinding() {
 }
 
 export function AppHeader({
-  tab,
-  todayDate,
   saveStatus,
   onOpenSettings,
 }: {
-  tab: AppTab;
-  todayDate: string;
   saveStatus: 'saved' | 'saving' | 'unavailable';
   onOpenSettings: () => void;
 }) {
-  const labels = {
-    today: '今天的记录',
-    growth: '成长手册',
-    journal: '日记本',
-  };
   const saveLabel =
     saveStatus === 'unavailable'
       ? '本地保存暂不可用'
@@ -57,15 +47,12 @@ export function AppHeader({
     <header className="top-bar">
       <div className="top-bar-copy">
         <div className="top-bar-line">
-          <p className="eyebrow">{labels[tab]}</p>
+          <p className="eyebrow">日记本</p>
           <span className={`save-state is-${saveStatus}`}>
             <i />
             {saveLabel}
           </span>
         </div>
-        {tab === 'today' && (
-          <p className="today-date">{formatFullDate(todayDate)}</p>
-        )}
       </div>
       <Button
         className="round-button"
@@ -197,7 +184,7 @@ export function SettingsDrawer({
               ))}
             </div>
             <p className="setting-note">
-              选择壁纸后会收起横线和装订孔，内容改为清晰的半透明卡片。
+              壁纸会被柔化成淡淡的画纸底色，横线和内容仍然保持清楚。
             </p>
           </section>
 
@@ -258,7 +245,7 @@ export function SettingsDrawer({
 
           <footer className="settings-footer">
             <strong>Asoul一个魂生活日记</strong>
-            <span>作者：就一枝匠纸 · AI 协作制作</span>
+            <span>作者：就一枝匠纸 · AI 生成</span>
             <span>v3 · 独立数据结构，不读取 v2 数据</span>
           </footer>
         </div>

@@ -91,6 +91,7 @@ export function normalizeState(candidate: AppState): AppState {
     dailyTasks: candidate.dailyTasks ?? [],
     countdowns: (candidate.countdowns ?? []).map((item) => ({
       ...item,
+      notes: item.notes ?? [],
       color: item.color ?? '#DB7D74',
     })),
     progressGoals: (candidate.progressGoals ?? []).map((goal) => ({

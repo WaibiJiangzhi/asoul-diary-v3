@@ -1,6 +1,6 @@
 'use client';
 
-import type { CSSProperties, SyntheticEvent } from 'react';
+import type { CSSProperties, SyntheticEvent, UIEvent } from 'react';
 import { useState } from 'react';
 import {
   Archive,
@@ -10,7 +10,6 @@ import {
   Clock3,
   Copy,
   Footprints,
-  Minus,
   NotebookPen,
   Pencil,
   Plus,
@@ -32,12 +31,33 @@ import { daysUntil, formatMoment, formatShortDate } from '@/lib/date';
 import type {
   AppState,
   Countdown,
+  CountdownNote,
   GrowthMemory,
   ProgressEvent,
   ProgressGoal,
 } from '@/lib/types';
 import { JIARAN_STICKERS, type GrowthDraft } from './constants';
 import { Decoration, isSticker } from './decoration';
+
+function syncCarouselIndex(
+  event: UIEvent<HTMLDivElement>,
+  setIndex: (index: number) => void,
+) {
+  const rail = event.currentTarget;
+  const railCenter = rail.getBoundingClientRect().left + rail.clientWidth / 2;
+  const cards = [...rail.querySelectorAll<HTMLElement>('[data-carousel-card]')];
+  let nearestIndex = 0;
+  let nearestDistance = Number.POSITIVE_INFINITY;
+  cards.forEach((card, index) => {
+    const rect = card.getBoundingClientRect();
+    const distance = Math.abs(rect.left + rect.width / 2 - railCenter);
+    if (distance < nearestDistance) {
+      nearestDistance = distance;
+      nearestIndex = index;
+    }
+  });
+  setIndex(nearestIndex);
+}
 
 export function GrowthView({
   state,
@@ -49,6 +69,8 @@ export function GrowthView({
   onArchive,
   onCopy,
   onDeleteMemory,
+  onAddCountdownNote,
+  onDeleteCountdownNote,
 }: {
   state: AppState;
   onAdd: (kind: GrowthDraft['kind']) => void;
@@ -59,12 +81,24 @@ export function GrowthView({
   onArchive: (goal: ProgressGoal, natural: boolean) => void;
   onCopy: (memory: GrowthMemory) => void;
   onDeleteMemory: (memory: GrowthMemory) => void;
+  onAddCountdownNote: (countdownId: string, text: string) => void;
+  onDeleteCountdownNote: (countdown: Countdown, note: CountdownNote) => void;
 }) {
   const [selectedMemory, setSelectedMemory] = useState<GrowthMemory | null>(
     null,
   );
-  const [noteGoal, setNoteGoal] = useState<ProgressGoal | null>(null);
-  const [progressNote, setProgressNote] = useState('');
+  const [countdownIndex, setCountdownIndex] = useState(0);
+  const [progressIndex, setProgressIndex] = useState(0);
+  const [noteCountdown, setNoteCountdown] = useState<Countdown | null>(null);
+  const [countdownNote, setCountdownNote] = useState('');
+  const visibleCountdownIndex = Math.min(
+    countdownIndex,
+    Math.max(0, state.countdowns.length - 1),
+  );
+  const visibleProgressIndex = Math.min(
+    progressIndex,
+    Math.max(0, state.progressGoals.length - 1),
+  );
 
   return (
     <div className="view-stack growth-view">
@@ -86,30 +120,90 @@ export function GrowthView({
               <p className="section-kicker">LOOKING FORWARD</p>
               <h2>期待的日子</h2>
             </div>
+            <span className="carousel-count" aria-live="polite">
+              {visibleCountdownIndex + 1} / {state.countdowns.length}
+            </span>
           </div>
-          <div className="countdown-grid">
-            {state.countdowns.map((item) => {
+          <div
+            className="countdown-grid growth-carousel"
+            onScroll={(event) => syncCarouselIndex(event, setCountdownIndex)}
+          >
+            {state.countdowns.map((item, index) => {
               const days = daysUntil(item.targetDate);
+              const latestNote = item.notes.at(-1);
               return (
                 <article
-                  className="paper-card countdown-card"
+                  className={`paper-card countdown-card ${index === visibleCountdownIndex ? 'is-active' : ''}`}
                   key={item.id}
+                  data-carousel-card
                   style={{ '--card-accent': item.color } as CSSProperties}
                 >
-                  <Decoration
-                    value={item.emoji}
-                    className="countdown-emoji"
-                    alt="倒计时表情"
-                  />
-                  <div className="countdown-copy">
-                    <small>{formatShortDate(item.targetDate)}</small>
-                    <strong>{item.title}</strong>
-                    {item.note && <p>{item.note}</p>}
+                  <time dateTime={item.targetDate} className="countdown-date">
+                    {formatShortDate(item.targetDate)}
+                  </time>
+                  <div className="countdown-main">
+                    <Decoration
+                      value={item.emoji}
+                      className="countdown-emoji"
+                      alt="倒计时表情"
+                    />
+                    <div className="countdown-copy">
+                      <strong>{item.title}</strong>
+                      {item.note && <p>{item.note}</p>}
+                    </div>
+                    <div className="countdown-number">
+                      <b>{Math.abs(days)}</b>
+                      <span>{days >= 0 ? '天后' : '天前'}</span>
+                    </div>
                   </div>
-                  <div className="countdown-number">
-                    <b>{Math.abs(days)}</b>
-                    <span>{days >= 0 ? '天后' : '天前'}</span>
-                  </div>
+                  {latestNote && (
+                    <p className="countdown-latest-note">
+                      <NotebookPen />
+                      <span>{latestNote.text}</span>
+                      <time>{formatMoment(latestNote.createdAt)}</time>
+                    </p>
+                  )}
+                  <Button
+                    className="countdown-note-button"
+                    variant="outline"
+                    onClick={() => {
+                      setNoteCountdown(item);
+                      setCountdownNote('');
+                    }}
+                  >
+                    <NotebookPen />
+                    写下今天的话
+                  </Button>
+                  <details className="countdown-notes">
+                    <summary>
+                      <span>
+                        <Footprints /> 日子手记 · {item.notes.length}
+                      </span>
+                      <ChevronDown />
+                    </summary>
+                    {item.notes.length ? (
+                      <ol>
+                        {[...item.notes].reverse().map((note) => (
+                          <li key={note.id}>
+                            <span>
+                              <small>{formatMoment(note.createdAt)}</small>
+                              <strong>{note.text}</strong>
+                            </span>
+                            <Button
+                              variant="ghost"
+                              size="icon-sm"
+                              aria-label={`删除${formatMoment(note.createdAt)}的日子手记`}
+                              onClick={() => onDeleteCountdownNote(item, note)}
+                            >
+                              <Trash2 />
+                            </Button>
+                          </li>
+                        ))}
+                      </ol>
+                    ) : (
+                      <p>还没有写过，今天可以留下第一句。</p>
+                    )}
+                  </details>
                   <div className="card-tools">
                     <Button
                       variant="ghost"
@@ -141,22 +235,27 @@ export function GrowthView({
             <p className="section-kicker">GROWING</p>
             <h2>正在发生的成长</h2>
           </div>
+          {!!state.progressGoals.length && (
+            <span className="carousel-count" aria-live="polite">
+              {visibleProgressIndex + 1} / {state.progressGoals.length}
+            </span>
+          )}
         </div>
         {state.progressGoals.length ? (
-          <div className="goal-list">
-            {state.progressGoals.map((goal) => (
+          <div
+            className="goal-list growth-carousel"
+            onScroll={(event) => syncCarouselIndex(event, setProgressIndex)}
+          >
+            {state.progressGoals.map((goal, index) => (
               <ProgressCard
-                key={goal.id}
+                key={`${goal.id}:${goal.step}`}
                 goal={goal}
+                active={index === visibleProgressIndex}
                 onAdjust={onAdjust}
                 onDeleteEvent={onDeleteEvent}
                 onEdit={onEdit}
                 onDelete={onDelete}
                 onArchive={onArchive}
-                onAddNote={() => {
-                  setNoteGoal(goal);
-                  setProgressNote('');
-                }}
               />
             ))}
           </div>
@@ -237,21 +336,21 @@ export function GrowthView({
           setSelectedMemory(null);
         }}
       />
-      <ProgressNoteDrawer
-        goal={noteGoal}
-        note={progressNote}
-        onNoteChange={setProgressNote}
+      <CountdownNoteDrawer
+        countdown={noteCountdown}
+        note={countdownNote}
+        onNoteChange={setCountdownNote}
         onOpenChange={(open) => {
           if (!open) {
-            setNoteGoal(null);
-            setProgressNote('');
+            setNoteCountdown(null);
+            setCountdownNote('');
           }
         }}
         onSave={() => {
-          if (!noteGoal) return;
-          onAdjust(noteGoal.id, noteGoal.step, progressNote);
-          setNoteGoal(null);
-          setProgressNote('');
+          if (!noteCountdown) return;
+          onAddCountdownNote(noteCountdown.id, countdownNote);
+          setNoteCountdown(null);
+          setCountdownNote('');
         }}
       />
     </div>
@@ -260,29 +359,41 @@ export function GrowthView({
 
 function ProgressCard({
   goal,
+  active,
   onAdjust,
   onDeleteEvent,
   onEdit,
   onDelete,
   onArchive,
-  onAddNote,
 }: {
   goal: ProgressGoal;
+  active: boolean;
   onAdjust: (id: string, delta: number, note?: string) => void;
   onDeleteEvent: (goal: ProgressGoal, event: ProgressEvent) => void;
   onEdit: (item: ProgressGoal) => void;
   onDelete: (item: ProgressGoal) => void;
   onArchive: (goal: ProgressGoal, natural: boolean) => void;
-  onAddNote: () => void;
 }) {
+  const [amount, setAmount] = useState(String(goal.step));
+  const [note, setNote] = useState('');
   const percentage = Math.min(
     100,
     Math.round((goal.current / goal.total) * 100),
   );
+  const numericAmount = Number(amount);
+  const lastEvent = goal.events.at(-1);
+
+  function submitAdjustment(event: SyntheticEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!Number.isFinite(numericAmount) || numericAmount === 0) return;
+    onAdjust(goal.id, numericAmount, note);
+    setNote('');
+  }
 
   return (
     <article
-      className="paper-card progress-card"
+      className={`paper-card progress-card ${active ? 'is-active' : ''}`}
+      data-carousel-card
       style={{ '--card-accent': goal.color } as CSSProperties}
     >
       <div className="goal-top">
@@ -329,34 +440,39 @@ function ProgressCard({
         </b>
       </div>
 
-      <div className="adjust-row">
+      <form className="progress-adjust" onSubmit={submitAdjustment}>
+        <label>
+          <span>本次调整</span>
+          <Input
+            type="number"
+            step="any"
+            value={amount}
+            onChange={(event) => setAmount(event.target.value)}
+            aria-label={`调整${goal.title}的进度，负数表示减少`}
+          />
+          <small>{goal.unit}</small>
+        </label>
+        <label className="progress-adjust-note">
+          <NotebookPen />
+          <Input
+            value={note}
+            onChange={(event) => setNote(event.target.value)}
+            maxLength={100}
+            placeholder="顺手写下一句话（可选）"
+          />
+        </label>
         <Button
-          variant="outline"
-          size="lg"
-          onClick={() => onAdjust(goal.id, -goal.step)}
-          disabled={goal.current <= 0}
+          type="submit"
+          disabled={!Number.isFinite(numericAmount) || numericAmount === 0}
         >
-          <Minus />
-          {goal.step}
+          确认记录
         </Button>
-        <Button
-          size="lg"
-          onClick={() => onAdjust(goal.id, goal.step)}
-          disabled={goal.current >= goal.total}
-        >
-          <Plus />
-          {goal.step} {goal.unit}
-        </Button>
-      </div>
-      <Button
-        className="progress-note-button"
-        variant="ghost"
-        onClick={onAddNote}
-        disabled={goal.current >= goal.total}
-      >
-        <NotebookPen />
-        增加一步，也写下一句话
-      </Button>
+        <small className="progress-last-update">
+          {lastEvent
+            ? `最近 ${lastEvent.delta >= 0 ? '+' : ''}${lastEvent.delta} ${goal.unit} · ${formatMoment(lastEvent.createdAt)}`
+            : '还没有足迹；填写负数可以减少进度'}
+        </small>
+      </form>
 
       <details className="footsteps">
         <summary>
@@ -391,7 +507,7 @@ function ProgressCard({
             ))}
           </ol>
         ) : (
-          <p>点一次加号，第一条足迹就会留在这里。</p>
+          <p>记录一次进度，第一条足迹就会留在这里。</p>
         )}
       </details>
 
@@ -573,7 +689,7 @@ export function GrowthDrawer({
                 />
               </label>
               <label className="field-label">
-                每次调整
+                默认调整量
                 <Input
                   type="number"
                   min="0.01"
@@ -719,37 +835,37 @@ function MemoryDetailDrawer({
   );
 }
 
-function ProgressNoteDrawer({
-  goal,
+function CountdownNoteDrawer({
+  countdown,
   note,
   onNoteChange,
   onOpenChange,
   onSave,
 }: {
-  goal: ProgressGoal | null;
+  countdown: Countdown | null;
   note: string;
   onNoteChange: (note: string) => void;
   onOpenChange: (open: boolean) => void;
   onSave: () => void;
 }) {
   return (
-    <Drawer open={!!goal} onOpenChange={onOpenChange}>
+    <Drawer open={!!countdown} onOpenChange={onOpenChange}>
       <DrawerContent className="sheet-drawer">
-        {goal && (
-          <div className="drawer-inner stack-form progress-note-drawer">
+        {countdown && (
+          <div className="drawer-inner stack-form countdown-note-drawer">
             <DrawerHeader>
-              <DrawerTitle>记下这一步</DrawerTitle>
+              <DrawerTitle>写给期待的日子</DrawerTitle>
               <DrawerDescription>
-                会增加 {goal.step} {goal.unit}，也把这句话留在成长足迹里。
+                这句话会按时间留在“{countdown.title}”的日子手记里。
               </DrawerDescription>
             </DrawerHeader>
             <label className="field-label">
-              这一步想记些什么？
+              今天想说些什么？
               <Input
                 value={note}
                 onChange={(event) => onNoteChange(event.target.value)}
-                maxLength={100}
-                placeholder="例如：今天状态不错，比昨天轻松一点"
+                maxLength={120}
+                placeholder="例如：又准备了一点，也更期待了一点"
               />
             </label>
             <Button
@@ -759,7 +875,7 @@ function ProgressNoteDrawer({
               disabled={!note.trim()}
             >
               <NotebookPen />
-              增加 {goal.step} {goal.unit} 并记下
+              留下今天这句话
             </Button>
           </div>
         )}

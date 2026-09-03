@@ -212,32 +212,6 @@
   transform: translateX(-50%);
 }
 
-.adjust-row {
-  display: grid;
-  grid-template-columns: 0.76fr 1.24fr;
-  gap: 8px;
-}
-.adjust-row [data-slot='button'] {
-  min-height: 49px;
-  border-radius: 15px;
-  font-weight: 900;
-}
-.adjust-row [data-slot='button']:last-child {
-  border-color: var(--card-accent);
-  background: var(--card-accent);
-  color: white;
-}
-.progress-note-button {
-  width: 100%;
-  min-height: 39px;
-  margin-top: 5px;
-  color: var(--card-accent);
-  font-size: 10px;
-}
-.progress-note-button svg {
-  width: 15px;
-}
-
 .footsteps {
   margin-top: 12px;
   border-top: 1px dashed #e9dfe2;
@@ -621,27 +595,311 @@
   min-height: 48px;
   border-radius: 15px;
 }
-.progress-note-drawer {
+.countdown-note-drawer {
   padding-top: 6px;
 }
 
 @media (max-width: 380px) {
-  .countdown-card {
-    grid-template-columns: 45px minmax(0, 1fr);
-  }
-  .countdown-number {
-    grid-column: 2;
-    text-align: left;
-  }
-  .countdown-number b,
-  .countdown-number span {
-    display: inline;
-  }
-  .countdown-number b {
-    margin-right: 4px;
-    font-size: 21px;
-  }
   .sticker-grid {
     grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* v2-style horizontal growth cards, extended with v3 notes and memories. */
+.carousel-count {
+  display: inline-flex;
+  min-width: 46px;
+  min-height: 28px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--theme-border);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--theme-soft), white 38%);
+  color: var(--theme-deep);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+}
+
+.growth-carousel {
+  display: flex;
+  width: auto;
+  gap: 11px;
+  margin-inline: -10px;
+  padding: 5px 6% 14px;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  scroll-padding-inline: 6%;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.growth-carousel::-webkit-scrollbar {
+  display: none;
+}
+.growth-carousel > [data-carousel-card] {
+  width: 88%;
+  min-width: 88%;
+  flex: 0 0 88%;
+  scroll-snap-align: center;
+  scroll-snap-stop: always;
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    transform 180ms ease;
+}
+.growth-carousel > [data-carousel-card].is-active {
+  border-color: color-mix(in srgb, var(--card-accent), white 38%);
+  box-shadow:
+    0 16px 34px color-mix(in srgb, var(--card-accent), transparent 83%),
+    inset 0 0 0 1px color-mix(in srgb, var(--card-accent), white 52%);
+}
+
+.countdown-card {
+  display: block;
+  min-height: 248px;
+  padding: 25px 17px 13px;
+}
+.countdown-date {
+  display: block;
+  margin: 0 42px 19px 2px;
+  color: var(--card-accent);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.03em;
+}
+.countdown-main {
+  display: grid;
+  grid-template-columns: 58px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+}
+.countdown-main .countdown-emoji {
+  width: 58px;
+  height: 58px;
+  border-radius: 18px;
+}
+.countdown-main .countdown-copy strong {
+  font-size: 17px;
+}
+.countdown-main .countdown-copy p {
+  white-space: normal;
+}
+.countdown-main .countdown-number {
+  min-width: 54px;
+}
+.countdown-main .countdown-number b {
+  font-size: 34px;
+}
+.countdown-latest-note {
+  display: grid;
+  min-height: 37px;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 7px;
+  margin: 15px 0 0;
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--card-accent), white 93%);
+  color: #756d78;
+  font-size: 10px;
+}
+.countdown-latest-note svg {
+  width: 14px;
+  color: var(--card-accent);
+}
+.countdown-latest-note span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.countdown-latest-note time {
+  color: #9b929d;
+  font-size: 9px;
+}
+.countdown-note-button {
+  width: 100%;
+  min-height: 41px;
+  margin-top: 12px;
+  border-color: color-mix(in srgb, var(--card-accent), white 65%);
+  border-radius: 13px;
+  background: color-mix(in srgb, var(--card-accent), white 94%);
+  color: var(--card-accent);
+  font-size: 11px;
+}
+.countdown-note-button svg {
+  width: 15px;
+}
+.countdown-notes {
+  margin-top: 8px;
+  border-top: 1px dashed color-mix(in srgb, var(--card-accent), white 74%);
+}
+.countdown-notes summary {
+  display: flex;
+  min-height: 42px;
+  align-items: center;
+  justify-content: space-between;
+  color: #756d78;
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 800;
+  list-style: none;
+}
+.countdown-notes summary span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.countdown-notes summary svg {
+  width: 14px;
+}
+.countdown-notes[open] summary > svg {
+  transform: rotate(180deg);
+}
+.countdown-notes ol {
+  display: grid;
+  max-height: 180px;
+  gap: 7px;
+  margin: 0;
+  padding: 0 0 7px;
+  overflow-y: auto;
+  list-style: none;
+}
+.countdown-notes li {
+  display: grid;
+  min-height: 42px;
+  grid-template-columns: minmax(0, 1fr) 30px;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 4px 6px 10px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--card-accent), white 94%);
+}
+.countdown-notes li span,
+.countdown-notes li small,
+.countdown-notes li strong {
+  display: block;
+}
+.countdown-notes li small {
+  margin-bottom: 2px;
+  color: #98909a;
+  font-size: 9px;
+}
+.countdown-notes li strong {
+  color: #615a65;
+  font-size: 10px;
+  font-weight: 700;
+}
+.countdown-notes li [data-slot='button'] {
+  color: #b98a8b;
+}
+.countdown-notes > p {
+  margin: 0;
+  padding: 2px 4px 10px;
+  color: #918994;
+  font-size: 10px;
+}
+
+.progress-card {
+  min-height: 430px;
+  padding: 21px 17px 15px;
+}
+.progress-adjust {
+  display: grid;
+  gap: 9px;
+  margin-top: 4px;
+  padding-top: 13px;
+  border-top: 1px solid color-mix(in srgb, var(--card-accent), white 78%);
+}
+.progress-adjust > label:first-child {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  min-height: 47px;
+  padding: 5px 11px;
+  border: 1px solid color-mix(in srgb, var(--card-accent), white 72%);
+  border-radius: 13px;
+  background: color-mix(in srgb, var(--card-accent), white 96%);
+}
+.progress-adjust > label:first-child span,
+.progress-adjust > label:first-child small {
+  color: #756d78;
+  font-size: 10px;
+  font-weight: 800;
+}
+.progress-adjust > label:first-child [data-slot='input'] {
+  min-width: 0;
+  height: 35px;
+  border: 0;
+  background: transparent;
+  color: var(--card-accent);
+  font-size: 16px;
+  font-weight: 900;
+  box-shadow: none;
+}
+.progress-adjust-note {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 7px;
+  min-height: 45px;
+  padding: 4px 10px;
+  border: 1px solid color-mix(in srgb, var(--card-accent), white 78%);
+  border-radius: 13px;
+  background: white;
+}
+.progress-adjust-note svg {
+  width: 15px;
+  color: var(--card-accent);
+}
+.progress-adjust-note [data-slot='input'] {
+  height: 35px;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.progress-adjust > [data-slot='button'] {
+  min-height: 43px;
+  border: 0;
+  border-radius: 13px;
+  background: var(--card-accent);
+  color: white;
+  font-weight: 900;
+}
+.progress-last-update {
+  color: #918994;
+  font-size: 9px;
+  line-height: 1.5;
+}
+
+@media (max-width: 380px) {
+  .growth-carousel {
+    padding-inline: 4%;
+    scroll-padding-inline: 4%;
+  }
+  .growth-carousel > [data-carousel-card] {
+    width: 92%;
+    min-width: 92%;
+    flex-basis: 92%;
+  }
+  .countdown-card {
+    display: block;
+  }
+  .countdown-main {
+    grid-template-columns: 52px minmax(0, 1fr) auto;
+    gap: 9px;
+  }
+  .countdown-main .countdown-number {
+    grid-column: auto;
+    text-align: center;
+  }
+  .countdown-main .countdown-number b,
+  .countdown-main .countdown-number span {
+    display: block;
+  }
+  .countdown-main .countdown-number b {
+    margin-right: 0;
+    font-size: 29px;
   }
 }

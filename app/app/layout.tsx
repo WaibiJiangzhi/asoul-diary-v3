@@ -5,13 +5,13 @@ export const metadata: Metadata = {
   title: 'Asoul一个魂生活日记',
   description: '躺着也能轻松记录的温馨生活日记。',
   applicationName: 'Asoul一个魂生活日记',
-  manifest: '/manifest.webmanifest',
+  manifest: '/manifest.webmanifest?v=4',
   icons: {
     icon: [
-      { url: '/icon-192.png', sizes: '192x192', type: 'image/png' },
-      { url: '/icon-512.png', sizes: '512x512', type: 'image/png' },
+      { url: '/icon-192.png?v=4', sizes: '192x192', type: 'image/png' },
+      { url: '/icon-512.png?v=4', sizes: '512x512', type: 'image/png' },
     ],
-    apple: '/icon-192.png',
+    apple: '/icon-192.png?v=4',
   },
   appleWebApp: {
     capable: true,

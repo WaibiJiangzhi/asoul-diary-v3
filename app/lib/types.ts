@@ -30,9 +30,16 @@ export interface Countdown {
   title: string;
   targetDate: string;
   note: string;
+  notes: CountdownNote[];
   color: CardColor;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface CountdownNote {
+  id: string;
+  text: string;
+  createdAt: string;
 }
 
 export interface ProgressEvent {

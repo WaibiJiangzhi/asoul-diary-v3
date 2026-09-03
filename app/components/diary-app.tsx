@@ -44,6 +44,7 @@ import type {
   AppTab,
   CommonItem,
   Countdown,
+  CountdownNote,
   DailyTask,
   DiaryEntry,
   GrowthMemory,
@@ -372,27 +373,34 @@ export default function DiaryApp() {
     requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: 'auto' }));
   }
 
-  function addTodayTask(emoji: string, title: string, sourceCommonId?: string) {
-    const cleaned = title.trim();
-    if (!cleaned) return;
+  function addTodayTasks(
+    items: { emoji: string; title: string; sourceId?: string }[],
+  ) {
+    const cleanedItems = items
+      .map((item) => ({ ...item, title: item.title.trim() }))
+      .filter((item) => item.title);
+    if (!cleanedItems.length) return;
     const now = new Date().toISOString();
-    const task: DailyTask = {
+    const tasks: DailyTask[] = cleanedItems.map((item) => ({
       id: createId('task'),
       date: todayDate,
-      emoji: emoji.trim() || '🌱',
-      title: cleaned,
+      emoji: item.emoji.trim() || '🌱',
+      title: item.title,
       done: false,
-      sourceCommonId,
+      sourceCommonId: item.sourceId,
       createdAt: now,
       updatedAt: now,
-    };
+    }));
     setState(
       (current) =>
-        current && { ...current, dailyTasks: [...current.dailyTasks, task] },
+        current && {
+          ...current,
+          dailyTasks: [...current.dailyTasks, ...tasks],
+        },
     );
     haptic();
     showToast(
-      `已放进${todayDate === dateKey() ? '今天' : '明天'} · 轻松做就好`,
+      `${tasks.length} 件小事已放进${todayDate === dateKey() ? '今天' : '明天'}`,
     );
   }
 
@@ -409,7 +417,47 @@ export default function DiaryApp() {
         },
     );
     haptic();
-    if (done) showToast('又完成了一件小事 ✓');
+    if (done) {
+      showToast('完成了，已经替你收好 ✓', () => {
+        setState(
+          (current) =>
+            current && {
+              ...current,
+              dailyTasks: current.dailyTasks.map((task) =>
+                task.id === id
+                  ? {
+                      ...task,
+                      done: false,
+                      updatedAt: new Date().toISOString(),
+                    }
+                  : task,
+              ),
+            },
+        );
+      });
+    }
+  }
+
+  function reorderTodayTasks(draggedId: string, targetId: string) {
+    setState((current) => {
+      if (!current) return current;
+      const selected = current.dailyTasks.filter(
+        (task) => task.date === todayDate,
+      );
+      const from = selected.findIndex((task) => task.id === draggedId);
+      const to = selected.findIndex((task) => task.id === targetId);
+      if (from < 0 || to < 0 || from === to) return current;
+      const reordered = [...selected];
+      const [moved] = reordered.splice(from, 1);
+      reordered.splice(to, 0, moved);
+      let index = 0;
+      return {
+        ...current,
+        dailyTasks: current.dailyTasks.map((task) =>
+          task.date === todayDate ? reordered[index++] : task,
+        ),
+      };
+    });
   }
 
   function deleteTodayTask(task: DailyTask) {
@@ -557,6 +605,9 @@ export default function DiaryApp() {
     if (!growthDraft.title.trim()) return;
     const now = new Date().toISOString();
     if (growthDraft.kind === 'countdown') {
+      const previous = state?.countdowns.find(
+        (entry) => entry.id === growthDraft.id,
+      );
       const item: Countdown = {
         id: growthDraft.id ?? createId('countdown'),
         kind: 'countdown',
@@ -564,10 +615,9 @@ export default function DiaryApp() {
         title: growthDraft.title.trim(),
         targetDate: growthDraft.targetDate,
         note: growthDraft.note.trim(),
+        notes: previous?.notes ?? [],
         color: growthDraft.color,
-        createdAt:
-          state?.countdowns.find((entry) => entry.id === growthDraft.id)
-            ?.createdAt ?? now,
+        createdAt: previous?.createdAt ?? now,
         updatedAt: now,
       };
       setState(
@@ -622,6 +672,7 @@ export default function DiaryApp() {
   }
 
   function adjustProgress(goalId: string, requestedDelta: number, note = '') {
+    if (!Number.isFinite(requestedDelta) || requestedDelta === 0) return;
     const previous = stateRef.current?.progressGoals.find(
       (goal) => goal.id === goalId,
     );
@@ -671,6 +722,63 @@ export default function DiaryApp() {
           ? '这一步和一句话都记下了'
           : '已记下这一步成长',
     );
+  }
+
+  function addCountdownNote(countdownId: string, text: string) {
+    const cleaned = text.trim().slice(0, 120);
+    if (!cleaned) return;
+    const now = new Date().toISOString();
+    setState(
+      (current) =>
+        current && {
+          ...current,
+          countdowns: current.countdowns.map((countdown) =>
+            countdown.id === countdownId
+              ? {
+                  ...countdown,
+                  updatedAt: now,
+                  notes: [
+                    ...countdown.notes,
+                    {
+                      id: createId('countdown-note'),
+                      text: cleaned,
+                      createdAt: now,
+                    },
+                  ],
+                }
+              : countdown,
+          ),
+        },
+    );
+    haptic();
+    showToast('今天想说的话已经留下');
+  }
+
+  function deleteCountdownNote(countdown: Countdown, note: CountdownNote) {
+    askConfirmation({
+      title: '删除这句日子手记？',
+      description: `“${note.text}”删除后无法恢复。`,
+      confirmLabel: '删除这句话',
+      destructive: true,
+      action: () => {
+        setState(
+          (current) =>
+            current && {
+              ...current,
+              countdowns: current.countdowns.map((item) =>
+                item.id === countdown.id
+                  ? {
+                      ...item,
+                      notes: item.notes.filter((entry) => entry.id !== note.id),
+                      updatedAt: new Date().toISOString(),
+                    }
+                  : item,
+              ),
+            },
+        );
+        showToast('这句话已删除');
+      },
+    });
   }
 
   function moveGrowth(item: Countdown | ProgressGoal, direction: -1 | 1) {
@@ -1047,14 +1155,13 @@ export default function DiaryApp() {
       <section className="diary-page" aria-label="Asoul一个魂生活日记">
         <PaperBinding />
         <AppHeader
-          tab={activeTab}
-          todayDate={todayDate}
           saveStatus={saveStatus}
           onOpenSettings={() => setSettingsOpen(true)}
         />
 
         {activeTab === 'today' && (
           <TodayView
+            key={todayDate}
             state={state}
             selectedDate={todayDate}
             onDateChange={setTodayDate}
@@ -1064,10 +1171,7 @@ export default function DiaryApp() {
             }}
             onToggle={toggleTodayTask}
             onEdit={setTaskEditing}
-            onOpenDiary={() => {
-              setJournalDate(todayDate);
-              setActiveTab('journal');
-            }}
+            onReorder={reorderTodayTasks}
           />
         )}
         {activeTab === 'growth' && (
@@ -1081,6 +1185,8 @@ export default function DiaryApp() {
             onArchive={archiveGoal}
             onCopy={copyMemory}
             onDeleteMemory={deleteMemory}
+            onAddCountdownNote={addCountdownNote}
+            onDeleteCountdownNote={deleteCountdownNote}
           />
         )}
         {activeTab === 'journal' && (
@@ -1105,7 +1211,7 @@ export default function DiaryApp() {
         mode={todayDrawerMode}
         onModeChange={setTodayDrawerMode}
         onOpenChange={setTodayDrawerOpen}
-        onAddTask={addTodayTask}
+        onAddTasks={addTodayTasks}
         onSaveCommon={saveCommon}
         onDeleteCommon={deleteCommon}
       />

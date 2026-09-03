@@ -1,11 +1,11 @@
 'use client';
 
-import type { SyntheticEvent } from 'react';
-import { useState } from 'react';
+import type { PointerEvent as ReactPointerEvent, SyntheticEvent } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   ArrowLeft,
-  BookHeart,
   Check,
+  ChevronDown,
   ChevronRight,
   MoreHorizontal,
   Pencil,
@@ -33,7 +33,7 @@ export function TodayView({
   onAdd,
   onToggle,
   onEdit,
-  onOpenDiary,
+  onReorder,
 }: {
   state: AppState;
   selectedDate: string;
@@ -41,14 +41,155 @@ export function TodayView({
   onAdd: () => void;
   onToggle: (id: string, done: boolean) => void;
   onEdit: (task: DailyTask) => void;
-  onOpenDiary: () => void;
+  onReorder: (draggedId: string, targetId: string) => void;
 }) {
   const today = dateKey();
   const tomorrow = moveDate(today, 1);
   const isTomorrow = selectedDate === tomorrow;
   const tasks = state.dailyTasks.filter((task) => task.date === selectedDate);
-  const completed = tasks.filter((task) => task.done).length;
-  const entry = state.diaries.find((item) => item.date === selectedDate);
+  const activeTasks = tasks.filter((task) => !task.done);
+  const completedTasks = tasks.filter((task) => task.done);
+  const completed = completedTasks.length;
+  const [completedOpen, setCompletedOpen] = useState(false);
+  const [finishingIds, setFinishingIds] = useState<Set<string>>(new Set());
+  const [draggingId, setDraggingId] = useState<string | null>(null);
+  const finishingTimers = useRef(new Map<string, number>());
+  const longPressTimer = useRef<number | null>(null);
+  const dragState = useRef<{
+    id: string;
+    startY: number;
+    active: boolean;
+  } | null>(null);
+  const suppressClick = useRef(false);
+
+  useEffect(
+    () => () => {
+      finishingTimers.current.forEach((timer) => window.clearTimeout(timer));
+      if (longPressTimer.current) window.clearTimeout(longPressTimer.current);
+    },
+    [],
+  );
+
+  function requestToggle(task: DailyTask) {
+    if (suppressClick.current) return;
+    if (finishingIds.has(task.id)) return;
+    if (task.done) {
+      onToggle(task.id, false);
+      return;
+    }
+    setFinishingIds((current) => new Set(current).add(task.id));
+    const timer = window.setTimeout(() => {
+      onToggle(task.id, true);
+      setFinishingIds((current) => {
+        const next = new Set(current);
+        next.delete(task.id);
+        return next;
+      });
+      finishingTimers.current.delete(task.id);
+    }, 280);
+    finishingTimers.current.set(task.id, timer);
+  }
+
+  function startLongPress(
+    event: ReactPointerEvent<HTMLDivElement>,
+    task: DailyTask,
+  ) {
+    if (
+      task.done ||
+      event.button !== 0 ||
+      (event.target as HTMLElement).closest('[data-no-drag]')
+    )
+      return;
+    if (longPressTimer.current) window.clearTimeout(longPressTimer.current);
+    dragState.current = { id: task.id, startY: event.clientY, active: false };
+    const control = event.currentTarget;
+    const pointerId = event.pointerId;
+    longPressTimer.current = window.setTimeout(() => {
+      if (!dragState.current || dragState.current.id !== task.id) return;
+      dragState.current.active = true;
+      suppressClick.current = true;
+      setDraggingId(task.id);
+      control.setPointerCapture?.(pointerId);
+      if (state.settings.haptics) navigator.vibrate?.(12);
+    }, 320);
+  }
+
+  function moveLongPress(event: ReactPointerEvent<HTMLDivElement>) {
+    const current = dragState.current;
+    if (!current) return;
+    if (!current.active) {
+      if (Math.abs(event.clientY - current.startY) > 8) {
+        if (longPressTimer.current) window.clearTimeout(longPressTimer.current);
+        longPressTimer.current = null;
+        dragState.current = null;
+      }
+      return;
+    }
+    event.preventDefault();
+    const target = document
+      .elementFromPoint(event.clientX, event.clientY)
+      ?.closest<HTMLElement>('[data-task-id]');
+    const targetId = target?.dataset.taskId;
+    if (targetId && targetId !== current.id) onReorder(current.id, targetId);
+  }
+
+  function finishLongPress() {
+    if (longPressTimer.current) window.clearTimeout(longPressTimer.current);
+    longPressTimer.current = null;
+    const wasDragging = dragState.current?.active === true;
+    dragState.current = null;
+    setDraggingId(null);
+    if (wasDragging) {
+      window.setTimeout(() => {
+        suppressClick.current = false;
+      }, 0);
+    }
+  }
+
+  function renderTask(task: DailyTask) {
+    const isFinishing = finishingIds.has(task.id);
+    return (
+      <div
+        className={`task-row ${task.done ? 'is-done' : ''} ${isFinishing ? 'is-finishing' : ''} ${draggingId === task.id ? 'is-dragging' : ''}`}
+        key={task.id}
+        data-task-id={task.id}
+        onPointerDown={(event) => startLongPress(event, task)}
+        onPointerMove={moveLongPress}
+        onPointerUp={finishLongPress}
+        onPointerCancel={finishLongPress}
+      >
+        <button
+          className="task-check-area"
+          type="button"
+          onClick={() => requestToggle(task)}
+          aria-label={`${task.done ? '取消完成' : '完成'}${task.title}`}
+        >
+          <span className="task-emoji" aria-hidden="true">
+            {task.emoji}
+          </span>
+          <span className="task-title">{task.title}</span>
+        </button>
+        <Checkbox
+          data-no-drag
+          checked={task.done || isFinishing}
+          disabled={isFinishing}
+          onCheckedChange={(checked) =>
+            checked === true ? requestToggle(task) : onToggle(task.id, false)
+          }
+          aria-label={`完成${task.title}`}
+        />
+        <Button
+          data-no-drag
+          variant="ghost"
+          size="icon-sm"
+          aria-label={`编辑${task.title}`}
+          onClick={() => onEdit(task)}
+        >
+          <MoreHorizontal aria-hidden="true" />
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className="view-stack today-view">
@@ -87,41 +228,37 @@ export function TodayView({
         </div>
 
         {tasks.length ? (
-          <div className="task-list">
-            {tasks.map((task) => (
-              <div
-                className={`task-row ${task.done ? 'is-done' : ''}`}
-                key={task.id}
-              >
+          <>
+            {activeTasks.length ? (
+              <div className="task-list">{activeTasks.map(renderTask)}</div>
+            ) : (
+              <p className="all-done-note">
+                {isTomorrow
+                  ? '明天安排的小事都完成了'
+                  : '今天想做的小事都完成了'}{' '}
+                ✓
+              </p>
+            )}
+            {!!completedTasks.length && (
+              <section className="completed-tasks">
                 <button
-                  className="task-check-area"
                   type="button"
-                  onClick={() => onToggle(task.id, !task.done)}
-                  aria-label={`${task.done ? '取消完成' : '完成'}${task.title}`}
+                  aria-expanded={completedOpen}
+                  onClick={() => setCompletedOpen((current) => !current)}
                 >
-                  <span className="task-emoji" aria-hidden="true">
-                    {task.emoji}
+                  <span>
+                    <Check /> 已完成 {completedTasks.length} 项
                   </span>
-                  <span className="task-title">{task.title}</span>
+                  <ChevronDown />
                 </button>
-                <Checkbox
-                  checked={task.done}
-                  onCheckedChange={(checked) =>
-                    onToggle(task.id, checked === true)
-                  }
-                  aria-label={`完成${task.title}`}
-                />
-                <Button
-                  variant="ghost"
-                  size="icon-sm"
-                  aria-label={`编辑${task.title}`}
-                  onClick={() => onEdit(task)}
-                >
-                  <MoreHorizontal aria-hidden="true" />
-                </Button>
-              </div>
-            ))}
-          </div>
+                {completedOpen && (
+                  <div className="task-list completed-list">
+                    {completedTasks.map(renderTask)}
+                  </div>
+                )}
+              </section>
+            )}
+          </>
         ) : (
           <div className="gentle-empty">
             <span>🍵</span>
@@ -139,25 +276,6 @@ export function TodayView({
           添加{isTomorrow ? '明天' : '今天'}要做的事
         </Button>
       </section>
-
-      {!isTomorrow && (
-        <button className="journal-peek" type="button" onClick={onOpenDiary}>
-          <span className="journal-peek-icon">
-            <BookHeart aria-hidden="true" />
-          </span>
-          <span>
-            <small>给今天留几句话</small>
-            <strong>
-              {entry?.body.trim()
-                ? entry.body.slice(0, 18)
-                : '今天还没有写日记'}
-            </strong>
-          </span>
-          <span className="journal-prompt">
-            {entry ? '继续写' : '去写写'} <ChevronRight aria-hidden="true" />
-          </span>
-        </button>
-      )}
     </div>
   );
 }
@@ -169,7 +287,7 @@ export function TodayDrawer({
   mode,
   onModeChange,
   onOpenChange,
-  onAddTask,
+  onAddTasks,
   onSaveCommon,
   onDeleteCommon,
 }: {
@@ -179,7 +297,9 @@ export function TodayDrawer({
   mode: 'add' | 'manage';
   onModeChange: (mode: 'add' | 'manage') => void;
   onOpenChange: (open: boolean) => void;
-  onAddTask: (emoji: string, title: string, sourceId?: string) => void;
+  onAddTasks: (
+    items: { emoji: string; title: string; sourceId?: string }[],
+  ) => void;
   onSaveCommon: (
     item: Pick<CommonItem, 'emoji' | 'title'>,
     id?: string,
@@ -190,11 +310,19 @@ export function TodayDrawer({
   const [emoji, setEmoji] = useState('🌱');
   const [title, setTitle] = useState('');
   const [editing, setEditing] = useState<CommonItem | null>(null);
+  const [selectedCommonIds, setSelectedCommonIds] = useState<Set<string>>(
+    new Set(),
+  );
+
+  function handleOpenChange(nextOpen: boolean) {
+    if (!nextOpen) setSelectedCommonIds(new Set());
+    onOpenChange(nextOpen);
+  }
 
   function submitTask(event: SyntheticEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!title.trim()) return;
-    onAddTask(emoji, title);
+    onAddTasks([{ emoji, title }]);
     setTitle('');
     onOpenChange(false);
   }
@@ -209,7 +337,7 @@ export function TodayDrawer({
   }
 
   return (
-    <Drawer open={open} onOpenChange={onOpenChange}>
+    <Drawer open={open} onOpenChange={handleOpenChange}>
       <DrawerContent className="sheet-drawer">
         <div className="drawer-inner">
           <DrawerHeader>
@@ -220,29 +348,58 @@ export function TodayDrawer({
             </DrawerTitle>
             <DrawerDescription>
               {mode === 'add'
-                ? '点一下常用事项，或者临时写一件。'
+                ? `可以连续选择几项，再一次放进${isTomorrow ? '明天' : '今天'}。`
                 : '常做的事留在这里，以后一点就能加入。'}
             </DrawerDescription>
           </DrawerHeader>
 
           {mode === 'add' ? (
             <>
-              <div className="quick-grid">
+              <div className="quick-list" aria-label="选择常用事项">
                 {state.commonItems.map((item) => (
-                  <Button
+                  <button
+                    type="button"
                     key={item.id}
-                    variant="outline"
-                    className="quick-item"
+                    className={`quick-item ${selectedCommonIds.has(item.id) ? 'is-selected' : ''}`}
+                    aria-pressed={selectedCommonIds.has(item.id)}
                     onClick={() => {
-                      onAddTask(item.emoji, item.title, item.id);
-                      onOpenChange(false);
+                      setSelectedCommonIds((current) => {
+                        const next = new Set(current);
+                        if (next.has(item.id)) next.delete(item.id);
+                        else next.add(item.id);
+                        return next;
+                      });
                     }}
                   >
-                    <span>{item.emoji}</span>
-                    {item.title}
-                  </Button>
+                    <span className="quick-item-emoji">{item.emoji}</span>
+                    <strong>{item.title}</strong>
+                    <i>{selectedCommonIds.has(item.id) && <Check />}</i>
+                  </button>
                 ))}
               </div>
+              {!!state.commonItems.length && (
+                <Button
+                  type="button"
+                  size="lg"
+                  className="batch-add-button"
+                  disabled={!selectedCommonIds.size}
+                  onClick={() => {
+                    onAddTasks(
+                      state.commonItems
+                        .filter((item) => selectedCommonIds.has(item.id))
+                        .map((item) => ({
+                          emoji: item.emoji,
+                          title: item.title,
+                          sourceId: item.id,
+                        })),
+                    );
+                    setSelectedCommonIds(new Set());
+                    onOpenChange(false);
+                  }}
+                >
+                  添加已选 {selectedCommonIds.size} 项
+                </Button>
+              )}
               <p className="or-divider">
                 <span>或者临时写一件</span>
               </p>
@@ -271,6 +428,7 @@ export function TodayDrawer({
                 className="manage-common"
                 onClick={() => {
                   setTitle('');
+                  setSelectedCommonIds(new Set());
                   onModeChange('manage');
                 }}
               >

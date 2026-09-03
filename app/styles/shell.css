@@ -25,16 +25,32 @@
   padding-bottom: calc(98px + env(safe-area-inset-bottom));
 }
 .app-shell.has-wallpaper {
+  position: relative;
+  isolation: isolate;
+  background: var(--paper);
+}
+.app-shell.has-wallpaper::before {
+  position: fixed;
+  z-index: 0;
+  inset: -18px;
   background-image:
-    linear-gradient(rgb(39 34 43 / 18%), rgb(39 34 43 / 26%)),
+    linear-gradient(
+      color-mix(in srgb, var(--paper) 76%, transparent),
+      color-mix(in srgb, var(--paper) 84%, transparent)
+    ),
     var(--selected-wallpaper);
   background-position: center;
   background-size: cover;
-  background-attachment: fixed;
+  content: '';
+  filter: blur(10px) saturate(0.82);
+  opacity: 0.58;
+  pointer-events: none;
+  transform: scale(1.04);
 }
 
 .diary-page {
   position: relative;
+  z-index: 1;
   width: min(100%, 560px);
   min-height: 100dvh;
   margin: 0 auto;
@@ -51,42 +67,18 @@
 }
 
 .has-wallpaper .diary-page {
-  background-color: transparent;
-  background-image: linear-gradient(
-    rgb(255 255 255 / 17%),
-    rgb(255 255 255 / 11%)
+  background-color: color-mix(in srgb, var(--paper) 88%, transparent);
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent 43px,
+    color-mix(in srgb, var(--rule) 72%, transparent) 44px
   );
-  box-shadow: 0 0 70px rgb(23 19 27 / 21%);
+  box-shadow: 0 0 70px rgb(54 44 52 / 14%);
+  backdrop-filter: blur(3px);
 }
 .has-wallpaper .binding-holes {
-  display: none;
-}
-.has-wallpaper .paper-card,
-.has-wallpaper .task-row,
-.has-wallpaper .journal-peek,
-.has-wallpaper .journal-date-nav,
-.has-wallpaper .journal-paper,
-.has-wallpaper .photo-section,
-.has-wallpaper .diary-task-section,
-.has-wallpaper .bili-tags {
-  border-color: rgb(255 255 255 / 42%);
-  background-color: rgb(255 255 255 / 78%);
-  backdrop-filter: blur(18px) saturate(1.08);
-  box-shadow: 0 14px 34px rgb(30 25 34 / 13%);
-}
-.has-wallpaper .top-bar,
-.has-wallpaper .section-heading {
-  padding: 10px 12px;
-  border: 1px solid rgb(255 255 255 / 42%);
-  border-radius: 18px;
-  background: rgb(255 255 255 / 78%);
-  box-shadow: 0 10px 28px rgb(30 25 34 / 12%);
-  backdrop-filter: blur(18px) saturate(1.08);
-}
-.has-wallpaper .photo-section {
-  padding: 14px;
-  border: 1px solid rgb(255 255 255 / 42%);
-  border-radius: 20px;
+  opacity: 0.48;
 }
 
 .binding-holes {
@@ -109,7 +101,7 @@
 
 .top-bar {
   display: flex;
-  min-height: 58px;
+  min-height: 52px;
   align-items: center;
   justify-content: space-between;
   gap: 10px;
@@ -161,21 +153,18 @@
 .save-state.is-unavailable i {
   background: var(--destructive);
 }
-.today-date {
-  margin: 4px 0 0;
-  color: #6f6972;
-  font-size: 13px;
-  font-weight: 700;
-}
-
 .round-button {
   width: 44px;
   height: 44px;
-  border: 1px solid var(--theme-border);
+  border: 0;
   border-radius: 50%;
-  background: rgb(255 255 255 / 76%);
+  background: transparent;
   color: var(--theme-accent-deep);
-  box-shadow: 0 8px 24px var(--theme-shadow);
+  box-shadow: none;
+}
+.round-button:active {
+  background: var(--theme-soft);
+  transform: scale(0.96);
 }
 
 .view-stack {
