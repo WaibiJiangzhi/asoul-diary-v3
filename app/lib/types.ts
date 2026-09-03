@@ -113,6 +113,7 @@ export interface AppSettings {
   theme: ThemeMode;
   accent: AccentTheme;
   wallpaper: string;
+  wallpaperCatalogVersion: 2;
   haptics: boolean;
 }
 

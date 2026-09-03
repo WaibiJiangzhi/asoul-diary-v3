@@ -34,12 +34,12 @@
   z-index: 0;
   inset: 0;
   background-image:
-    linear-gradient(rgb(255 250 247 / 12%), rgb(255 250 247 / 18%)),
+    linear-gradient(rgb(255 250 247 / 7%), rgb(255 250 247 / 12%)),
     var(--selected-wallpaper);
   background-position: center;
   background-size: cover;
   content: '';
-  filter: saturate(0.92);
+  filter: saturate(0.96) contrast(0.98);
   opacity: 1;
   pointer-events: none;
 }
@@ -68,12 +68,12 @@
     to bottom,
     transparent 0,
     transparent 43px,
-    rgb(255 255 255 / 10%) 44px
+    rgb(255 255 255 / 14%) 44px
   );
   box-shadow: 0 0 70px rgb(32 26 36 / 18%);
 }
 .has-wallpaper .binding-holes {
-  opacity: 0.34;
+  opacity: 0.46;
 }
 
 .has-wallpaper .paper-card,
@@ -85,17 +85,26 @@
 .has-wallpaper .memory-card,
 .has-wallpaper .photo-add,
 .has-wallpaper .bili-tags a {
-  background: rgb(255 252 250 / 62%);
+  background: rgb(255 252 250 / 52%);
   box-shadow: 0 14px 34px rgb(34 27 38 / 14%);
-  backdrop-filter: blur(6px);
+  backdrop-filter: blur(3px);
+}
+.has-wallpaper .countdown-card,
+.has-wallpaper .progress-card,
+.has-wallpaper .memory-card {
+  border-color: color-mix(in srgb, var(--card-accent), white 58%);
+  background: color-mix(in srgb, var(--card-accent) 9%, rgb(255 252 250 / 52%));
+}
+.has-wallpaper .journal-paper {
+  background: rgb(255 252 250 / 58%);
 }
 .has-wallpaper .task-row.is-done,
 .has-wallpaper .all-done-note {
-  background: rgb(235 251 245 / 68%);
+  background: rgb(235 251 245 / 62%);
 }
 .has-wallpaper .bottom-nav {
-  background: rgb(255 250 248 / 76%);
-  backdrop-filter: blur(10px);
+  background: rgb(255 250 248 / 82%);
+  backdrop-filter: blur(12px);
 }
 .has-wallpaper .progress-adjust > label,
 .has-wallpaper .progress-adjust-note,
@@ -103,18 +112,64 @@
 .has-wallpaper .countdown-notes li,
 .has-wallpaper .footsteps li,
 .has-wallpaper .diary-task-section li {
-  background: rgb(255 255 255 / 54%);
+  background: rgb(255 255 255 / 48%);
 }
 .has-wallpaper .journal-paper textarea {
-  background-color: rgb(255 252 250 / 18%);
+  background-color: transparent;
+  color: #39333d;
+  font-weight: 600;
+  text-shadow: 0 1px 2px rgb(255 255 255 / 62%);
 }
 .has-wallpaper .growth-actions [data-slot='button'] {
-  background-color: rgb(255 252 250 / 62%);
-  backdrop-filter: blur(6px);
+  background-color: rgb(255 252 250 / 56%);
+  backdrop-filter: blur(3px);
 }
 .has-wallpaper .growth-actions [data-slot='button']:first-child {
   border-color: color-mix(in srgb, var(--theme-accent), transparent 35%);
   background: color-mix(in srgb, var(--theme-accent), transparent 22%);
+}
+.has-wallpaper .top-bar {
+  margin-inline: -7px;
+  padding-inline: 7px;
+  border-radius: 16px;
+  background: linear-gradient(
+    90deg,
+    rgb(255 252 250 / 30%),
+    rgb(255 252 250 / 12%) 72%,
+    transparent
+  );
+  backdrop-filter: blur(2px);
+}
+.has-wallpaper .top-bar,
+.has-wallpaper .day-switcher,
+.has-wallpaper .section-heading,
+.has-wallpaper .photo-heading,
+.has-wallpaper .bili-tags > .section-kicker {
+  text-shadow:
+    0 1px 3px rgb(255 255 255 / 95%),
+    0 0 12px rgb(255 255 255 / 82%);
+}
+.has-wallpaper .save-state,
+.has-wallpaper .day-switcher button,
+.has-wallpaper .photo-heading p {
+  color: #5e5662;
+  font-weight: 800;
+}
+.has-wallpaper .section-heading h2,
+.has-wallpaper .photo-heading h2 {
+  color: #342e38;
+}
+.has-wallpaper .photo-heading {
+  margin-inline: -6px;
+  padding: 5px 6px;
+  border-radius: 14px;
+  background: linear-gradient(
+    90deg,
+    rgb(255 252 250 / 30%),
+    rgb(255 252 250 / 10%) 76%,
+    transparent
+  );
+  backdrop-filter: blur(2px);
 }
 
 .binding-holes {
@@ -435,18 +490,28 @@
   justify-content: space-between;
   gap: 10px;
   margin: auto;
-  padding: 10px 14px 10px 17px;
-  border: 1px solid var(--theme-border);
+  overflow: hidden;
+  padding: 10px 14px 10px 19px;
+  border: 1px solid color-mix(in srgb, var(--theme-accent), white 70%);
   border-radius: 17px;
-  background: rgb(56 52 62 / 95%);
-  color: white;
-  box-shadow: 0 14px 38px rgb(38 31 38 / 24%);
+  background: rgb(255 251 248 / 92%);
+  color: #4f4852;
+  box-shadow: 0 14px 38px rgb(38 31 38 / 17%);
+  backdrop-filter: blur(12px);
   font-size: 12px;
   font-weight: 700;
   animation: toast-in 220ms ease-out;
 }
+.toast::before {
+  position: absolute;
+  inset: 9px auto 9px 7px;
+  width: 4px;
+  border-radius: 999px;
+  background: var(--theme-accent);
+  content: '';
+}
 .toast [data-slot='button'] {
-  color: color-mix(in srgb, var(--theme-accent), white 52%);
+  color: var(--theme-accent-deep);
 }
 @keyframes toast-in {
   from {

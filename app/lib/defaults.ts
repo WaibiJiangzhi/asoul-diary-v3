@@ -18,22 +18,40 @@ export const ACCENT_COLORS: Record<AccentTheme, CardColor> = {
 };
 
 export const WALLPAPERS = [
-  '/wallpapers/bella-1.webp',
-  '/wallpapers/bella-2.webp',
-  '/wallpapers/bella-3.webp',
-  '/wallpapers/bella-4.webp',
-  '/wallpapers/bella-5.webp',
   '/wallpapers/jiaran-1.webp',
-  '/wallpapers/jiaran-2.webp',
-  '/wallpapers/jiaran-3.webp',
-  '/wallpapers/jiaran-4.webp',
-  '/wallpapers/jiaran-5.webp',
+  '/wallpapers/beila-1.webp',
   '/wallpapers/nailin-1.webp',
+  '/wallpapers/jiaran-2.webp',
+  '/wallpapers/beila-2.webp',
   '/wallpapers/nailin-2.webp',
+  '/wallpapers/jiaran-3.webp',
+  '/wallpapers/beila-3.webp',
   '/wallpapers/nailin-3.webp',
+  '/wallpapers/jiaran-4.webp',
+  '/wallpapers/beila-4.webp',
   '/wallpapers/nailin-4.webp',
+  '/wallpapers/jiaran-5.webp',
+  '/wallpapers/beila-5.webp',
   '/wallpapers/nailin-5.webp',
 ] as const;
+
+const LEGACY_WALLPAPER_PATHS: Record<string, string> = {
+  '/wallpapers/bella-1.webp': '/wallpapers/beila-2.webp',
+  '/wallpapers/bella-2.webp': '/wallpapers/beila-1.webp',
+  '/wallpapers/bella-3.webp': '/wallpapers/beila-3.webp',
+  '/wallpapers/bella-4.webp': '/wallpapers/beila-4.webp',
+  '/wallpapers/bella-5.webp': '/wallpapers/beila-5.webp',
+  '/wallpapers/jiaran-1.webp': '/wallpapers/jiaran-2.webp',
+  '/wallpapers/jiaran-2.webp': '/wallpapers/jiaran-1.webp',
+  '/wallpapers/jiaran-3.webp': '/wallpapers/jiaran-3.webp',
+  '/wallpapers/jiaran-4.webp': '/wallpapers/jiaran-4.webp',
+  '/wallpapers/jiaran-5.webp': '/wallpapers/jiaran-5.webp',
+  '/wallpapers/nailin-1.webp': '/wallpapers/nailin-5.webp',
+  '/wallpapers/nailin-2.webp': '/wallpapers/nailin-2.webp',
+  '/wallpapers/nailin-3.webp': '/wallpapers/nailin-1.webp',
+  '/wallpapers/nailin-4.webp': '/wallpapers/nailin-3.webp',
+  '/wallpapers/nailin-5.webp': '/wallpapers/nailin-4.webp',
+};
 
 export function createId(prefix = 'item') {
   const id =
@@ -77,6 +95,7 @@ export function createDefaultState(): AppState {
       theme: 'paper',
       accent: 'bella',
       wallpaper: WALLPAPERS[0],
+      wallpaperCatalogVersion: 2,
       haptics: true,
     },
   };
@@ -84,6 +103,11 @@ export function createDefaultState(): AppState {
 
 export function normalizeState(candidate: AppState): AppState {
   const fresh = createDefaultState();
+  const storedWallpaper =
+    candidate.settings?.wallpaper ?? fresh.settings.wallpaper;
+  const wallpaper = candidate.settings?.wallpaperCatalogVersion
+    ? storedWallpaper
+    : (LEGACY_WALLPAPER_PATHS[storedWallpaper] ?? storedWallpaper);
   return {
     ...fresh,
     ...candidate,
@@ -118,6 +142,8 @@ export function normalizeState(candidate: AppState): AppState {
       ...fresh.settings,
       ...candidate.settings,
       accent: candidate.settings?.accent ?? 'bella',
+      wallpaper,
+      wallpaperCatalogVersion: 2,
     },
   };
 }

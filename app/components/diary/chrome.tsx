@@ -184,7 +184,7 @@ export function SettingsDrawer({
               ))}
             </div>
             <p className="setting-note">
-              壁纸会被柔化成淡淡的画纸底色，横线和内容仍然保持清楚。
+              壁纸会铺在整本日记后面，内容使用半透明纸面保持清楚。
             </p>
           </section>
 

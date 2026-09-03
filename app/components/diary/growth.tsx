@@ -7,6 +7,7 @@ import {
   ArrowLeft,
   ArrowRight,
   ChevronDown,
+  ChevronRight,
   Clock3,
   Copy,
   Footprints,
@@ -92,6 +93,18 @@ export function GrowthView({
   const [progressIndex, setProgressIndex] = useState(0);
   const [noteCountdown, setNoteCountdown] = useState<Countdown | null>(null);
   const [countdownNote, setCountdownNote] = useState('');
+  const [countdownHistoryId, setCountdownHistoryId] = useState<string | null>(
+    null,
+  );
+  const [progressHistoryId, setProgressHistoryId] = useState<string | null>(
+    null,
+  );
+  const countdownHistory = state.countdowns.find(
+    (item) => item.id === countdownHistoryId,
+  );
+  const progressHistory = state.progressGoals.find(
+    (item) => item.id === progressHistoryId,
+  );
   const visibleCountdownIndex = Math.min(
     countdownIndex,
     Math.max(0, state.countdowns.length - 1),
@@ -177,36 +190,16 @@ export function GrowthView({
                     <NotebookPen />
                     写下今天的话
                   </Button>
-                  <details className="countdown-notes">
-                    <summary>
-                      <span>
-                        <Footprints /> 日子手记 · {item.notes.length}
-                      </span>
-                      <ChevronDown />
-                    </summary>
-                    {item.notes.length ? (
-                      <ol>
-                        {[...item.notes].reverse().map((note) => (
-                          <li key={note.id}>
-                            <span>
-                              <small>{formatMoment(note.createdAt)}</small>
-                              <strong>{note.text}</strong>
-                            </span>
-                            <Button
-                              variant="ghost"
-                              size="icon-sm"
-                              aria-label={`删除${formatMoment(note.createdAt)}的日子手记`}
-                              onClick={() => onDeleteCountdownNote(item, note)}
-                            >
-                              <Trash2 />
-                            </Button>
-                          </li>
-                        ))}
-                      </ol>
-                    ) : (
-                      <p>还没有写过，今天可以留下第一句。</p>
-                    )}
-                  </details>
+                  <Button
+                    className="history-trigger"
+                    variant="ghost"
+                    onClick={() => setCountdownHistoryId(item.id)}
+                  >
+                    <span>
+                      <Footprints /> 日子手记 · {item.notes.length}
+                    </span>
+                    <ChevronRight />
+                  </Button>
                   <div className="card-tools">
                     <Button
                       variant="ghost"
@@ -255,10 +248,10 @@ export function GrowthView({
                 goal={goal}
                 active={index === visibleProgressIndex}
                 onAdjust={onAdjust}
-                onDeleteEvent={onDeleteEvent}
                 onEdit={onEdit}
                 onDelete={onDelete}
                 onArchive={onArchive}
+                onOpenHistory={setProgressHistoryId}
               />
             ))}
           </div>
@@ -346,6 +339,16 @@ export function GrowthView({
           setCountdownNote('');
         }}
       />
+      <CountdownHistoryDrawer
+        countdown={countdownHistory ?? null}
+        onOpenChange={(open) => !open && setCountdownHistoryId(null)}
+        onDelete={onDeleteCountdownNote}
+      />
+      <ProgressHistoryDrawer
+        goal={progressHistory ?? null}
+        onOpenChange={(open) => !open && setProgressHistoryId(null)}
+        onDelete={onDeleteEvent}
+      />
     </div>
   );
 }
@@ -395,18 +398,18 @@ function ProgressCard({
   goal,
   active,
   onAdjust,
-  onDeleteEvent,
   onEdit,
   onDelete,
   onArchive,
+  onOpenHistory,
 }: {
   goal: ProgressGoal;
   active: boolean;
   onAdjust: (id: string, delta: number, note?: string) => void;
-  onDeleteEvent: (goal: ProgressGoal, event: ProgressEvent) => void;
   onEdit: (item: ProgressGoal) => void;
   onDelete: (item: ProgressGoal) => void;
   onArchive: (goal: ProgressGoal, natural: boolean) => void;
+  onOpenHistory: (goalId: string) => void;
 }) {
   const [amount, setAmount] = useState(String(goal.step));
   const [note, setNote] = useState('');
@@ -508,42 +511,16 @@ function ProgressCard({
         </small>
       </form>
 
-      <details className="footsteps">
-        <summary>
-          <span>
-            <Footprints />
-            成长足迹 · {goal.events.length} 条
-          </span>
-          <ChevronDown />
-        </summary>
-        {goal.events.length ? (
-          <ol>
-            {[...goal.events].reverse().map((event) => (
-              <li key={event.id}>
-                <span className="footstep-copy">
-                  <span>{formatMoment(event.createdAt)}</span>
-                  {event.note && <small>{event.note}</small>}
-                </span>
-                <strong className={event.delta >= 0 ? 'positive' : 'negative'}>
-                  {event.delta >= 0 ? '+' : ''}
-                  {event.delta} {goal.unit}
-                </strong>
-                <small>累计 {event.valueAfter}</small>
-                <Button
-                  variant="ghost"
-                  size="icon-sm"
-                  aria-label={`删除${formatMoment(event.createdAt)}的足迹`}
-                  onClick={() => onDeleteEvent(goal, event)}
-                >
-                  <Trash2 />
-                </Button>
-              </li>
-            ))}
-          </ol>
-        ) : (
-          <p>记录一次进度，第一条足迹就会留在这里。</p>
-        )}
-      </details>
+      <Button
+        className="history-trigger"
+        variant="ghost"
+        onClick={() => onOpenHistory(goal.id)}
+      >
+        <span>
+          <Footprints /> 成长足迹 · {goal.events.length} 条
+        </span>
+        <ChevronRight />
+      </Button>
 
       {goal.current >= goal.total ? (
         <Button
@@ -593,7 +570,11 @@ export function GrowthDrawer({
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
       <DrawerContent className="sheet-drawer tall">
-        <form className="drawer-inner stack-form" onSubmit={onSave}>
+        <form
+          className="drawer-inner stack-form"
+          style={{ '--card-accent': draft.color } as CSSProperties}
+          onSubmit={onSave}
+        >
           <DrawerHeader>
             <DrawerTitle>
               {draft.id ? '编辑' : '新建'}
@@ -971,6 +952,113 @@ function MemoryLibraryDrawer({
   );
 }
 
+function CountdownHistoryDrawer({
+  countdown,
+  onOpenChange,
+  onDelete,
+}: {
+  countdown: Countdown | null;
+  onOpenChange: (open: boolean) => void;
+  onDelete: (countdown: Countdown, note: CountdownNote) => void;
+}) {
+  return (
+    <Drawer open={!!countdown} onOpenChange={onOpenChange}>
+      <DrawerContent className="sheet-drawer tall history-drawer">
+        {countdown && (
+          <div
+            className="drawer-inner growth-history"
+            style={{ '--card-accent': countdown.color } as CSSProperties}
+          >
+            <DrawerHeader>
+              <DrawerTitle>日子手记 · {countdown.notes.length}</DrawerTitle>
+              <DrawerDescription>{countdown.title}</DrawerDescription>
+            </DrawerHeader>
+            {countdown.notes.length ? (
+              <ol className="growth-history-list countdown-history-list">
+                {[...countdown.notes].reverse().map((note) => (
+                  <li key={note.id}>
+                    <span>
+                      <time>{formatMoment(note.createdAt)}</time>
+                      <strong>{note.text}</strong>
+                    </span>
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      aria-label={`删除${formatMoment(note.createdAt)}的日子手记`}
+                      onClick={() => onDelete(countdown, note)}
+                    >
+                      <Trash2 />
+                    </Button>
+                  </li>
+                ))}
+              </ol>
+            ) : (
+              <p className="history-empty">还没有日子手记</p>
+            )}
+          </div>
+        )}
+      </DrawerContent>
+    </Drawer>
+  );
+}
+
+function ProgressHistoryDrawer({
+  goal,
+  onOpenChange,
+  onDelete,
+}: {
+  goal: ProgressGoal | null;
+  onOpenChange: (open: boolean) => void;
+  onDelete: (goal: ProgressGoal, event: ProgressEvent) => void;
+}) {
+  return (
+    <Drawer open={!!goal} onOpenChange={onOpenChange}>
+      <DrawerContent className="sheet-drawer tall history-drawer">
+        {goal && (
+          <div
+            className="drawer-inner growth-history"
+            style={{ '--card-accent': goal.color } as CSSProperties}
+          >
+            <DrawerHeader>
+              <DrawerTitle>成长足迹 · {goal.events.length}</DrawerTitle>
+              <DrawerDescription>{goal.title}</DrawerDescription>
+            </DrawerHeader>
+            {goal.events.length ? (
+              <ol className="growth-history-list progress-history-list">
+                {[...goal.events].reverse().map((event) => (
+                  <li key={event.id}>
+                    <span className="footstep-copy">
+                      <time>{formatMoment(event.createdAt)}</time>
+                      {event.note && <strong>{event.note}</strong>}
+                    </span>
+                    <span className="history-value">
+                      <b className={event.delta >= 0 ? 'positive' : 'negative'}>
+                        {event.delta >= 0 ? '+' : ''}
+                        {event.delta} {goal.unit}
+                      </b>
+                      <small>累计 {event.valueAfter}</small>
+                    </span>
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      aria-label={`删除${formatMoment(event.createdAt)}的足迹`}
+                      onClick={() => onDelete(goal, event)}
+                    >
+                      <Trash2 />
+                    </Button>
+                  </li>
+                ))}
+              </ol>
+            ) : (
+              <p className="history-empty">还没有成长足迹</p>
+            )}
+          </div>
+        )}
+      </DrawerContent>
+    </Drawer>
+  );
+}
+
 function CountdownNoteDrawer({
   countdown,
   note,
@@ -1001,7 +1089,6 @@ function CountdownNoteDrawer({
                 value={note}
                 onChange={(event) => onNoteChange(event.target.value)}
                 maxLength={120}
-                placeholder="例如：又准备了一点，也更期待了一点"
               />
             </label>
             <Button
