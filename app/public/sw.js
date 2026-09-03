@@ -1,4 +1,4 @@
-const CACHE_NAME = 'asoul-diary-v3-shell-4';
+const CACHE_NAME = 'asoul-diary-v3-shell-5';
 const APP_SHELL = [
   '/',
   '/manifest.webmanifest?v=4',

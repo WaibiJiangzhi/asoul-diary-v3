@@ -2,7 +2,16 @@ export type AppTab = 'today' | 'growth' | 'journal';
 export type Mood = 'happy' | 'good' | 'plain' | 'annoyed' | 'sad' | '';
 export type ThemeMode = 'paper' | 'wallpaper';
 export type AccentTheme = 'bella' | 'jiaran' | 'nailin';
-export type CardColor = '#E799B0' | '#DB7D74' | '#576690';
+export type CardColor =
+  | '#E799B0'
+  | '#DB7D74'
+  | '#576690'
+  | '#D8946B'
+  | '#C89B4B'
+  | '#6F9A76'
+  | '#5B9292'
+  | '#8B78A8'
+  | '#84787E';
 
 export interface CommonItem {
   id: string;

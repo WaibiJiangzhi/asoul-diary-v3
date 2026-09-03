@@ -77,6 +77,9 @@
     border-color 180ms ease;
   user-select: none;
 }
+.task-row.has-sort-handle {
+  grid-template-columns: minmax(0, 1fr) 26px 28px 32px;
+}
 
 .task-row:active {
   transform: scale(0.988);
@@ -99,6 +102,29 @@
   opacity: 0.94;
   transform: scale(1.018);
   touch-action: none;
+}
+
+.sortable-item {
+  position: relative;
+  transition: z-index 0s;
+}
+.sortable-item.is-dragging .task-row,
+.manage-row.is-dragging {
+  border-color: var(--theme-accent);
+  box-shadow: 0 18px 38px var(--theme-shadow);
+  opacity: 0.95;
+  transform: scale(1.018);
+}
+.sort-handle {
+  color: #b4a9b2 !important;
+  cursor: grab;
+  touch-action: none;
+}
+.sort-handle:active {
+  cursor: grabbing;
+}
+.sort-handle svg {
+  width: 16px;
 }
 
 .task-check-area {
@@ -286,7 +312,7 @@
 }
 .manage-row {
   display: grid;
-  grid-template-columns: 38px minmax(0, 1fr) 38px 38px;
+  grid-template-columns: 38px minmax(0, 1fr) 34px 34px 34px;
   min-height: 54px;
   align-items: center;
   gap: 5px;

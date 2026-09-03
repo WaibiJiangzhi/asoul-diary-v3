@@ -312,12 +312,6 @@
   padding-top: 4px;
   border-top: 1px dashed var(--theme-border);
 }
-.memory-lead {
-  margin: -4px 0 13px;
-  color: #8b838d;
-  font-family: var(--serif);
-  font-size: 13px;
-}
 .memory-card {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 40px;
@@ -449,18 +443,25 @@
 }
 
 .color-picker {
-  display: flex;
-  align-items: center;
-  gap: 12px;
+  display: grid;
+  gap: 9px;
   padding: 0;
   border: 0;
 }
 .color-picker legend {
-  float: left;
-  margin-right: 8px;
   color: #716976;
   font-size: 11px;
   font-weight: 800;
+}
+.color-picker > div {
+  display: flex;
+  gap: 10px;
+  padding: 3px 3px 5px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.color-picker > div::-webkit-scrollbar {
+  display: none;
 }
 .color-picker button {
   width: 34px;
@@ -595,6 +596,60 @@
   min-height: 48px;
   border-radius: 15px;
 }
+.memory-all-button {
+  width: 100%;
+  min-height: 42px;
+  margin-top: 8px;
+  color: var(--theme-accent-deep);
+  font-size: 11px;
+}
+.memory-all-button svg {
+  width: 15px;
+}
+.memory-library {
+  display: grid;
+  gap: 8px;
+}
+.memory-library .memory-list {
+  padding-bottom: 12px;
+}
+.memory-back {
+  width: fit-content;
+  margin: 2px 0 -6px -7px;
+  color: var(--card-accent);
+}
+.memory-back svg {
+  width: 16px;
+}
+.memory-detail-hero {
+  display: grid;
+  grid-template-columns: 68px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 13px;
+  text-align: left;
+}
+.memory-detail-hero:not(:has(.memory-detail-emoji)) {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+.memory-detail-title {
+  display: block;
+  min-width: 0;
+}
+.memory-detail-title [data-slot='drawer-description'] {
+  margin-top: 5px;
+  text-align: left;
+}
+.memory-final-value {
+  color: var(--card-accent);
+  font-size: 28px;
+  line-height: 1;
+  text-align: right;
+}
+.memory-final-value small {
+  display: block;
+  margin-top: 5px;
+  font-size: 9px;
+}
 .countdown-note-drawer {
   padding-top: 6px;
 }
@@ -603,6 +658,88 @@
   .sticker-grid {
     grid-template-columns: repeat(3, 1fr);
   }
+}
+
+.decoration-picker {
+  display: block;
+  padding: 0;
+  overflow: hidden;
+}
+.decoration-picker > summary {
+  display: grid;
+  min-height: 61px;
+  grid-template-columns: minmax(0, 1fr) auto 20px;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  cursor: pointer;
+  list-style: none;
+}
+.decoration-picker > summary::-webkit-details-marker {
+  display: none;
+}
+.decoration-picker > summary strong,
+.decoration-picker > summary small {
+  display: block;
+}
+.decoration-picker > summary strong {
+  color: #716976;
+  font-size: 11px;
+}
+.decoration-picker > summary small {
+  margin-top: 3px;
+  color: #99909a;
+  font-size: 9px;
+}
+.decoration-picker > summary > svg {
+  width: 17px;
+  color: #9c929d;
+  transition: transform 160ms ease;
+}
+.decoration-picker[open] > summary > svg {
+  transform: rotate(180deg);
+}
+.decoration-preview {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 13px;
+  background: white;
+  font-size: 22px;
+}
+.decoration-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.decoration-options {
+  display: grid;
+  gap: 12px;
+  padding: 2px 12px 13px;
+  border-top: 1px solid var(--theme-border);
+}
+.decoration-modes {
+  grid-template-columns: repeat(3, 1fr);
+  margin-top: 11px;
+}
+.decoration-modes button {
+  min-width: 0;
+  font-size: 10px;
+}
+
+.memory-open:not(:has(.memory-emoji)) {
+  grid-template-columns: minmax(0, 1fr);
+}
+.memory-detail-emoji {
+  width: 68px;
+  height: 68px;
+  border-radius: 19px;
+  font-size: 30px;
+}
+.memory-footsteps {
+  text-align: left;
 }
 
 /* v2-style horizontal growth cards, extended with v3 notes and memories. */
@@ -901,5 +1038,123 @@
   .countdown-main .countdown-number b {
     margin-right: 0;
     font-size: 29px;
+  }
+}
+
+/* Final card sizing lives after the legacy v2 compatibility rules above. */
+.growth-section .section-heading.compact h2 {
+  font-family: var(--sans);
+  font-size: clamp(24px, 7vw, 30px);
+  font-weight: 900;
+  letter-spacing: -0.05em;
+}
+.growth-carousel {
+  margin-inline: -14px;
+  padding-inline: 4%;
+  scroll-padding-inline: 4%;
+}
+.growth-carousel > [data-carousel-card] {
+  width: 93%;
+  min-width: 93%;
+  flex-basis: 93%;
+}
+.countdown-card {
+  min-height: 278px;
+  padding: 27px 19px 14px;
+}
+.countdown-main {
+  grid-template-columns: 70px minmax(0, 1fr) auto;
+  gap: 14px;
+}
+.countdown-main.no-decoration,
+.goal-top.no-decoration {
+  grid-template-columns: minmax(0, 1fr);
+}
+.countdown-main.no-decoration .countdown-number {
+  position: absolute;
+  top: 48px;
+  right: 20px;
+}
+.countdown-main.no-decoration .countdown-copy {
+  padding-right: 70px;
+}
+.countdown-main .countdown-emoji,
+.goal-top .goal-emoji {
+  width: 70px;
+  height: 70px;
+  border-radius: 20px;
+  font-size: 31px;
+}
+.countdown-main .countdown-copy strong,
+.goal-top h3 {
+  font-family: var(--sans);
+  font-size: 20px;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+}
+.countdown-main .countdown-number b {
+  font-size: 42px;
+}
+.progress-card {
+  min-height: 472px;
+  padding: 24px 19px 16px;
+}
+.goal-top {
+  grid-template-columns: 72px minmax(0, 1fr);
+  align-items: center;
+  gap: 14px;
+}
+.goal-number {
+  margin: 20px 2px 18px;
+}
+.goal-number strong {
+  font-size: 46px;
+}
+.goal-progress {
+  height: 12px;
+  margin-bottom: 29px;
+}
+.goal-progress b {
+  top: -9px;
+  min-width: 45px;
+  padding: 4px 7px;
+  border: 2px solid white;
+  border-radius: 999px;
+  background: var(--card-accent);
+  color: white;
+  box-shadow: 0 4px 10px color-mix(in srgb, var(--card-accent), transparent 60%);
+  font-size: 9px;
+  line-height: 1;
+}
+.progress-adjust > [data-slot='button'] {
+  border: 1px solid color-mix(in srgb, var(--card-accent), white 58%);
+  background: color-mix(in srgb, var(--card-accent), white 84%);
+  color: color-mix(in srgb, var(--card-accent), black 14%);
+}
+@media (max-width: 380px) {
+  .growth-carousel > [data-carousel-card] {
+    width: 95%;
+    min-width: 95%;
+    flex-basis: 95%;
+  }
+  .countdown-main {
+    grid-template-columns: 60px minmax(0, 1fr) auto;
+    gap: 10px;
+  }
+  .countdown-main .countdown-emoji,
+  .goal-top .goal-emoji {
+    width: 60px;
+    height: 60px;
+  }
+  .countdown-main .countdown-copy strong,
+  .goal-top h3 {
+    font-size: 18px;
+  }
+  .memory-detail-hero {
+    grid-template-columns: 58px minmax(0, 1fr);
+  }
+  .memory-final-value {
+    grid-column: 2;
+    text-align: left;
   }
 }

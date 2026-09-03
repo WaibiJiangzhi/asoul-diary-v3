@@ -1,12 +1,15 @@
 'use client';
 
-import type { PointerEvent as ReactPointerEvent, SyntheticEvent } from 'react';
+/* oxlint-disable react/react-compiler -- sortable activator refs are supplied by dnd-kit during render. */
+
+import type { ReactNode, SyntheticEvent } from 'react';
 import { useEffect, useRef, useState } from 'react';
 import {
   ArrowLeft,
   Check,
   ChevronDown,
   ChevronRight,
+  GripVertical,
   MoreHorizontal,
   Pencil,
   Plus,
@@ -25,6 +28,8 @@ import {
 import { Input } from '@/components/ui/input';
 import { dateKey, formatShortDate, moveDate } from '@/lib/date';
 import type { AppState, CommonItem, DailyTask } from '@/lib/types';
+import { pickDailyEmoji } from './constants';
+import { SortableList, type SortableHandle } from './sortable-list';
 
 export function TodayView({
   state,
@@ -52,26 +57,16 @@ export function TodayView({
   const completed = completedTasks.length;
   const [completedOpen, setCompletedOpen] = useState(false);
   const [finishingIds, setFinishingIds] = useState<Set<string>>(new Set());
-  const [draggingId, setDraggingId] = useState<string | null>(null);
   const finishingTimers = useRef(new Map<string, number>());
-  const longPressTimer = useRef<number | null>(null);
-  const dragState = useRef<{
-    id: string;
-    startY: number;
-    active: boolean;
-  } | null>(null);
-  const suppressClick = useRef(false);
 
   useEffect(
     () => () => {
       finishingTimers.current.forEach((timer) => window.clearTimeout(timer));
-      if (longPressTimer.current) window.clearTimeout(longPressTimer.current);
     },
     [],
   );
 
   function requestToggle(task: DailyTask) {
-    if (suppressClick.current) return;
     if (finishingIds.has(task.id)) return;
     if (task.done) {
       onToggle(task.id, false);
@@ -90,73 +85,16 @@ export function TodayView({
     finishingTimers.current.set(task.id, timer);
   }
 
-  function startLongPress(
-    event: ReactPointerEvent<HTMLDivElement>,
+  function renderTask(
     task: DailyTask,
+    dragHandle?: ReactNode,
+    isDragging = false,
   ) {
-    if (
-      task.done ||
-      event.button !== 0 ||
-      (event.target as HTMLElement).closest('[data-no-drag]')
-    )
-      return;
-    if (longPressTimer.current) window.clearTimeout(longPressTimer.current);
-    dragState.current = { id: task.id, startY: event.clientY, active: false };
-    const control = event.currentTarget;
-    const pointerId = event.pointerId;
-    longPressTimer.current = window.setTimeout(() => {
-      if (!dragState.current || dragState.current.id !== task.id) return;
-      dragState.current.active = true;
-      suppressClick.current = true;
-      setDraggingId(task.id);
-      control.setPointerCapture?.(pointerId);
-      if (state.settings.haptics) navigator.vibrate?.(12);
-    }, 320);
-  }
-
-  function moveLongPress(event: ReactPointerEvent<HTMLDivElement>) {
-    const current = dragState.current;
-    if (!current) return;
-    if (!current.active) {
-      if (Math.abs(event.clientY - current.startY) > 8) {
-        if (longPressTimer.current) window.clearTimeout(longPressTimer.current);
-        longPressTimer.current = null;
-        dragState.current = null;
-      }
-      return;
-    }
-    event.preventDefault();
-    const target = document
-      .elementFromPoint(event.clientX, event.clientY)
-      ?.closest<HTMLElement>('[data-task-id]');
-    const targetId = target?.dataset.taskId;
-    if (targetId && targetId !== current.id) onReorder(current.id, targetId);
-  }
-
-  function finishLongPress() {
-    if (longPressTimer.current) window.clearTimeout(longPressTimer.current);
-    longPressTimer.current = null;
-    const wasDragging = dragState.current?.active === true;
-    dragState.current = null;
-    setDraggingId(null);
-    if (wasDragging) {
-      window.setTimeout(() => {
-        suppressClick.current = false;
-      }, 0);
-    }
-  }
-
-  function renderTask(task: DailyTask) {
     const isFinishing = finishingIds.has(task.id);
     return (
       <div
-        className={`task-row ${task.done ? 'is-done' : ''} ${isFinishing ? 'is-finishing' : ''} ${draggingId === task.id ? 'is-dragging' : ''}`}
+        className={`task-row ${task.done ? 'is-done' : ''} ${isFinishing ? 'is-finishing' : ''} ${dragHandle ? 'has-sort-handle' : ''} ${isDragging ? 'is-dragging' : ''}`}
         key={task.id}
-        data-task-id={task.id}
-        onPointerDown={(event) => startLongPress(event, task)}
-        onPointerMove={moveLongPress}
-        onPointerUp={finishLongPress}
-        onPointerCancel={finishLongPress}
       >
         <button
           className="task-check-area"
@@ -178,6 +116,7 @@ export function TodayView({
           }
           aria-label={`完成${task.title}`}
         />
+        {dragHandle}
         <Button
           data-no-drag
           variant="ghost"
@@ -230,7 +169,26 @@ export function TodayView({
         {tasks.length ? (
           <>
             {activeTasks.length ? (
-              <div className="task-list">{activeTasks.map(renderTask)}</div>
+              <SortableList
+                ids={activeTasks.map((task) => task.id)}
+                className="task-list"
+                onReorder={onReorder}
+                onDragStart={() => {
+                  if (state.settings.haptics) navigator.vibrate?.(12);
+                }}
+              >
+                {(id, handle, isDragging) => {
+                  const task = activeTasks.find((item) => item.id === id)!;
+                  return renderTask(
+                    task,
+                    <SortHandle
+                      handle={handle}
+                      label={`拖动${task.title}排序`}
+                    />,
+                    isDragging,
+                  );
+                }}
+              </SortableList>
             ) : (
               <p className="all-done-note">
                 {isTomorrow
@@ -253,7 +211,7 @@ export function TodayView({
                 </button>
                 {completedOpen && (
                   <div className="task-list completed-list">
-                    {completedTasks.map(renderTask)}
+                    {completedTasks.map((task) => renderTask(task))}
                   </div>
                 )}
               </section>
@@ -290,6 +248,7 @@ export function TodayDrawer({
   onAddTasks,
   onSaveCommon,
   onDeleteCommon,
+  onReorderCommon,
 }: {
   state: AppState;
   selectedDate: string;
@@ -305,17 +264,27 @@ export function TodayDrawer({
     id?: string,
   ) => void;
   onDeleteCommon: (item: CommonItem) => void;
+  onReorderCommon: (draggedId: string, targetId: string) => void;
 }) {
   const isTomorrow = selectedDate === moveDate(dateKey(), 1);
-  const [emoji, setEmoji] = useState('🌱');
+  const [emoji, setEmoji] = useState<string>('✨');
   const [title, setTitle] = useState('');
   const [editing, setEditing] = useState<CommonItem | null>(null);
   const [selectedCommonIds, setSelectedCommonIds] = useState<Set<string>>(
     new Set(),
   );
 
+  useEffect(() => {
+    if (open) setEmoji(pickDailyEmoji());
+  }, [open]);
+
   function handleOpenChange(nextOpen: boolean) {
-    if (!nextOpen) setSelectedCommonIds(new Set());
+    if (!nextOpen) {
+      setSelectedCommonIds(new Set());
+      setTitle('');
+      setEmoji(pickDailyEmoji());
+      setEditing(null);
+    }
     onOpenChange(nextOpen);
   }
 
@@ -324,6 +293,7 @@ export function TodayDrawer({
     if (!title.trim()) return;
     onAddTasks([{ emoji, title }]);
     setTitle('');
+    setEmoji(pickDailyEmoji());
     onOpenChange(false);
   }
 
@@ -332,7 +302,7 @@ export function TodayDrawer({
     if (!title.trim()) return;
     onSaveCommon({ emoji, title }, editing?.id);
     setTitle('');
-    setEmoji('🌱');
+    setEmoji(pickDailyEmoji());
     setEditing(null);
   }
 
@@ -346,10 +316,8 @@ export function TodayDrawer({
                 ? `${isTomorrow ? '明天' : '今天'}想做什么？`
                 : '管理常用事项'}
             </DrawerTitle>
-            <DrawerDescription>
-              {mode === 'add'
-                ? `可以连续选择几项，再一次放进${isTomorrow ? '明天' : '今天'}。`
-                : '常做的事留在这里，以后一点就能加入。'}
+            <DrawerDescription className="sr-only">
+              选择或编辑事项
             </DrawerDescription>
           </DrawerHeader>
 
@@ -457,34 +425,52 @@ export function TodayDrawer({
                   {editing ? '保存修改' : '新增常用事项'}
                 </Button>
               </form>
-              <div className="manage-list">
-                {state.commonItems.map((item) => (
-                  <div className="manage-row" key={item.id}>
-                    <span>{item.emoji}</span>
-                    <strong>{item.title}</strong>
-                    <Button
-                      variant="ghost"
-                      size="icon-sm"
-                      aria-label={`编辑${item.title}`}
-                      onClick={() => {
-                        setEditing(item);
-                        setEmoji(item.emoji);
-                        setTitle(item.title);
-                      }}
+              <SortableList
+                ids={state.commonItems.map((item) => item.id)}
+                className="manage-list"
+                onReorder={onReorderCommon}
+                onDragStart={() => {
+                  if (state.settings.haptics) navigator.vibrate?.(12);
+                }}
+              >
+                {(id, handle, isDragging) => {
+                  const item = state.commonItems.find(
+                    (common) => common.id === id,
+                  )!;
+                  return (
+                    <div
+                      className={`manage-row ${isDragging ? 'is-dragging' : ''}`}
                     >
-                      <Pencil />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon-sm"
-                      aria-label={`删除${item.title}`}
-                      onClick={() => onDeleteCommon(item)}
-                    >
-                      <Trash2 />
-                    </Button>
-                  </div>
-                ))}
-              </div>
+                      <span>{item.emoji}</span>
+                      <strong>{item.title}</strong>
+                      <SortHandle
+                        handle={handle}
+                        label={`拖动${item.title}排序`}
+                      />
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        aria-label={`编辑${item.title}`}
+                        onClick={() => {
+                          setEditing(item);
+                          setEmoji(item.emoji);
+                          setTitle(item.title);
+                        }}
+                      >
+                        <Pencil />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        aria-label={`删除${item.title}`}
+                        onClick={() => onDeleteCommon(item)}
+                      >
+                        <Trash2 />
+                      </Button>
+                    </div>
+                  );
+                }}
+              </SortableList>
               <Button
                 variant="ghost"
                 className="manage-common"
@@ -498,6 +484,28 @@ export function TodayDrawer({
         </div>
       </DrawerContent>
     </Drawer>
+  );
+}
+
+function SortHandle({
+  handle,
+  label,
+}: {
+  handle: SortableHandle;
+  label: string;
+}) {
+  return (
+    <Button
+      ref={handle.setActivatorNodeRef}
+      variant="ghost"
+      size="icon-sm"
+      className="sort-handle"
+      aria-label={label}
+      {...handle.attributes}
+      {...handle.listeners}
+    >
+      <GripVertical aria-hidden="true" />
+    </Button>
   );
 }
 

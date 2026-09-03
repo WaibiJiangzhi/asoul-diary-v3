@@ -188,28 +188,10 @@ export function JournalView({
         </DrawerContent>
       </Drawer>
 
-      <section className="journal-paper">
-        <textarea
-          value={entry?.body ?? ''}
-          onChange={(event) =>
-            onUpdate(selectedDate, { body: event.target.value })
-          }
-          placeholder={'开心的、普通的、有点狼狈的，\n都可以慢慢写下来……'}
-          maxLength={12000}
-          aria-label="日记正文"
-        />
-        <span className="journal-word-count">{entry?.body.length ?? 0} 字</span>
-      </section>
-
       {(dayTasks.length > 0 || taskSnapshots.length > 0) && (
         <section className="diary-task-section">
           <div className="diary-task-heading">
-            <div>
-              <h2>
-                {selectedDate === dateKey() ? '今天的小事' : '那天的小事'}
-              </h2>
-              <p>选择几件，一起收进这一页。</p>
-            </div>
+            <h2>今日小事</h2>
             <Button variant="outline" onClick={() => setTaskPickerOpen(true)}>
               <ListPlus />
               选择
@@ -228,6 +210,18 @@ export function JournalView({
           )}
         </section>
       )}
+
+      <section className="journal-paper">
+        <textarea
+          value={entry?.body ?? ''}
+          onChange={(event) =>
+            onUpdate(selectedDate, { body: event.target.value })
+          }
+          maxLength={12000}
+          aria-label="日记正文"
+        />
+        <span className="journal-word-count">{entry?.body.length ?? 0} 字</span>
+      </section>
 
       <Drawer open={taskPickerOpen} onOpenChange={setTaskPickerOpen}>
         <DrawerContent className="sheet-drawer">
@@ -313,8 +307,6 @@ export function JournalView({
         )}
       </section>
 
-      <BilibiliTags />
-
       {entry && hasEntry && (
         <div className="journal-page-tools">
           <Button
@@ -327,6 +319,8 @@ export function JournalView({
           </Button>
         </div>
       )}
+
+      <BilibiliTags />
     </div>
   );
 }
@@ -404,8 +398,7 @@ function BilibiliTags() {
 
   return (
     <section className="bili-tags">
-      <p className="section-kicker">写完以后</p>
-      <h2>也可以去 B 站留下今天</h2>
+      <p className="section-kicker">A-SOUL TAG</p>
       <div>
         {tags.map((tag) => (
           <a

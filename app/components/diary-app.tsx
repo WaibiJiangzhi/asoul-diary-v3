@@ -19,6 +19,7 @@ import {
 } from '@/components/diary/confirm-dialog';
 import {
   createEmptyGrowthDraft,
+  pickDailyEmoji,
   type GrowthDraft,
 } from '@/components/diary/constants';
 import { GrowthDrawer, GrowthView } from '@/components/diary/growth';
@@ -254,7 +255,7 @@ export default function DiaryApp() {
               const tasks: DailyTask[] = items.map((item) => ({
                 id: createId('task'),
                 date: dateKey(),
-                emoji: item.emoji?.trim() || '🌱',
+                emoji: item.emoji?.trim() || pickDailyEmoji(),
                 title: item.title!.trim().slice(0, 50),
                 done: false,
                 createdAt: now,
@@ -384,7 +385,7 @@ export default function DiaryApp() {
     const tasks: DailyTask[] = cleanedItems.map((item) => ({
       id: createId('task'),
       date: todayDate,
-      emoji: item.emoji.trim() || '🌱',
+      emoji: item.emoji.trim() || pickDailyEmoji(),
       title: item.title,
       done: false,
       sourceCommonId: item.sourceId,
@@ -442,7 +443,7 @@ export default function DiaryApp() {
     setState((current) => {
       if (!current) return current;
       const selected = current.dailyTasks.filter(
-        (task) => task.date === todayDate,
+        (task) => task.date === todayDate && !task.done,
       );
       const from = selected.findIndex((task) => task.id === draggedId);
       const to = selected.findIndex((task) => task.id === targetId);
@@ -454,7 +455,7 @@ export default function DiaryApp() {
       return {
         ...current,
         dailyTasks: current.dailyTasks.map((task) =>
-          task.date === todayDate ? reordered[index++] : task,
+          task.date === todayDate && !task.done ? reordered[index++] : task,
         ),
       };
     });
@@ -489,7 +490,7 @@ export default function DiaryApp() {
     const edited = {
       ...taskEditing,
       title: taskEditing.title.trim(),
-      emoji: taskEditing.emoji || '🌱',
+      emoji: taskEditing.emoji || pickDailyEmoji(),
       updatedAt: new Date().toISOString(),
     };
     setState(
@@ -516,7 +517,12 @@ export default function DiaryApp() {
           ...current,
           commonItems: current.commonItems.map((common) =>
             common.id === id
-              ? { ...common, emoji: item.emoji || '🌱', title, updatedAt: now }
+              ? {
+                  ...common,
+                  emoji: item.emoji || pickDailyEmoji(),
+                  title,
+                  updatedAt: now,
+                }
               : common,
           ),
         };
@@ -527,13 +533,28 @@ export default function DiaryApp() {
           ...current.commonItems,
           {
             id: createId('common'),
-            emoji: item.emoji || '🌱',
+            emoji: item.emoji || pickDailyEmoji(),
             title,
             createdAt: now,
             updatedAt: now,
           },
         ],
       };
+    });
+  }
+
+  function reorderCommonItems(draggedId: string, targetId: string) {
+    setState((current) => {
+      if (!current) return current;
+      const from = current.commonItems.findIndex(
+        (item) => item.id === draggedId,
+      );
+      const to = current.commonItems.findIndex((item) => item.id === targetId);
+      if (from < 0 || to < 0 || from === to) return current;
+      const commonItems = [...current.commonItems];
+      const [moved] = commonItems.splice(from, 1);
+      commonItems.splice(to, 0, moved);
+      return { ...current, commonItems };
     });
   }
 
@@ -611,7 +632,7 @@ export default function DiaryApp() {
       const item: Countdown = {
         id: growthDraft.id ?? createId('countdown'),
         kind: 'countdown',
-        emoji: growthDraft.emoji || '⏳',
+        emoji: growthDraft.emoji,
         title: growthDraft.title.trim(),
         targetDate: growthDraft.targetDate,
         note: growthDraft.note.trim(),
@@ -643,7 +664,7 @@ export default function DiaryApp() {
       const item: ProgressGoal = {
         id: growthDraft.id ?? createId('goal'),
         kind: 'progress',
-        emoji: growthDraft.emoji || '🌱',
+        emoji: growthDraft.emoji,
         title: growthDraft.title.trim(),
         current: currentValue,
         total,
@@ -793,7 +814,7 @@ export default function DiaryApp() {
       currentIndex + direction < 0 ||
       currentIndex + direction >= (currentSource?.length ?? 0)
     ) {
-      showToast(direction < 0 ? '已经是第一张了' : '已经是最后一张了');
+      showToast(direction < 0 ? '已经在最左边了' : '已经在最右边了');
       return;
     }
     setState((current) => {
@@ -809,7 +830,7 @@ export default function DiaryApp() {
         ? { ...current, countdowns: reordered as Countdown[] }
         : { ...current, progressGoals: reordered as ProgressGoal[] };
     });
-    showToast(direction < 0 ? '卡片已向前移动' : '卡片已向后移动');
+    showToast(direction < 0 ? '卡片已向左移动' : '卡片已向右移动');
   }
 
   function deleteProgressEvent(goal: ProgressGoal, event: ProgressEvent) {
@@ -1214,6 +1235,7 @@ export default function DiaryApp() {
         onAddTasks={addTodayTasks}
         onSaveCommon={saveCommon}
         onDeleteCommon={deleteCommon}
+        onReorderCommon={reorderCommonItems}
       />
 
       <TaskEditDrawer

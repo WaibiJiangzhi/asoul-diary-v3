@@ -27,25 +27,21 @@
 .app-shell.has-wallpaper {
   position: relative;
   isolation: isolate;
-  background: var(--paper);
+  background: #302a35;
 }
 .app-shell.has-wallpaper::before {
   position: fixed;
   z-index: 0;
-  inset: -18px;
+  inset: 0;
   background-image:
-    linear-gradient(
-      color-mix(in srgb, var(--paper) 76%, transparent),
-      color-mix(in srgb, var(--paper) 84%, transparent)
-    ),
+    linear-gradient(rgb(255 250 247 / 12%), rgb(255 250 247 / 18%)),
     var(--selected-wallpaper);
   background-position: center;
   background-size: cover;
   content: '';
-  filter: blur(10px) saturate(0.82);
-  opacity: 0.58;
+  filter: saturate(0.92);
+  opacity: 1;
   pointer-events: none;
-  transform: scale(1.04);
 }
 
 .diary-page {
@@ -67,18 +63,58 @@
 }
 
 .has-wallpaper .diary-page {
-  background-color: color-mix(in srgb, var(--paper) 88%, transparent);
+  background-color: transparent;
   background-image: repeating-linear-gradient(
     to bottom,
     transparent 0,
     transparent 43px,
-    color-mix(in srgb, var(--rule) 72%, transparent) 44px
+    rgb(255 255 255 / 10%) 44px
   );
-  box-shadow: 0 0 70px rgb(54 44 52 / 14%);
-  backdrop-filter: blur(3px);
+  box-shadow: 0 0 70px rgb(32 26 36 / 18%);
 }
 .has-wallpaper .binding-holes {
-  opacity: 0.48;
+  opacity: 0.34;
+}
+
+.has-wallpaper .paper-card,
+.has-wallpaper .task-row,
+.has-wallpaper .journal-date-nav,
+.has-wallpaper .journal-paper,
+.has-wallpaper .diary-task-section,
+.has-wallpaper .gentle-empty.roomy,
+.has-wallpaper .memory-card,
+.has-wallpaper .photo-add,
+.has-wallpaper .bili-tags a {
+  background: rgb(255 252 250 / 62%);
+  box-shadow: 0 14px 34px rgb(34 27 38 / 14%);
+  backdrop-filter: blur(6px);
+}
+.has-wallpaper .task-row.is-done,
+.has-wallpaper .all-done-note {
+  background: rgb(235 251 245 / 68%);
+}
+.has-wallpaper .bottom-nav {
+  background: rgb(255 250 248 / 76%);
+  backdrop-filter: blur(10px);
+}
+.has-wallpaper .progress-adjust > label,
+.has-wallpaper .progress-adjust-note,
+.has-wallpaper .countdown-latest-note,
+.has-wallpaper .countdown-notes li,
+.has-wallpaper .footsteps li,
+.has-wallpaper .diary-task-section li {
+  background: rgb(255 255 255 / 54%);
+}
+.has-wallpaper .journal-paper textarea {
+  background-color: rgb(255 252 250 / 18%);
+}
+.has-wallpaper .growth-actions [data-slot='button'] {
+  background-color: rgb(255 252 250 / 62%);
+  backdrop-filter: blur(6px);
+}
+.has-wallpaper .growth-actions [data-slot='button']:first-child {
+  border-color: color-mix(in srgb, var(--theme-accent), transparent 35%);
+  background: color-mix(in srgb, var(--theme-accent), transparent 22%);
 }
 
 .binding-holes {

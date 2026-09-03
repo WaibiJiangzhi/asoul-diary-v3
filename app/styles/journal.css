@@ -180,30 +180,30 @@
 .journal-paper {
   position: relative;
   margin-top: 22px;
-  padding: 15px 14px 32px;
+  padding: 0 14px 32px;
   border: 1px solid var(--theme-border);
   border-radius: 22px 17px 24px 19px;
-  background:
-    repeating-linear-gradient(
-      to bottom,
-      transparent 0,
-      transparent 31px,
-      color-mix(in srgb, var(--theme-accent), transparent 89%) 32px
-    ),
-    rgb(255 253 249 / 94%);
+  background: rgb(255 253 249 / 94%);
   box-shadow: 0 16px 36px var(--theme-shadow);
 }
 .journal-paper textarea {
   width: 100%;
-  min-height: 360px;
-  resize: vertical;
+  min-height: 396px;
+  resize: none;
+  padding: 10px 0 9px;
   border: 0;
   outline: 0;
-  background: transparent;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent 35px,
+    color-mix(in srgb, var(--theme-accent), transparent 86%) 36px
+  );
+  background-attachment: local;
   color: #48424d;
   font-family: 'KaiTi', 'STKaiti', var(--serif);
   font-size: 16px;
-  line-height: 32px;
+  line-height: 36px;
 }
 .journal-paper textarea::placeholder {
   color: #b0a7aa;
@@ -306,7 +306,7 @@
 }
 
 .diary-task-section {
-  margin-top: 20px;
+  margin-top: 18px;
   padding: 14px;
   border: 1px solid var(--theme-border);
   border-radius: 20px;
@@ -322,11 +322,6 @@
   margin: 0;
   font-family: var(--serif);
   font-size: 16px;
-}
-.diary-task-heading p {
-  margin: 3px 0 0;
-  color: #928994;
-  font-size: 9px;
 }
 .diary-task-heading [data-slot='button'] {
   min-height: 38px;
@@ -409,21 +404,14 @@
 }
 
 .bili-tags {
-  margin-top: 31px;
-  padding: 19px 15px;
-  border: 1px solid var(--theme-border);
-  border-radius: 22px;
-  background: var(--theme-faint);
-}
-.bili-tags h2 {
-  margin: 5px 0 14px;
-  color: var(--ink);
-  font-family: var(--serif);
-  font-size: 18px;
+  margin-top: 28px;
+  padding: 18px 0 3px;
+  border-top: 1px dashed var(--theme-border);
 }
 .bili-tags > div {
   display: grid;
   gap: 8px;
+  margin-top: 11px;
 }
 .bili-tags a {
   display: grid;

@@ -4,8 +4,8 @@ import type { CSSProperties, SyntheticEvent, UIEvent } from 'react';
 import { useState } from 'react';
 import {
   Archive,
-  ArrowDown,
-  ArrowUp,
+  ArrowLeft,
+  ArrowRight,
   ChevronDown,
   Clock3,
   Copy,
@@ -36,7 +36,7 @@ import type {
   ProgressEvent,
   ProgressGoal,
 } from '@/lib/types';
-import { JIARAN_STICKERS, type GrowthDraft } from './constants';
+import { CARD_COLORS, JIARAN_STICKERS, type GrowthDraft } from './constants';
 import { Decoration, isSticker } from './decoration';
 
 function syncCarouselIndex(
@@ -87,6 +87,7 @@ export function GrowthView({
   const [selectedMemory, setSelectedMemory] = useState<GrowthMemory | null>(
     null,
   );
+  const [memoryDrawerOpen, setMemoryDrawerOpen] = useState(false);
   const [countdownIndex, setCountdownIndex] = useState(0);
   const [progressIndex, setProgressIndex] = useState(0);
   const [noteCountdown, setNoteCountdown] = useState<Countdown | null>(null);
@@ -141,7 +142,9 @@ export function GrowthView({
                   <time dateTime={item.targetDate} className="countdown-date">
                     {formatShortDate(item.targetDate)}
                   </time>
-                  <div className="countdown-main">
+                  <div
+                    className={`countdown-main ${item.emoji ? '' : 'no-decoration'}`}
+                  >
                     <Decoration
                       value={item.emoji}
                       className="countdown-emoji"
@@ -280,59 +283,49 @@ export function GrowthView({
               <h2>成长纪念册</h2>
             </div>
           </div>
-          <p className="memory-lead">完成得怎样都没关系，有尝试就很棒了。</p>
           <div className="memory-list">
-            {state.memories.map((memory) => (
-              <article
-                className="memory-card"
+            {state.memories.slice(0, 2).map((memory) => (
+              <MemoryRow
+                memory={memory}
                 key={memory.id}
-                style={{ '--card-accent': memory.color } as CSSProperties}
-              >
-                <button
-                  className="memory-open"
-                  type="button"
-                  onClick={() => setSelectedMemory(memory)}
-                >
-                  <Decoration
-                    value={memory.emoji}
-                    className="memory-emoji"
-                    alt="成长纪念表情"
-                  />
-                  <span>
-                    <small>
-                      {new Date(memory.endedAt).toLocaleDateString('zh-CN')}{' '}
-                      收藏
-                    </small>
-                    <strong>{memory.title}</strong>
-                    <span>
-                      {memory.current}/{memory.total} {memory.unit} ·{' '}
-                      {memory.events.length} 条足迹
-                    </span>
-                  </span>
-                </button>
-                <Button
-                  variant="ghost"
-                  size="icon-sm"
-                  aria-label="打开成长纪念"
-                  onClick={() => setSelectedMemory(memory)}
-                >
-                  <Footprints />
-                </Button>
-              </article>
+                onOpen={() => {
+                  setSelectedMemory(memory);
+                  setMemoryDrawerOpen(true);
+                }}
+              />
             ))}
           </div>
+          <Button
+            className="memory-all-button"
+            variant="ghost"
+            onClick={() => {
+              setSelectedMemory(null);
+              setMemoryDrawerOpen(true);
+            }}
+          >
+            查看全部 {state.memories.length} 段成长
+            <ChevronDown aria-hidden="true" />
+          </Button>
         </section>
       )}
 
-      <MemoryDetailDrawer
+      <MemoryLibraryDrawer
+        open={memoryDrawerOpen}
+        memories={state.memories}
         memory={selectedMemory}
-        onOpenChange={(open) => !open && setSelectedMemory(null)}
+        onSelect={setSelectedMemory}
+        onOpenChange={(open) => {
+          setMemoryDrawerOpen(open);
+          if (!open) setSelectedMemory(null);
+        }}
         onCopy={(memory) => {
           onCopy(memory);
+          setMemoryDrawerOpen(false);
           setSelectedMemory(null);
         }}
         onDelete={(memory) => {
           onDeleteMemory(memory);
+          setMemoryDrawerOpen(false);
           setSelectedMemory(null);
         }}
       />
@@ -354,6 +347,47 @@ export function GrowthView({
         }}
       />
     </div>
+  );
+}
+
+function MemoryRow({
+  memory,
+  onOpen,
+}: {
+  memory: GrowthMemory;
+  onOpen: () => void;
+}) {
+  return (
+    <article
+      className="memory-card"
+      style={{ '--card-accent': memory.color } as CSSProperties}
+    >
+      <button className="memory-open" type="button" onClick={onOpen}>
+        <Decoration
+          value={memory.emoji}
+          className="memory-emoji"
+          alt="成长纪念表情"
+        />
+        <span>
+          <small>
+            {new Date(memory.endedAt).toLocaleDateString('zh-CN')} 收藏
+          </small>
+          <strong>{memory.title}</strong>
+          <span>
+            {memory.current}/{memory.total} {memory.unit} ·{' '}
+            {memory.events.length} 条足迹
+          </span>
+        </span>
+      </button>
+      <Button
+        variant="ghost"
+        size="icon-sm"
+        aria-label="打开成长纪念"
+        onClick={onOpen}
+      >
+        <Footprints />
+      </Button>
+    </article>
   );
 }
 
@@ -396,7 +430,7 @@ function ProgressCard({
       data-carousel-card
       style={{ '--card-accent': goal.color } as CSSProperties}
     >
-      <div className="goal-top">
+      <div className={`goal-top ${goal.emoji ? '' : 'no-decoration'}`}>
         <Decoration
           value={goal.emoji}
           className="goal-emoji"
@@ -435,7 +469,7 @@ function ProgressCard({
       </div>
       <div className="goal-progress" aria-label={`进度 ${percentage}%`}>
         <i style={{ width: `${percentage}%` }} />
-        <b style={{ left: `clamp(12px, ${percentage}%, calc(100% - 12px))` }}>
+        <b style={{ left: `clamp(24px, ${percentage}%, calc(100% - 24px))` }}>
           {percentage}%
         </b>
       </div>
@@ -458,7 +492,7 @@ function ProgressCard({
             value={note}
             onChange={(event) => setNote(event.target.value)}
             maxLength={100}
-            placeholder="顺手写下一句话（可选）"
+            aria-label="为这次进度留一句话（可选）"
           />
         </label>
         <Button
@@ -550,6 +584,11 @@ export function GrowthDrawer({
 }) {
   const patch = (next: Partial<GrowthDraft>) =>
     onDraftChange({ ...draft, ...next });
+  const decorationMode = isSticker(draft.emoji)
+    ? 'sticker'
+    : draft.emoji
+      ? 'emoji'
+      : 'blank';
 
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
@@ -560,10 +599,8 @@ export function GrowthDrawer({
               {draft.id ? '编辑' : '新建'}
               {draft.kind === 'progress' ? '进度目标' : '倒计时'}
             </DrawerTitle>
-            <DrawerDescription>
-              {draft.kind === 'progress'
-                ? '每一次加减都会自动留下一条足迹。'
-                : '把值得期待的日子放在手边。'}
+            <DrawerDescription className="sr-only">
+              填写成长记录
             </DrawerDescription>
           </DrawerHeader>
 
@@ -594,16 +631,16 @@ export function GrowthDrawer({
                 variant="outline"
                 onClick={() => onMove(draft.kind, draft.id!, -1)}
               >
-                <ArrowUp />
-                上移
+                <ArrowLeft />
+                左移
               </Button>
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => onMove(draft.kind, draft.id!, 1)}
               >
-                <ArrowDown />
-                下移
+                <ArrowRight />
+                右移
               </Button>
             </div>
           )}
@@ -619,35 +656,6 @@ export function GrowthDrawer({
               maxLength={40}
             />
           </label>
-
-          <fieldset className="decoration-picker">
-            <legend>给这张卡片选一个表情</legend>
-            <div className="emoji-choice">
-              <Input
-                aria-label="使用 Emoji"
-                value={isSticker(draft.emoji) ? '' : draft.emoji}
-                onChange={(event) =>
-                  patch({ emoji: event.target.value.slice(0, 4) || '🌱' })
-                }
-                placeholder="🌱"
-              />
-              <span>也可以从下面选择一张嘉然动态表情</span>
-            </div>
-            <div className="sticker-grid" aria-label="2026嘉然的画册动态表情包">
-              {JIARAN_STICKERS.map((sticker) => (
-                <button
-                  type="button"
-                  key={sticker.src}
-                  className={draft.emoji === sticker.src ? 'active' : ''}
-                  aria-label={`选择${sticker.name}`}
-                  onClick={() => patch({ emoji: sticker.src })}
-                >
-                  <Decoration value={sticker.src} alt={sticker.name} />
-                  <small>{sticker.name}</small>
-                </button>
-              ))}
-            </div>
-          </fieldset>
 
           {draft.kind === 'countdown' ? (
             <label className="field-label">
@@ -703,18 +711,18 @@ export function GrowthDrawer({
 
           <fieldset className="color-picker">
             <legend>卡片主题色</legend>
-            {(['#DB7D74', '#E799B0', '#576690'] as ProgressGoal['color'][]).map(
-              (color) => (
+            <div>
+              {CARD_COLORS.map((color) => (
                 <button
-                  key={color}
+                  key={color.value}
                   type="button"
-                  className={draft.color === color ? 'active' : ''}
-                  style={{ background: color }}
-                  aria-label={`选择颜色 ${color}`}
-                  onClick={() => patch({ color })}
+                  className={draft.color === color.value ? 'active' : ''}
+                  style={{ background: color.value }}
+                  aria-label={`选择${color.label}`}
+                  onClick={() => patch({ color: color.value })}
                 />
-              ),
-            )}
+              ))}
+            </div>
           </fieldset>
 
           <label className="field-label">
@@ -723,9 +731,101 @@ export function GrowthDrawer({
               value={draft.note}
               onChange={(event) => patch({ note: event.target.value })}
               maxLength={80}
-              placeholder="写给自己看就好"
             />
           </label>
+
+          <details className="decoration-picker">
+            <summary>
+              <span>
+                <strong>卡片表情</strong>
+                <small>
+                  {decorationMode === 'blank'
+                    ? '留空'
+                    : decorationMode === 'emoji'
+                      ? 'Emoji'
+                      : '2026 嘉然动态表情'}
+                </small>
+              </span>
+              <Decoration
+                value={draft.emoji}
+                className="decoration-preview"
+                alt="当前卡片表情"
+              />
+              <ChevronDown aria-hidden="true" />
+            </summary>
+            <div className="decoration-options">
+              <div className="segmented decoration-modes">
+                <button
+                  type="button"
+                  className={decorationMode === 'blank' ? 'active' : ''}
+                  onClick={() => patch({ emoji: '' })}
+                >
+                  留空
+                </button>
+                <button
+                  type="button"
+                  className={decorationMode === 'emoji' ? 'active' : ''}
+                  onClick={() =>
+                    patch({
+                      emoji:
+                        draft.emoji && !isSticker(draft.emoji)
+                          ? draft.emoji
+                          : '✨',
+                    })
+                  }
+                >
+                  Emoji
+                </button>
+                <button
+                  type="button"
+                  className={decorationMode === 'sticker' ? 'active' : ''}
+                  onClick={() =>
+                    patch({
+                      emoji: isSticker(draft.emoji)
+                        ? draft.emoji
+                        : JIARAN_STICKERS[0].src,
+                    })
+                  }
+                >
+                  嘉然表情
+                </button>
+              </div>
+
+              {decorationMode === 'emoji' && (
+                <div className="emoji-choice">
+                  <Input
+                    aria-label="使用 Emoji"
+                    value={draft.emoji}
+                    onChange={(event) =>
+                      patch({ emoji: event.target.value.slice(0, 12) })
+                    }
+                  />
+                  <span>点输入框，用手机的 Emoji 键盘选择。</span>
+                </div>
+              )}
+
+              {decorationMode === 'sticker' && (
+                <div
+                  className="sticker-grid"
+                  aria-label="2026嘉然的画册动态表情包"
+                >
+                  {JIARAN_STICKERS.map((sticker) => (
+                    <button
+                      type="button"
+                      key={sticker.src}
+                      className={draft.emoji === sticker.src ? 'active' : ''}
+                      aria-label={`选择${sticker.name}`}
+                      onClick={() => patch({ emoji: sticker.src })}
+                    >
+                      <Decoration value={sticker.src} alt={sticker.name} />
+                      <small>{sticker.name}</small>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </details>
+
           <Button type="submit" size="lg" disabled={!draft.title.trim()}>
             <Save />
             {draft.id ? '保存修改' : '开始记录'}
@@ -736,40 +836,58 @@ export function GrowthDrawer({
   );
 }
 
-function MemoryDetailDrawer({
+function MemoryLibraryDrawer({
+  open,
+  memories,
   memory,
+  onSelect,
   onOpenChange,
   onCopy,
   onDelete,
 }: {
+  open: boolean;
+  memories: GrowthMemory[];
   memory: GrowthMemory | null;
+  onSelect: (memory: GrowthMemory | null) => void;
   onOpenChange: (open: boolean) => void;
   onCopy: (memory: GrowthMemory) => void;
   onDelete: (memory: GrowthMemory) => void;
 }) {
   return (
-    <Drawer open={!!memory} onOpenChange={onOpenChange}>
-      <DrawerContent className="sheet-drawer tall">
-        {memory && (
+    <Drawer open={open} onOpenChange={onOpenChange}>
+      <DrawerContent className="sheet-drawer tall memory-library-drawer">
+        {memory ? (
           <div
             className="drawer-inner memory-detail"
             style={{ '--card-accent': memory.color } as CSSProperties}
           >
+            <Button
+              className="memory-back"
+              variant="ghost"
+              onClick={() => onSelect(null)}
+            >
+              <ArrowLeft />
+              返回纪念册
+            </Button>
             <DrawerHeader>
-              <div className="memory-detail-title">
+              <div className="memory-detail-hero">
                 <Decoration
                   value={memory.emoji}
                   className="memory-detail-emoji"
                   alt="成长纪念表情"
                 />
-                <div>
+                <div className="memory-detail-title">
                   <p>成长纪念</p>
                   <DrawerTitle>{memory.title}</DrawerTitle>
+                  {memory.note && (
+                    <DrawerDescription>{memory.note}</DrawerDescription>
+                  )}
                 </div>
+                <strong className="memory-final-value">
+                  {memory.current.toLocaleString()}
+                  <small>{memory.unit}</small>
+                </strong>
               </div>
-              <DrawerDescription>
-                {memory.note || '这段认真走过的路，值得被记住。'}
-              </DrawerDescription>
             </DrawerHeader>
 
             <section className="memory-summary">
@@ -827,6 +945,24 @@ function MemoryDetailDrawer({
                 <Trash2 />
                 删除纪念
               </Button>
+            </div>
+          </div>
+        ) : (
+          <div className="drawer-inner memory-library">
+            <DrawerHeader>
+              <DrawerTitle>成长纪念册</DrawerTitle>
+              <DrawerDescription className="sr-only">
+                查看已经结束的进度和当时留下的足迹。
+              </DrawerDescription>
+            </DrawerHeader>
+            <div className="memory-list">
+              {memories.map((item) => (
+                <MemoryRow
+                  memory={item}
+                  key={item.id}
+                  onOpen={() => onSelect(item)}
+                />
+              ))}
             </div>
           </div>
         )}

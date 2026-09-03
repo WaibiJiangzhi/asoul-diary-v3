@@ -13,6 +13,8 @@ export function Decoration({
   className?: string;
   alt?: string;
 }) {
+  if (!value) return null;
+
   if (isSticker(value)) {
     return (
       <span className={className} data-decoration="sticker">
@@ -27,4 +29,3 @@ export function Decoration({
     </span>
   );
 }
-
