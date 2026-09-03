@@ -11,12 +11,14 @@ import {
   ChevronRight,
   Heart,
   Image as ImageIcon,
+  ListPlus,
   Trash2,
   X,
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Drawer,
   DrawerContent,
@@ -24,10 +26,9 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from '@/components/ui/drawer';
-import { dateKey, formatFullDate, formatShortDate, fromDateKey, moveDate } from '@/lib/date';
+import { dateKey, formatFullDate, fromDateKey, moveDate } from '@/lib/date';
 import { getPhotos } from '@/lib/db';
 import type { AppState, DiaryEntry } from '@/lib/types';
-import { MOOD_OPTIONS } from './constants';
 
 export function JournalView({
   state,
@@ -37,7 +38,6 @@ export function JournalView({
   onAddPhotos,
   onRemovePhoto,
   onDelete,
-  saveStatus,
 }: {
   state: AppState;
   selectedDate: string;
@@ -46,11 +46,22 @@ export function JournalView({
   onAddPhotos: (date: string, files: FileList | null) => void;
   onRemovePhoto: (date: string, id: string) => void;
   onDelete: (entry: DiaryEntry) => void;
-  saveStatus: 'saved' | 'saving' | 'unavailable';
 }) {
   const entry = state.diaries.find((item) => item.date === selectedDate);
-  const hasEntry = !!entry && !!(entry.body || entry.mood || entry.photoIds.length);
+  const taskSnapshots = entry?.taskSnapshots ?? [];
+  const dayTasks = state.dailyTasks.filter(
+    (task) => task.date === selectedDate,
+  );
+  const hasEntry =
+    !!entry &&
+    !!(
+      entry.body ||
+      entry.mood ||
+      entry.photoIds.length ||
+      taskSnapshots.length
+    );
   const [calendarOpen, setCalendarOpen] = useState(false);
+  const [taskPickerOpen, setTaskPickerOpen] = useState(false);
   const [calendarMonth, setCalendarMonth] = useState(fromDateKey(selectedDate));
   const [photoUrls, setPhotoUrls] = useState<Record<string, string>>({});
   const photoIds = entry?.photoIds ?? [];
@@ -78,12 +89,33 @@ export function JournalView({
     };
   }, [photoKey]);
 
-  const mood = entry?.mood ?? '';
+  const toggleTaskSnapshot = (taskId: string, included: boolean) => {
+    const task = dayTasks.find((item) => item.id === taskId);
+    if (!task) return;
+    const next = included
+      ? [
+          ...taskSnapshots.filter((item) => item.sourceTaskId !== task.id),
+          {
+            id: `snapshot-${task.id}`,
+            sourceTaskId: task.id,
+            emoji: task.emoji,
+            title: task.title,
+            done: task.done,
+          },
+        ]
+      : taskSnapshots.filter((item) => item.sourceTaskId !== task.id);
+    onUpdate(selectedDate, { taskSnapshots: next });
+  };
 
   return (
     <div className="view-stack journal-view">
       <section className="journal-date-nav">
-        <Button variant="ghost" size="icon" aria-label="前一天" onClick={() => onDateChange(moveDate(selectedDate, -1))}>
+        <Button
+          variant="ghost"
+          size="icon"
+          aria-label="前一天"
+          onClick={() => onDateChange(moveDate(selectedDate, -1))}
+        >
           <ArrowLeft />
         </Button>
         <button
@@ -97,7 +129,11 @@ export function JournalView({
           <CalendarDays aria-hidden="true" />
           <span>
             <strong>{formatFullDate(selectedDate)}</strong>
-            <small>{selectedDate === dateKey() ? '今天 · 点开日历' : '点开日历翻看以前'}</small>
+            <small>
+              {selectedDate === dateKey()
+                ? '今天 · 点开日历'
+                : '点开日历翻看以前'}
+            </small>
           </span>
         </button>
         <Button
@@ -116,7 +152,9 @@ export function JournalView({
           <div className="drawer-inner">
             <DrawerHeader>
               <DrawerTitle>翻一翻以前的日记</DrawerTitle>
-              <DrawerDescription>有粉色小点的日子，已经留下过一页。</DrawerDescription>
+              <DrawerDescription>
+                有粉色小点的日子，已经留下过一页。
+              </DrawerDescription>
             </DrawerHeader>
             <Calendar
               mode="single"
@@ -127,7 +165,9 @@ export function JournalView({
               disabled={{ after: fromDateKey(dateKey()) }}
               modifiers={{
                 hasDiary: state.diaries
-                  .filter((item) => item.body || item.mood || item.photoIds.length)
+                  .filter(
+                    (item) => item.body || item.mood || item.photoIds.length,
+                  )
                   .map((item) => fromDateKey(item.date)),
               }}
               modifiersClassNames={{ hasDiary: 'has-diary' }}
@@ -148,54 +188,79 @@ export function JournalView({
         </DrawerContent>
       </Drawer>
 
-      {entry && hasEntry && (
-        <div className="journal-page-tools">
-          <Button variant="ghost" className="journal-delete" onClick={() => onDelete(entry)}>
-            <Trash2 />删除本页
-          </Button>
-        </div>
-      )}
-
-      <section className="journal-title">
-        <p className="hand-note">今天这一页</p>
-        <h1>{selectedDate === dateKey() ? '今天想留下些什么？' : `${formatShortDate(selectedDate)}，那天留下的`}</h1>
-        <p>
-          {saveStatus === 'unavailable'
-            ? '本地存储暂不可用，请先不要关闭这一页'
-            : saveStatus === 'saving'
-              ? '正在保存…'
-              : '写下的内容会自动保存在这台设备上'}
-        </p>
-      </section>
-
-      <section className="mood-section">
-        <h2>给今天盖个心情章</h2>
-        <div className="mood-row">
-          {MOOD_OPTIONS.map((option) => (
-            <button
-              key={option.value}
-              type="button"
-              className={mood === option.value ? 'active' : ''}
-              aria-pressed={mood === option.value}
-              onClick={() => onUpdate(selectedDate, { mood: option.value })}
-            >
-              <span>{option.emoji}</span>
-              <small>{option.label}</small>
-            </button>
-          ))}
-        </div>
-      </section>
-
       <section className="journal-paper">
         <textarea
           value={entry?.body ?? ''}
-          onChange={(event) => onUpdate(selectedDate, { body: event.target.value })}
+          onChange={(event) =>
+            onUpdate(selectedDate, { body: event.target.value })
+          }
           placeholder={'开心的、普通的、有点狼狈的，\n都可以慢慢写下来……'}
           maxLength={12000}
           aria-label="日记正文"
         />
         <span className="journal-word-count">{entry?.body.length ?? 0} 字</span>
       </section>
+
+      {(dayTasks.length > 0 || taskSnapshots.length > 0) && (
+        <section className="diary-task-section">
+          <div className="diary-task-heading">
+            <div>
+              <h2>
+                {selectedDate === dateKey() ? '今天的小事' : '那天的小事'}
+              </h2>
+              <p>选择几件，一起收进这一页。</p>
+            </div>
+            <Button variant="outline" onClick={() => setTaskPickerOpen(true)}>
+              <ListPlus />
+              选择
+            </Button>
+          </div>
+          {taskSnapshots.length > 0 && (
+            <ul>
+              {taskSnapshots.map((item) => (
+                <li key={item.id}>
+                  <span>{item.emoji}</span>
+                  <strong>{item.title}</strong>
+                  <i>{item.done ? '已完成' : '未完成'}</i>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      )}
+
+      <Drawer open={taskPickerOpen} onOpenChange={setTaskPickerOpen}>
+        <DrawerContent className="sheet-drawer">
+          <div className="drawer-inner diary-task-picker">
+            <DrawerHeader>
+              <DrawerTitle>收进这一天的小事</DrawerTitle>
+              <DrawerDescription>
+                这里只留下一份当时的记录，以后修改事项不会改动日记。
+              </DrawerDescription>
+            </DrawerHeader>
+            <div>
+              {dayTasks.map((task) => {
+                const included = taskSnapshots.some(
+                  (item) => item.sourceTaskId === task.id,
+                );
+                return (
+                  <label key={task.id}>
+                    <span>{task.emoji}</span>
+                    <strong>{task.title}</strong>
+                    <Checkbox
+                      checked={included}
+                      onCheckedChange={(checked) =>
+                        toggleTaskSnapshot(task.id, checked === true)
+                      }
+                    />
+                  </label>
+                );
+              })}
+            </div>
+            <Button onClick={() => setTaskPickerOpen(false)}>选好了</Button>
+          </div>
+        </DrawerContent>
+      </Drawer>
 
       <section className="photo-section">
         <div className="photo-heading">
@@ -204,7 +269,8 @@ export function JournalView({
             <p>最多 9 张，只保存在本机。</p>
           </div>
           <label className="photo-add">
-            <Camera /><span>添加照片</span>
+            <Camera />
+            <span>添加照片</span>
             <input
               type="file"
               accept="image/*"
@@ -221,11 +287,24 @@ export function JournalView({
             {photoIds.map((id) => (
               <figure key={id}>
                 {photoUrls[id] ? (
-                  <Image src={photoUrls[id]} alt="日记照片" fill sizes="(max-width: 560px) 30vw, 160px" unoptimized />
+                  <Image
+                    src={photoUrls[id]}
+                    alt="日记照片"
+                    fill
+                    sizes="(max-width: 560px) 30vw, 160px"
+                    unoptimized
+                  />
                 ) : (
-                  <span className="photo-loading"><ImageIcon /></span>
+                  <span className="photo-loading">
+                    <ImageIcon />
+                  </span>
                 )}
-                <Button variant="secondary" size="icon-sm" aria-label="删除照片" onClick={() => onRemovePhoto(selectedDate, id)}>
+                <Button
+                  variant="secondary"
+                  size="icon-sm"
+                  aria-label="删除照片"
+                  onClick={() => onRemovePhoto(selectedDate, id)}
+                >
                   <X />
                 </Button>
               </figure>
@@ -235,13 +314,38 @@ export function JournalView({
       </section>
 
       <BilibiliTags />
+
+      {entry && hasEntry && (
+        <div className="journal-page-tools">
+          <Button
+            variant="ghost"
+            className="journal-delete"
+            onClick={() => onDelete(entry)}
+          >
+            <Trash2 />
+            删除本页
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
 
-function RecentDiaryList({ entries, onSelect }: { entries: DiaryEntry[]; onSelect: (date: string) => void }) {
+function RecentDiaryList({
+  entries,
+  onSelect,
+}: {
+  entries: DiaryEntry[];
+  onSelect: (date: string) => void;
+}) {
   const recent = entries
-    .filter((entry) => entry.body.trim() || entry.mood || entry.photoIds.length)
+    .filter(
+      (entry) =>
+        entry.body.trim() ||
+        entry.mood ||
+        entry.photoIds.length ||
+        entry.taskSnapshots.length,
+    )
     .sort((first, second) => second.date.localeCompare(first.date))
     .slice(0, 5);
 
@@ -251,13 +355,21 @@ function RecentDiaryList({ entries, onSelect }: { entries: DiaryEntry[]; onSelec
       {recent.length ? (
         <div>
           {recent.map((entry) => {
-            const mood = MOOD_OPTIONS.find((item) => item.value === entry.mood);
             return (
-              <button type="button" key={entry.date} onClick={() => onSelect(entry.date)}>
-                <span>{mood?.emoji ?? '📖'}</span>
+              <button
+                type="button"
+                key={entry.date}
+                onClick={() => onSelect(entry.date)}
+              >
+                <span>📖</span>
                 <span>
                   <strong>{formatFullDate(entry.date)}</strong>
-                  <small>{entry.body.trim().slice(0, 24) || (entry.photoIds.length ? `${entry.photoIds.length} 张照片` : mood?.label)}</small>
+                  <small>
+                    {entry.body.trim().slice(0, 24) ||
+                      (entry.photoIds.length
+                        ? `${entry.photoIds.length} 张照片`
+                        : `${entry.taskSnapshots.length} 件小事`)}
+                  </small>
                 </span>
                 <ChevronRight />
               </button>
@@ -273,9 +385,21 @@ function RecentDiaryList({ entries, onSelect }: { entries: DiaryEntry[]; onSelec
 
 function BilibiliTags() {
   const tags = [
-    { name: '贝极星空间站的日常', href: 'https://www.bilibili.com/v/topic/detail?topic_id=32780', color: 'bella' },
-    { name: '嘉心糖的手帐本', href: 'https://www.bilibili.com/v/topic/detail?topic_id=36443', color: 'jiaran' },
-    { name: '乃琳夸夸群', href: 'https://www.bilibili.com/v/topic/detail?topic_id=9825', color: 'nailin' },
+    {
+      name: '贝极星空间站的日常',
+      href: 'https://www.bilibili.com/v/topic/detail?topic_id=32780',
+      color: 'bella',
+    },
+    {
+      name: '嘉心糖的手帐本',
+      href: 'https://www.bilibili.com/v/topic/detail?topic_id=36443',
+      color: 'jiaran',
+    },
+    {
+      name: '乃琳夸夸群',
+      href: 'https://www.bilibili.com/v/topic/detail?topic_id=9825',
+      color: 'nailin',
+    },
   ];
 
   return (
@@ -284,8 +408,16 @@ function BilibiliTags() {
       <h2>也可以去 B 站留下今天</h2>
       <div>
         {tags.map((tag) => (
-          <a className={tag.color} href={tag.href} target="_blank" rel="noreferrer" key={tag.href}>
-            <Heart />{tag.name}<ChevronRight />
+          <a
+            className={tag.color}
+            href={tag.href}
+            target="_blank"
+            rel="noreferrer"
+            key={tag.href}
+          >
+            <Heart />
+            {tag.name}
+            <ChevronRight />
           </a>
         ))}
       </div>

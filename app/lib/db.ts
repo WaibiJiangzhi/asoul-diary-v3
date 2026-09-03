@@ -1,4 +1,4 @@
-import { createDefaultState, createId } from './defaults';
+import { createDefaultState, createId, normalizeState } from './defaults';
 import type { AppState, StoredPhoto, V3Backup } from './types';
 
 const DB_NAME = 'asoul-diary-v3';
@@ -30,7 +30,8 @@ function openDatabase(): Promise<IDBDatabase> {
 
     request.onupgradeneeded = () => {
       const database = request.result;
-      if (!database.objectStoreNames.contains('state')) database.createObjectStore('state');
+      if (!database.objectStoreNames.contains('state'))
+        database.createObjectStore('state');
       if (!database.objectStoreNames.contains('photos')) {
         database.createObjectStore('photos', { keyPath: 'id' });
       }
@@ -67,10 +68,13 @@ function transactionDone(transaction: IDBTransaction): Promise<void> {
 export async function loadState(): Promise<AppState> {
   const database = await openDatabase();
   const transaction = database.transaction('state', 'readonly');
-  const stored = await requestResult(transaction.objectStore('state').get(STATE_KEY));
+  const stored = await requestResult(
+    transaction.objectStore('state').get(STATE_KEY),
+  );
   database.close();
-  if (!stored || (stored as AppState).version !== 3) return createDefaultState();
-  return stored as AppState;
+  if (!stored || (stored as AppState).version !== 3)
+    return createDefaultState();
+  return normalizeState(stored as AppState);
 }
 
 export async function saveState(state: AppState): Promise<void> {
@@ -83,7 +87,8 @@ export async function saveState(state: AppState): Promise<void> {
 
 async function compressImage(file: File): Promise<Blob> {
   if (!file.type.startsWith('image/')) throw new Error('只能添加图片');
-  if (file.size < 1_200_000 || typeof createImageBitmap === 'undefined') return file;
+  if (file.size < 1_200_000 || typeof createImageBitmap === 'undefined')
+    return file;
   const bitmap = await createImageBitmap(file);
   const scale = Math.min(1, 1920 / Math.max(bitmap.width, bitmap.height));
   const canvas = document.createElement('canvas');
@@ -116,7 +121,9 @@ export async function getPhotos(ids: string[]): Promise<StoredPhoto[]> {
   const database = await openDatabase();
   const transaction = database.transaction('photos', 'readonly');
   const store = transaction.objectStore('photos');
-  const photos = await Promise.all(ids.map((id) => requestResult(store.get(id))));
+  const photos = await Promise.all(
+    ids.map((id) => requestResult(store.get(id))),
+  );
   database.close();
   return photos.filter(Boolean) as StoredPhoto[];
 }
@@ -145,15 +152,20 @@ function blobToDataUrl(blob: Blob): Promise<string> {
 
 function dataUrlToBlob(dataUrl: string) {
   const [header, body] = dataUrl.split(',');
-  const mime = /data:(.*?);base64/.exec(header)?.[1] ?? 'application/octet-stream';
-  const bytes = Uint8Array.from(atob(body), (character) => character.charCodeAt(0));
+  const mime =
+    /data:(.*?);base64/.exec(header)?.[1] ?? 'application/octet-stream';
+  const bytes = Uint8Array.from(atob(body), (character) =>
+    character.charCodeAt(0),
+  );
   return new Blob([bytes], { type: mime });
 }
 
 export async function createBackup(state: AppState): Promise<V3Backup> {
   const database = await openDatabase();
   const transaction = database.transaction('photos', 'readonly');
-  const photos = (await requestResult(transaction.objectStore('photos').getAll())) as StoredPhoto[];
+  const photos = (await requestResult(
+    transaction.objectStore('photos').getAll(),
+  )) as StoredPhoto[];
   database.close();
   return {
     product: 'asoul-diary-v3',
@@ -174,13 +186,14 @@ export async function restoreBackup(backup: V3Backup): Promise<AppState> {
   if (backup.product !== 'asoul-diary-v3' || backup.state?.version !== 3) {
     throw new Error('这不是 Asoul 一个魂生活日记 v3 备份');
   }
+  const restored = normalizeState(backup.state);
   const database = await openDatabase();
   const transaction = database.transaction(['state', 'photos'], 'readwrite');
   const stateStore = transaction.objectStore('state');
   const photoStore = transaction.objectStore('photos');
   stateStore.clear();
   photoStore.clear();
-  stateStore.put(backup.state, STATE_KEY);
+  stateStore.put(restored, STATE_KEY);
   for (const photo of backup.photos ?? []) {
     photoStore.put({
       id: photo.id,
@@ -191,7 +204,7 @@ export async function restoreBackup(backup: V3Backup): Promise<AppState> {
   }
   await transactionDone(transaction);
   database.close();
-  return backup.state;
+  return restored;
 }
 
 export async function clearAllData(): Promise<AppState> {

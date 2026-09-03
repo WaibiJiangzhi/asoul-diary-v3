@@ -1,6 +1,8 @@
 export type AppTab = 'today' | 'growth' | 'journal';
 export type Mood = 'happy' | 'good' | 'plain' | 'annoyed' | 'sad' | '';
 export type ThemeMode = 'paper' | 'wallpaper';
+export type AccentTheme = 'bella' | 'jiaran' | 'nailin';
+export type CardColor = '#E799B0' | '#DB7D74' | '#576690';
 
 export interface CommonItem {
   id: string;
@@ -28,6 +30,7 @@ export interface Countdown {
   title: string;
   targetDate: string;
   note: string;
+  color: CardColor;
   createdAt: string;
   updatedAt: string;
 }
@@ -36,6 +39,7 @@ export interface ProgressEvent {
   id: string;
   delta: number;
   valueAfter: number;
+  note?: string;
   createdAt: string;
 }
 
@@ -49,7 +53,7 @@ export interface ProgressGoal {
   unit: string;
   step: number;
   note: string;
-  color: '#E799B0' | '#DB7D74' | '#576690';
+  color: CardColor;
   events: ProgressEvent[];
   createdAt: string;
   updatedAt: string;
@@ -64,10 +68,19 @@ export interface GrowthMemory {
   total: number;
   unit: string;
   note: string;
+  color: CardColor;
   completedNaturally: boolean;
   startedAt: string;
   endedAt: string;
   events: ProgressEvent[];
+}
+
+export interface DiaryTaskSnapshot {
+  id: string;
+  sourceTaskId: string;
+  emoji: string;
+  title: string;
+  done: boolean;
 }
 
 export interface DiaryEntry {
@@ -75,12 +88,14 @@ export interface DiaryEntry {
   mood: Mood;
   body: string;
   photoIds: string[];
+  taskSnapshots: DiaryTaskSnapshot[];
   createdAt: string;
   updatedAt: string;
 }
 
 export interface AppSettings {
   theme: ThemeMode;
+  accent: AccentTheme;
   wallpaper: string;
   haptics: boolean;
 }

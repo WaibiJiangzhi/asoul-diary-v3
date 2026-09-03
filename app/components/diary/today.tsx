@@ -23,40 +23,61 @@ import {
   DrawerTitle,
 } from '@/components/ui/drawer';
 import { Input } from '@/components/ui/input';
-import { dateKey } from '@/lib/date';
+import { dateKey, formatShortDate, moveDate } from '@/lib/date';
 import type { AppState, CommonItem, DailyTask } from '@/lib/types';
 
 export function TodayView({
   state,
+  selectedDate,
+  onDateChange,
   onAdd,
   onToggle,
   onEdit,
   onOpenDiary,
 }: {
   state: AppState;
+  selectedDate: string;
+  onDateChange: (date: string) => void;
   onAdd: () => void;
   onToggle: (id: string, done: boolean) => void;
   onEdit: (task: DailyTask) => void;
   onOpenDiary: () => void;
 }) {
   const today = dateKey();
-  const tasks = state.dailyTasks.filter((task) => task.date === today);
+  const tomorrow = moveDate(today, 1);
+  const isTomorrow = selectedDate === tomorrow;
+  const tasks = state.dailyTasks.filter((task) => task.date === selectedDate);
   const completed = tasks.filter((task) => task.done).length;
-  const entry = state.diaries.find((item) => item.date === today);
+  const entry = state.diaries.find((item) => item.date === selectedDate);
 
   return (
     <div className="view-stack today-view">
-      <section className="hero-copy">
-        <p className="hand-note">今天这一页</p>
-        <h1>今天，想做点什么？</h1>
-        <p>选几件真正想做的小事，完成了就轻轻打个勾。</p>
+      <section className="day-switcher" aria-label="选择今天或明天">
+        <button
+          type="button"
+          className={!isTomorrow ? 'active' : ''}
+          onClick={() => onDateChange(today)}
+        >
+          <strong>今天</strong>
+          <small>{formatShortDate(today)}</small>
+        </button>
+        <button
+          type="button"
+          className={isTomorrow ? 'active' : ''}
+          onClick={() => onDateChange(tomorrow)}
+        >
+          <strong>明天</strong>
+          <small>{formatShortDate(tomorrow)}</small>
+        </button>
       </section>
 
-      <section className="paper-card today-card" aria-labelledby="today-heading">
+      <section className="today-section" aria-labelledby="today-heading">
         <div className="section-heading">
           <div>
-            <p className="section-kicker">TODAY</p>
-            <h2 id="today-heading">今天要做</h2>
+            <p className="section-kicker">
+              {isTomorrow ? 'TOMORROW' : 'TODAY'}
+            </p>
+            <h2 id="today-heading">{isTomorrow ? '明天要做' : '今天要做'}</h2>
           </div>
           {!!tasks.length && (
             <span className="progress-stamp">
@@ -68,7 +89,10 @@ export function TodayView({
         {tasks.length ? (
           <div className="task-list">
             {tasks.map((task) => (
-              <div className={`task-row ${task.done ? 'is-done' : ''}`} key={task.id}>
+              <div
+                className={`task-row ${task.done ? 'is-done' : ''}`}
+                key={task.id}
+              >
                 <button
                   className="task-check-area"
                   type="button"
@@ -82,7 +106,9 @@ export function TodayView({
                 </button>
                 <Checkbox
                   checked={task.done}
-                  onCheckedChange={(checked) => onToggle(task.id, checked === true)}
+                  onCheckedChange={(checked) =>
+                    onToggle(task.id, checked === true)
+                  }
                   aria-label={`完成${task.title}`}
                 />
                 <Button
@@ -99,34 +125,46 @@ export function TodayView({
         ) : (
           <div className="gentle-empty">
             <span>🍵</span>
-            <strong>今天还没有安排</strong>
-            <p>不用列很长，先放进一件想做的小事。</p>
+            <strong>{isTomorrow ? '明天还没有安排' : '今天还没有安排'}</strong>
+            <p>
+              {isTomorrow
+                ? '先写下一件明天想做的小事。'
+                : '不用列很长，先放进一件想做的小事。'}
+            </p>
           </div>
         )}
 
         <Button className="add-today-button" size="lg" onClick={onAdd}>
-          <Plus aria-hidden="true" />添加今天要做的事
+          <Plus aria-hidden="true" />
+          添加{isTomorrow ? '明天' : '今天'}要做的事
         </Button>
       </section>
 
-      <button className="journal-peek" type="button" onClick={onOpenDiary}>
-        <span className="journal-peek-icon">
-          <BookHeart aria-hidden="true" />
-        </span>
-        <span>
-          <small>给今天留几句话</small>
-          <strong>{entry?.body.trim() ? entry.body.slice(0, 18) : '今天还没有写日记'}</strong>
-        </span>
-        <span className="journal-prompt">
-          {entry ? '继续写' : '去写写'} <ChevronRight aria-hidden="true" />
-        </span>
-      </button>
+      {!isTomorrow && (
+        <button className="journal-peek" type="button" onClick={onOpenDiary}>
+          <span className="journal-peek-icon">
+            <BookHeart aria-hidden="true" />
+          </span>
+          <span>
+            <small>给今天留几句话</small>
+            <strong>
+              {entry?.body.trim()
+                ? entry.body.slice(0, 18)
+                : '今天还没有写日记'}
+            </strong>
+          </span>
+          <span className="journal-prompt">
+            {entry ? '继续写' : '去写写'} <ChevronRight aria-hidden="true" />
+          </span>
+        </button>
+      )}
     </div>
   );
 }
 
 export function TodayDrawer({
   state,
+  selectedDate,
   open,
   mode,
   onModeChange,
@@ -136,14 +174,19 @@ export function TodayDrawer({
   onDeleteCommon,
 }: {
   state: AppState;
+  selectedDate: string;
   open: boolean;
   mode: 'add' | 'manage';
   onModeChange: (mode: 'add' | 'manage') => void;
   onOpenChange: (open: boolean) => void;
   onAddTask: (emoji: string, title: string, sourceId?: string) => void;
-  onSaveCommon: (item: Pick<CommonItem, 'emoji' | 'title'>, id?: string) => void;
+  onSaveCommon: (
+    item: Pick<CommonItem, 'emoji' | 'title'>,
+    id?: string,
+  ) => void;
   onDeleteCommon: (item: CommonItem) => void;
 }) {
+  const isTomorrow = selectedDate === moveDate(dateKey(), 1);
   const [emoji, setEmoji] = useState('🌱');
   const [title, setTitle] = useState('');
   const [editing, setEditing] = useState<CommonItem | null>(null);
@@ -170,7 +213,11 @@ export function TodayDrawer({
       <DrawerContent className="sheet-drawer">
         <div className="drawer-inner">
           <DrawerHeader>
-            <DrawerTitle>{mode === 'add' ? '今天想做什么？' : '管理常用事项'}</DrawerTitle>
+            <DrawerTitle>
+              {mode === 'add'
+                ? `${isTomorrow ? '明天' : '今天'}想做什么？`
+                : '管理常用事项'}
+            </DrawerTitle>
             <DrawerDescription>
               {mode === 'add'
                 ? '点一下常用事项，或者临时写一件。'
@@ -191,17 +238,22 @@ export function TodayDrawer({
                       onOpenChange(false);
                     }}
                   >
-                    <span>{item.emoji}</span>{item.title}
+                    <span>{item.emoji}</span>
+                    {item.title}
                   </Button>
                 ))}
               </div>
-              <p className="or-divider"><span>或者临时写一件</span></p>
+              <p className="or-divider">
+                <span>或者临时写一件</span>
+              </p>
               <form className="stack-form" onSubmit={submitTask}>
                 <div className="emoji-title-fields">
                   <Input
                     aria-label="表情"
                     value={emoji}
-                    onChange={(event) => setEmoji(event.target.value.slice(0, 4))}
+                    onChange={(event) =>
+                      setEmoji(event.target.value.slice(0, 4))
+                    }
                   />
                   <Input
                     value={title}
@@ -210,7 +262,9 @@ export function TodayDrawer({
                     maxLength={50}
                   />
                 </div>
-                <Button type="submit" size="lg" disabled={!title.trim()}>添加到今天</Button>
+                <Button type="submit" size="lg" disabled={!title.trim()}>
+                  添加到{isTomorrow ? '明天' : '今天'}
+                </Button>
               </form>
               <Button
                 variant="ghost"
@@ -230,7 +284,9 @@ export function TodayDrawer({
                   <Input
                     aria-label="表情"
                     value={emoji}
-                    onChange={(event) => setEmoji(event.target.value.slice(0, 4))}
+                    onChange={(event) =>
+                      setEmoji(event.target.value.slice(0, 4))
+                    }
                   />
                   <Input
                     value={title}
@@ -271,8 +327,13 @@ export function TodayDrawer({
                   </div>
                 ))}
               </div>
-              <Button variant="ghost" className="manage-common" onClick={() => onModeChange('add')}>
-                <ArrowLeft aria-hidden="true" />返回添加今日事项
+              <Button
+                variant="ghost"
+                className="manage-common"
+                onClick={() => onModeChange('add')}
+              >
+                <ArrowLeft aria-hidden="true" />
+                返回添加今日事项
               </Button>
             </>
           )}
@@ -299,24 +360,41 @@ export function TaskEditDrawer({
         {task && (
           <form className="drawer-inner stack-form" onSubmit={onSave}>
             <DrawerHeader>
-              <DrawerTitle>修改今天这件事</DrawerTitle>
-              <DrawerDescription>只修改今天，不会影响常用事项。</DrawerDescription>
+              <DrawerTitle>
+                修改{task.date === moveDate(dateKey(), 1) ? '明天' : '今天'}
+                这件事
+              </DrawerTitle>
+              <DrawerDescription>
+                只修改这一天，不会影响常用事项。
+              </DrawerDescription>
             </DrawerHeader>
             <div className="emoji-title-fields">
               <Input
                 aria-label="表情"
                 value={task.emoji}
-                onChange={(event) => onChange({ ...task, emoji: event.target.value.slice(0, 4) })}
+                onChange={(event) =>
+                  onChange({ ...task, emoji: event.target.value.slice(0, 4) })
+                }
               />
               <Input
                 value={task.title}
-                onChange={(event) => onChange({ ...task, title: event.target.value })}
+                onChange={(event) =>
+                  onChange({ ...task, title: event.target.value })
+                }
                 maxLength={50}
               />
             </div>
-            <Button type="submit" disabled={!task.title.trim()}>保存修改</Button>
-            <Button type="button" variant="ghost" className="danger-text" onClick={() => onDelete(task)}>
-              <Trash2 aria-hidden="true" />删除这条
+            <Button type="submit" disabled={!task.title.trim()}>
+              保存修改
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              className="danger-text"
+              onClick={() => onDelete(task)}
+            >
+              <Trash2 aria-hidden="true" />
+              删除这条
             </Button>
           </form>
         )}
@@ -324,4 +402,3 @@ export function TaskEditDrawer({
     </Drawer>
   );
 }
-

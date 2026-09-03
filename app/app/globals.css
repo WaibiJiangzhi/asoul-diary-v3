@@ -34,24 +34,34 @@
   --radius-2xl: calc(var(--radius) * 1.62);
 }
 :root {
-  --background: #f2ebe5;
+  --theme-accent: #db7d74;
+  --theme-accent-strong: #c96860;
+  --theme-accent-deep: #8c4845;
+  --theme-soft: #fff0eb;
+  --theme-faint: #fff8f4;
+  --theme-surface: rgb(255 253 248 / 94%);
+  --theme-border: rgb(219 125 116 / 25%);
+  --theme-shadow: rgb(150 76 69 / 13%);
+  --theme-glow: rgb(219 125 116 / 17%);
+  --theme-companion-glow: rgb(231 153 176 / 10%);
+  --background: #f3ebe5;
   --foreground: #3f3945;
-  --card: #fffdf8;
+  --card: var(--theme-surface);
   --card-foreground: #3f3945;
   --popover: #fffdf8;
   --popover-foreground: #3f3945;
-  --primary: #db7d74;
+  --primary: var(--theme-accent);
   --primary-foreground: #fffaf7;
-  --secondary: #faecee;
-  --secondary-foreground: #7c4d5c;
+  --secondary: var(--theme-soft);
+  --secondary-foreground: var(--theme-accent-deep);
   --muted: #f5f0ec;
   --muted-foreground: #817985;
-  --accent: #faecee;
-  --accent-foreground: #7c4d5c;
+  --accent: var(--theme-soft);
+  --accent-foreground: var(--theme-accent-deep);
   --destructive: #c85e64;
-  --border: #e8ddd6;
-  --input: #e8ddd6;
-  --ring: #e799b0;
+  --border: var(--theme-border);
+  --input: var(--theme-border);
+  --ring: var(--theme-accent);
   --radius: 1rem;
   --jiaran: #e799b0;
   --bella: #db7d74;
@@ -60,8 +70,45 @@
   --ink: #3f3945;
   --soft-ink: #7f7782;
   --rule: rgb(87 102 144 / 6%);
-  --serif: "Songti SC", "STSong", "Noto Serif CJK SC", serif;
-  --sans: "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", system-ui, sans-serif;
+  --serif: 'Songti SC', 'STSong', 'Noto Serif CJK SC', serif;
+  --sans:
+    'PingFang SC', 'Microsoft YaHei', 'Noto Sans CJK SC', system-ui, sans-serif;
+}
+
+:root[data-accent='jiaran'] {
+  --theme-accent: #e799b0;
+  --theme-accent-strong: #d77f9c;
+  --theme-accent-deep: #99556f;
+  --theme-soft: #fff0f5;
+  --theme-faint: #fff8fa;
+  --theme-surface: rgb(255 252 252 / 95%);
+  --theme-border: rgb(231 153 176 / 27%);
+  --theme-shadow: rgb(180 91 120 / 12%);
+  --theme-glow: rgb(231 153 176 / 20%);
+  --theme-companion-glow: rgb(219 125 116 / 8%);
+  --background: #f5ebee;
+  --paper: #fffaf9;
+  --ink: #443943;
+  --soft-ink: #84747e;
+  --rule: rgb(231 153 176 / 7%);
+}
+
+:root[data-accent='nailin'] {
+  --theme-accent: #576690;
+  --theme-accent-strong: #48577f;
+  --theme-accent-deep: #35415f;
+  --theme-soft: #eef1f9;
+  --theme-faint: #f7f8fc;
+  --theme-surface: rgb(250 251 255 / 95%);
+  --theme-border: rgb(87 102 144 / 25%);
+  --theme-shadow: rgb(55 67 101 / 14%);
+  --theme-glow: rgb(87 102 144 / 17%);
+  --theme-companion-glow: rgb(126 139 178 / 11%);
+  --background: #e9ebf2;
+  --paper: #fbfbff;
+  --ink: #373b49;
+  --soft-ink: #74798a;
+  --rule: rgb(87 102 144 / 8%);
 }
 
 @layer base {
@@ -80,8 +127,12 @@
     min-height: 100%;
     margin: 0;
     background:
-      radial-gradient(circle at 12% 8%, rgb(231 153 176 / 16%), transparent 30rem),
-      radial-gradient(circle at 88% 58%, rgb(87 102 144 / 9%), transparent 30rem),
+      radial-gradient(circle at 12% 8%, var(--theme-glow), transparent 30rem),
+      radial-gradient(
+        circle at 88% 58%,
+        var(--theme-companion-glow),
+        transparent 30rem
+      ),
       var(--background);
     color: var(--foreground);
     font-family: var(--sans);

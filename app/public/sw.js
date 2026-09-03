@@ -1,5 +1,5 @@
-const CACHE_NAME = 'asoul-diary-v3-shell-2';
-const APP_SHELL = ['/', '/manifest.webmanifest', '/icon-safe-192.png', '/icon-safe-512.png'];
+const CACHE_NAME = 'asoul-diary-v3-shell-3';
+const APP_SHELL = ['/', '/manifest.webmanifest', '/icon-192.png', '/icon-512.png'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL)));

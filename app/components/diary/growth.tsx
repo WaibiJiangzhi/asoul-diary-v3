@@ -4,11 +4,14 @@ import type { CSSProperties, SyntheticEvent } from 'react';
 import { useState } from 'react';
 import {
   Archive,
+  ArrowDown,
+  ArrowUp,
   ChevronDown,
   Clock3,
   Copy,
   Footprints,
   Minus,
+  NotebookPen,
   Pencil,
   Plus,
   Save,
@@ -49,7 +52,7 @@ export function GrowthView({
 }: {
   state: AppState;
   onAdd: (kind: GrowthDraft['kind']) => void;
-  onAdjust: (id: string, delta: number) => void;
+  onAdjust: (id: string, delta: number, note?: string) => void;
   onDeleteEvent: (goal: ProgressGoal, event: ProgressEvent) => void;
   onEdit: (item: Countdown | ProgressGoal) => void;
   onDelete: (item: Countdown | ProgressGoal) => void;
@@ -57,22 +60,22 @@ export function GrowthView({
   onCopy: (memory: GrowthMemory) => void;
   onDeleteMemory: (memory: GrowthMemory) => void;
 }) {
-  const [selectedMemory, setSelectedMemory] = useState<GrowthMemory | null>(null);
+  const [selectedMemory, setSelectedMemory] = useState<GrowthMemory | null>(
+    null,
+  );
+  const [noteGoal, setNoteGoal] = useState<ProgressGoal | null>(null);
+  const [progressNote, setProgressNote] = useState('');
 
   return (
     <div className="view-stack growth-view">
-      <section className="view-intro growth-intro">
-        <p className="hand-note">每一步，都算数</p>
-        <h1>把想做的事，<br />一点点变成真的</h1>
-        <p>倒数值得期待的日子，也收好每一次向前。</p>
-      </section>
-
       <section className="growth-actions" aria-label="添加成长记录">
-        <Button onClick={() => onAdd('progress')}>
-          <Plus />添加进度
+        <Button onClick={() => onAdd('countdown')}>
+          <Clock3 />
+          添加倒计时
         </Button>
-        <Button variant="outline" onClick={() => onAdd('countdown')}>
-          <Clock3 />添加倒计时
+        <Button variant="outline" onClick={() => onAdd('progress')}>
+          <Plus />
+          添加进度
         </Button>
       </section>
 
@@ -88,8 +91,16 @@ export function GrowthView({
             {state.countdowns.map((item) => {
               const days = daysUntil(item.targetDate);
               return (
-                <article className="paper-card countdown-card" key={item.id}>
-                  <Decoration value={item.emoji} className="countdown-emoji" alt="倒计时表情" />
+                <article
+                  className="paper-card countdown-card"
+                  key={item.id}
+                  style={{ '--card-accent': item.color } as CSSProperties}
+                >
+                  <Decoration
+                    value={item.emoji}
+                    className="countdown-emoji"
+                    alt="倒计时表情"
+                  />
                   <div className="countdown-copy">
                     <small>{formatShortDate(item.targetDate)}</small>
                     <strong>{item.title}</strong>
@@ -100,10 +111,20 @@ export function GrowthView({
                     <span>{days >= 0 ? '天后' : '天前'}</span>
                   </div>
                   <div className="card-tools">
-                    <Button variant="ghost" size="icon-sm" aria-label="编辑倒计时" onClick={() => onEdit(item)}>
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      aria-label="编辑倒计时"
+                      onClick={() => onEdit(item)}
+                    >
                       <Pencil />
                     </Button>
-                    <Button variant="ghost" size="icon-sm" aria-label="删除倒计时" onClick={() => onDelete(item)}>
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      aria-label="删除倒计时"
+                      onClick={() => onDelete(item)}
+                    >
                       <Trash2 />
                     </Button>
                   </div>
@@ -132,6 +153,10 @@ export function GrowthView({
                 onEdit={onEdit}
                 onDelete={onDelete}
                 onArchive={onArchive}
+                onAddNote={() => {
+                  setNoteGoal(goal);
+                  setProgressNote('');
+                }}
               />
             ))}
           </div>
@@ -141,7 +166,8 @@ export function GrowthView({
             <strong>还没有正在记录的进度</strong>
             <p>比如“这个月跑 30 km”，每点一次，进度就向前一点。</p>
             <Button variant="outline" onClick={() => onAdd('progress')}>
-              <Plus />开始一个
+              <Plus />
+              开始一个
             </Button>
           </div>
         )}
@@ -158,16 +184,39 @@ export function GrowthView({
           <p className="memory-lead">完成得怎样都没关系，有尝试就很棒了。</p>
           <div className="memory-list">
             {state.memories.map((memory) => (
-              <article className="memory-card" key={memory.id}>
-                <button className="memory-open" type="button" onClick={() => setSelectedMemory(memory)}>
-                  <Decoration value={memory.emoji} className="memory-emoji" alt="成长纪念表情" />
+              <article
+                className="memory-card"
+                key={memory.id}
+                style={{ '--card-accent': memory.color } as CSSProperties}
+              >
+                <button
+                  className="memory-open"
+                  type="button"
+                  onClick={() => setSelectedMemory(memory)}
+                >
+                  <Decoration
+                    value={memory.emoji}
+                    className="memory-emoji"
+                    alt="成长纪念表情"
+                  />
                   <span>
-                    <small>{new Date(memory.endedAt).toLocaleDateString('zh-CN')} 收藏</small>
+                    <small>
+                      {new Date(memory.endedAt).toLocaleDateString('zh-CN')}{' '}
+                      收藏
+                    </small>
                     <strong>{memory.title}</strong>
-                    <span>{memory.current}/{memory.total} {memory.unit} · {memory.events.length} 条足迹</span>
+                    <span>
+                      {memory.current}/{memory.total} {memory.unit} ·{' '}
+                      {memory.events.length} 条足迹
+                    </span>
                   </span>
                 </button>
-                <Button variant="ghost" size="icon-sm" aria-label="打开成长纪念" onClick={() => setSelectedMemory(memory)}>
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  aria-label="打开成长纪念"
+                  onClick={() => setSelectedMemory(memory)}
+                >
                   <Footprints />
                 </Button>
               </article>
@@ -188,6 +237,23 @@ export function GrowthView({
           setSelectedMemory(null);
         }}
       />
+      <ProgressNoteDrawer
+        goal={noteGoal}
+        note={progressNote}
+        onNoteChange={setProgressNote}
+        onOpenChange={(open) => {
+          if (!open) {
+            setNoteGoal(null);
+            setProgressNote('');
+          }
+        }}
+        onSave={() => {
+          if (!noteGoal) return;
+          onAdjust(noteGoal.id, noteGoal.step, progressNote);
+          setNoteGoal(null);
+          setProgressNote('');
+        }}
+      />
     </div>
   );
 }
@@ -199,30 +265,52 @@ function ProgressCard({
   onEdit,
   onDelete,
   onArchive,
+  onAddNote,
 }: {
   goal: ProgressGoal;
-  onAdjust: (id: string, delta: number) => void;
+  onAdjust: (id: string, delta: number, note?: string) => void;
   onDeleteEvent: (goal: ProgressGoal, event: ProgressEvent) => void;
   onEdit: (item: ProgressGoal) => void;
   onDelete: (item: ProgressGoal) => void;
   onArchive: (goal: ProgressGoal, natural: boolean) => void;
+  onAddNote: () => void;
 }) {
-  const percentage = Math.min(100, Math.round((goal.current / goal.total) * 100));
+  const percentage = Math.min(
+    100,
+    Math.round((goal.current / goal.total) * 100),
+  );
 
   return (
-    <article className="paper-card progress-card" style={{ '--goal-color': goal.color } as CSSProperties}>
+    <article
+      className="paper-card progress-card"
+      style={{ '--card-accent': goal.color } as CSSProperties}
+    >
       <div className="goal-top">
-        <Decoration value={goal.emoji} className="goal-emoji" alt="进度目标表情" />
+        <Decoration
+          value={goal.emoji}
+          className="goal-emoji"
+          alt="进度目标表情"
+        />
         <div className="goal-copy">
           <small>完成 {percentage}%</small>
           <h3>{goal.title}</h3>
           {goal.note && <p>{goal.note}</p>}
         </div>
         <div className="card-tools">
-          <Button variant="ghost" size="icon-sm" aria-label="编辑目标" onClick={() => onEdit(goal)}>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            aria-label="编辑目标"
+            onClick={() => onEdit(goal)}
+          >
             <Pencil />
           </Button>
-          <Button variant="ghost" size="icon-sm" aria-label="删除目标" onClick={() => onDelete(goal)}>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            aria-label="删除目标"
+            onClick={() => onDelete(goal)}
+          >
             <Trash2 />
           </Button>
         </div>
@@ -230,34 +318,65 @@ function ProgressCard({
 
       <div className="goal-number">
         <strong>{goal.current.toLocaleString()}</strong>
-        <span>/ {goal.total.toLocaleString()} {goal.unit}</span>
+        <span>
+          / {goal.total.toLocaleString()} {goal.unit}
+        </span>
       </div>
       <div className="goal-progress" aria-label={`进度 ${percentage}%`}>
         <i style={{ width: `${percentage}%` }} />
-        <b style={{ left: `clamp(12px, ${percentage}%, calc(100% - 12px))` }}>{percentage}%</b>
+        <b style={{ left: `clamp(12px, ${percentage}%, calc(100% - 12px))` }}>
+          {percentage}%
+        </b>
       </div>
 
       <div className="adjust-row">
-        <Button variant="outline" size="lg" onClick={() => onAdjust(goal.id, -goal.step)} disabled={goal.current <= 0}>
-          <Minus />{goal.step}
+        <Button
+          variant="outline"
+          size="lg"
+          onClick={() => onAdjust(goal.id, -goal.step)}
+          disabled={goal.current <= 0}
+        >
+          <Minus />
+          {goal.step}
         </Button>
-        <Button size="lg" onClick={() => onAdjust(goal.id, goal.step)} disabled={goal.current >= goal.total}>
-          <Plus />{goal.step} {goal.unit}
+        <Button
+          size="lg"
+          onClick={() => onAdjust(goal.id, goal.step)}
+          disabled={goal.current >= goal.total}
+        >
+          <Plus />
+          {goal.step} {goal.unit}
         </Button>
       </div>
+      <Button
+        className="progress-note-button"
+        variant="ghost"
+        onClick={onAddNote}
+        disabled={goal.current >= goal.total}
+      >
+        <NotebookPen />
+        增加一步，也写下一句话
+      </Button>
 
       <details className="footsteps">
         <summary>
-          <span><Footprints />成长足迹 · {goal.events.length} 条</span>
+          <span>
+            <Footprints />
+            成长足迹 · {goal.events.length} 条
+          </span>
           <ChevronDown />
         </summary>
         {goal.events.length ? (
           <ol>
             {[...goal.events].reverse().map((event) => (
               <li key={event.id}>
-                <span>{formatMoment(event.createdAt)}</span>
+                <span className="footstep-copy">
+                  <span>{formatMoment(event.createdAt)}</span>
+                  {event.note && <small>{event.note}</small>}
+                </span>
                 <strong className={event.delta >= 0 ? 'positive' : 'negative'}>
-                  {event.delta >= 0 ? '+' : ''}{event.delta} {goal.unit}
+                  {event.delta >= 0 ? '+' : ''}
+                  {event.delta} {goal.unit}
                 </strong>
                 <small>累计 {event.valueAfter}</small>
                 <Button
@@ -277,12 +396,21 @@ function ProgressCard({
       </details>
 
       {goal.current >= goal.total ? (
-        <Button className="archive-button" onClick={() => onArchive(goal, true)}>
-          <Sparkles />完成了，收进纪念册
+        <Button
+          className="archive-button"
+          onClick={() => onArchive(goal, true)}
+        >
+          <Sparkles />
+          完成了，收进纪念册
         </Button>
       ) : (
-        <Button className="finish-early" variant="ghost" onClick={() => onArchive(goal, false)}>
-          <Archive />现在结束这段成长
+        <Button
+          className="finish-early"
+          variant="ghost"
+          onClick={() => onArchive(goal, false)}
+        >
+          <Archive />
+          现在结束这段成长
         </Button>
       )}
     </article>
@@ -295,21 +423,27 @@ export function GrowthDrawer({
   onOpenChange,
   onDraftChange,
   onSave,
+  onMove,
 }: {
   open: boolean;
   draft: GrowthDraft;
   onOpenChange: (open: boolean) => void;
   onDraftChange: (draft: GrowthDraft) => void;
   onSave: (event: SyntheticEvent<HTMLFormElement>) => void;
+  onMove: (kind: GrowthDraft['kind'], id: string, direction: -1 | 1) => void;
 }) {
-  const patch = (next: Partial<GrowthDraft>) => onDraftChange({ ...draft, ...next });
+  const patch = (next: Partial<GrowthDraft>) =>
+    onDraftChange({ ...draft, ...next });
 
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
       <DrawerContent className="sheet-drawer tall">
         <form className="drawer-inner stack-form" onSubmit={onSave}>
           <DrawerHeader>
-            <DrawerTitle>{draft.id ? '编辑' : '新建'}{draft.kind === 'progress' ? '进度目标' : '倒计时'}</DrawerTitle>
+            <DrawerTitle>
+              {draft.id ? '编辑' : '新建'}
+              {draft.kind === 'progress' ? '进度目标' : '倒计时'}
+            </DrawerTitle>
             <DrawerDescription>
               {draft.kind === 'progress'
                 ? '每一次加减都会自动留下一条足迹。'
@@ -319,8 +453,42 @@ export function GrowthDrawer({
 
           {!draft.id && (
             <div className="segmented">
-              <button type="button" className={draft.kind === 'progress' ? 'active' : ''} onClick={() => patch({ kind: 'progress' })}>进度</button>
-              <button type="button" className={draft.kind === 'countdown' ? 'active' : ''} onClick={() => patch({ kind: 'countdown' })}>倒计时</button>
+              <button
+                type="button"
+                className={draft.kind === 'countdown' ? 'active' : ''}
+                onClick={() => patch({ kind: 'countdown' })}
+              >
+                倒计时
+              </button>
+              <button
+                type="button"
+                className={draft.kind === 'progress' ? 'active' : ''}
+                onClick={() => patch({ kind: 'progress' })}
+              >
+                进度
+              </button>
+            </div>
+          )}
+
+          {draft.id && (
+            <div className="sort-actions" aria-label="调整卡片顺序">
+              <span>卡片顺序</span>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onMove(draft.kind, draft.id!, -1)}
+              >
+                <ArrowUp />
+                上移
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onMove(draft.kind, draft.id!, 1)}
+              >
+                <ArrowDown />
+                下移
+              </Button>
             </div>
           )}
 
@@ -329,7 +497,9 @@ export function GrowthDrawer({
             <Input
               value={draft.title}
               onChange={(event) => patch({ title: event.target.value })}
-              placeholder={draft.kind === 'progress' ? '例如：九月跑量' : '例如：去看演出'}
+              placeholder={
+                draft.kind === 'progress' ? '例如：九月跑量' : '例如：去看演出'
+              }
               maxLength={40}
             />
           </label>
@@ -340,7 +510,9 @@ export function GrowthDrawer({
               <Input
                 aria-label="使用 Emoji"
                 value={isSticker(draft.emoji) ? '' : draft.emoji}
-                onChange={(event) => patch({ emoji: event.target.value.slice(0, 4) || '🌱' })}
+                onChange={(event) =>
+                  patch({ emoji: event.target.value.slice(0, 4) || '🌱' })
+                }
                 placeholder="🌱"
               />
               <span>也可以从下面选择一张嘉然动态表情</span>
@@ -364,21 +536,59 @@ export function GrowthDrawer({
           {draft.kind === 'countdown' ? (
             <label className="field-label">
               目标日期
-              <Input type="date" value={draft.targetDate} onChange={(event) => patch({ targetDate: event.target.value })} />
+              <Input
+                type="date"
+                value={draft.targetDate}
+                onChange={(event) => patch({ targetDate: event.target.value })}
+              />
             </label>
           ) : (
             <div className="number-fields">
-              <label className="field-label">当前<Input type="number" min="0" step="any" value={draft.current} onChange={(event) => patch({ current: event.target.value })} /></label>
-              <label className="field-label">总目标<Input type="number" min="0.01" step="any" value={draft.total} onChange={(event) => patch({ total: event.target.value })} /></label>
-              <label className="field-label">单位<Input value={draft.unit} onChange={(event) => patch({ unit: event.target.value })} maxLength={8} /></label>
-              <label className="field-label">每次调整<Input type="number" min="0.01" step="any" value={draft.step} onChange={(event) => patch({ step: event.target.value })} /></label>
+              <label className="field-label">
+                当前
+                <Input
+                  type="number"
+                  min="0"
+                  step="any"
+                  value={draft.current}
+                  onChange={(event) => patch({ current: event.target.value })}
+                />
+              </label>
+              <label className="field-label">
+                总目标
+                <Input
+                  type="number"
+                  min="0.01"
+                  step="any"
+                  value={draft.total}
+                  onChange={(event) => patch({ total: event.target.value })}
+                />
+              </label>
+              <label className="field-label">
+                单位
+                <Input
+                  value={draft.unit}
+                  onChange={(event) => patch({ unit: event.target.value })}
+                  maxLength={8}
+                />
+              </label>
+              <label className="field-label">
+                每次调整
+                <Input
+                  type="number"
+                  min="0.01"
+                  step="any"
+                  value={draft.step}
+                  onChange={(event) => patch({ step: event.target.value })}
+                />
+              </label>
             </div>
           )}
 
-          {draft.kind === 'progress' && (
-            <fieldset className="color-picker">
-              <legend>卡片颜色</legend>
-              {(['#E799B0', '#DB7D74', '#576690'] as ProgressGoal['color'][]).map((color) => (
+          <fieldset className="color-picker">
+            <legend>卡片主题色</legend>
+            {(['#DB7D74', '#E799B0', '#576690'] as ProgressGoal['color'][]).map(
+              (color) => (
                 <button
                   key={color}
                   type="button"
@@ -387,16 +597,22 @@ export function GrowthDrawer({
                   aria-label={`选择颜色 ${color}`}
                   onClick={() => patch({ color })}
                 />
-              ))}
-            </fieldset>
-          )}
+              ),
+            )}
+          </fieldset>
 
           <label className="field-label">
             一句话（可选）
-            <Input value={draft.note} onChange={(event) => patch({ note: event.target.value })} maxLength={80} placeholder="写给自己看就好" />
+            <Input
+              value={draft.note}
+              onChange={(event) => patch({ note: event.target.value })}
+              maxLength={80}
+              placeholder="写给自己看就好"
+            />
           </label>
           <Button type="submit" size="lg" disabled={!draft.title.trim()}>
-            <Save />{draft.id ? '保存修改' : '开始记录'}
+            <Save />
+            {draft.id ? '保存修改' : '开始记录'}
           </Button>
         </form>
       </DrawerContent>
@@ -419,31 +635,60 @@ function MemoryDetailDrawer({
     <Drawer open={!!memory} onOpenChange={onOpenChange}>
       <DrawerContent className="sheet-drawer tall">
         {memory && (
-          <div className="drawer-inner memory-detail">
+          <div
+            className="drawer-inner memory-detail"
+            style={{ '--card-accent': memory.color } as CSSProperties}
+          >
             <DrawerHeader>
               <div className="memory-detail-title">
-                <Decoration value={memory.emoji} className="memory-detail-emoji" alt="成长纪念表情" />
+                <Decoration
+                  value={memory.emoji}
+                  className="memory-detail-emoji"
+                  alt="成长纪念表情"
+                />
                 <div>
                   <p>成长纪念</p>
                   <DrawerTitle>{memory.title}</DrawerTitle>
                 </div>
               </div>
-              <DrawerDescription>{memory.note || '这段认真走过的路，值得被记住。'}</DrawerDescription>
+              <DrawerDescription>
+                {memory.note || '这段认真走过的路，值得被记住。'}
+              </DrawerDescription>
             </DrawerHeader>
 
             <section className="memory-summary">
-              <div><small>最后走到</small><strong>{memory.current}/{memory.total} {memory.unit}</strong></div>
-              <div><small>记录时间</small><strong>{new Date(memory.startedAt).toLocaleDateString('zh-CN')} — {new Date(memory.endedAt).toLocaleDateString('zh-CN')}</strong></div>
+              <div>
+                <small>最后走到</small>
+                <strong>
+                  {memory.current}/{memory.total} {memory.unit}
+                </strong>
+              </div>
+              <div>
+                <small>记录时间</small>
+                <strong>
+                  {new Date(memory.startedAt).toLocaleDateString('zh-CN')} —{' '}
+                  {new Date(memory.endedAt).toLocaleDateString('zh-CN')}
+                </strong>
+              </div>
             </section>
 
             <section className="memory-footsteps">
-              <h3><Footprints />这一路的足迹</h3>
+              <h3>
+                <Footprints />
+                这一路的足迹
+              </h3>
               {memory.events.length ? (
                 <ol>
                   {memory.events.map((event) => (
                     <li key={event.id}>
-                      <span>{formatMoment(event.createdAt)}</span>
-                      <strong>{event.delta >= 0 ? '+' : ''}{event.delta} {memory.unit}</strong>
+                      <span className="footstep-copy">
+                        <span>{formatMoment(event.createdAt)}</span>
+                        {event.note && <small>{event.note}</small>}
+                      </span>
+                      <strong>
+                        {event.delta >= 0 ? '+' : ''}
+                        {event.delta} {memory.unit}
+                      </strong>
                       <small>累计 {event.valueAfter}</small>
                     </li>
                   ))}
@@ -454,8 +699,18 @@ function MemoryDetailDrawer({
             </section>
 
             <div className="memory-detail-actions">
-              <Button onClick={() => onCopy(memory)}><Copy />再来一期</Button>
-              <Button variant="ghost" className="danger-text" onClick={() => onDelete(memory)}><Trash2 />删除纪念</Button>
+              <Button onClick={() => onCopy(memory)}>
+                <Copy />
+                再来一期
+              </Button>
+              <Button
+                variant="ghost"
+                className="danger-text"
+                onClick={() => onDelete(memory)}
+              >
+                <Trash2 />
+                删除纪念
+              </Button>
             </div>
           </div>
         )}
@@ -464,3 +719,51 @@ function MemoryDetailDrawer({
   );
 }
 
+function ProgressNoteDrawer({
+  goal,
+  note,
+  onNoteChange,
+  onOpenChange,
+  onSave,
+}: {
+  goal: ProgressGoal | null;
+  note: string;
+  onNoteChange: (note: string) => void;
+  onOpenChange: (open: boolean) => void;
+  onSave: () => void;
+}) {
+  return (
+    <Drawer open={!!goal} onOpenChange={onOpenChange}>
+      <DrawerContent className="sheet-drawer">
+        {goal && (
+          <div className="drawer-inner stack-form progress-note-drawer">
+            <DrawerHeader>
+              <DrawerTitle>记下这一步</DrawerTitle>
+              <DrawerDescription>
+                会增加 {goal.step} {goal.unit}，也把这句话留在成长足迹里。
+              </DrawerDescription>
+            </DrawerHeader>
+            <label className="field-label">
+              这一步想记些什么？
+              <Input
+                value={note}
+                onChange={(event) => onNoteChange(event.target.value)}
+                maxLength={100}
+                placeholder="例如：今天状态不错，比昨天轻松一点"
+              />
+            </label>
+            <Button
+              type="button"
+              size="lg"
+              onClick={onSave}
+              disabled={!note.trim()}
+            >
+              <NotebookPen />
+              增加 {goal.step} {goal.unit} 并记下
+            </Button>
+          </div>
+        )}
+      </DrawerContent>
+    </Drawer>
+  );
+}
