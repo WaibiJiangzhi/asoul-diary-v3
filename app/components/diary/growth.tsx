@@ -91,8 +91,9 @@ export function GrowthView({
   const [memoryDrawerOpen, setMemoryDrawerOpen] = useState(false);
   const [countdownIndex, setCountdownIndex] = useState(0);
   const [progressIndex, setProgressIndex] = useState(0);
-  const [noteCountdown, setNoteCountdown] = useState<Countdown | null>(null);
-  const [countdownNote, setCountdownNote] = useState('');
+  const [countdownNotes, setCountdownNotes] = useState<Record<string, string>>(
+    {},
+  );
   const [countdownHistoryId, setCountdownHistoryId] = useState<string | null>(
     null,
   );
@@ -145,6 +146,7 @@ export function GrowthView({
             {state.countdowns.map((item, index) => {
               const days = daysUntil(item.targetDate);
               const latestNote = item.notes.at(-1);
+              const noteDraft = countdownNotes[item.id] ?? '';
               return (
                 <article
                   className={`paper-card countdown-card ${index === visibleCountdownIndex ? 'is-active' : ''}`}
@@ -179,17 +181,37 @@ export function GrowthView({
                       <time>{formatMoment(latestNote.createdAt)}</time>
                     </p>
                   )}
-                  <Button
-                    className="countdown-note-button"
-                    variant="outline"
-                    onClick={() => {
-                      setNoteCountdown(item);
-                      setCountdownNote('');
+                  <form
+                    className="countdown-note-entry"
+                    onSubmit={(event) => {
+                      event.preventDefault();
+                      const note = noteDraft.trim();
+                      if (!note) return;
+                      onAddCountdownNote(item.id, note);
+                      setCountdownNotes((current) => ({
+                        ...current,
+                        [item.id]: '',
+                      }));
                     }}
                   >
-                    <NotebookPen />
-                    写下今天的话
-                  </Button>
+                    <label>
+                      <NotebookPen aria-hidden="true" />
+                      <Input
+                        value={noteDraft}
+                        onChange={(event) =>
+                          setCountdownNotes((current) => ({
+                            ...current,
+                            [item.id]: event.target.value,
+                          }))
+                        }
+                        maxLength={120}
+                        aria-label={`给${item.title}写一条日子手记`}
+                      />
+                    </label>
+                    <Button type="submit" disabled={!noteDraft.trim()}>
+                      确认记录
+                    </Button>
+                  </form>
                   <Button
                     className="history-trigger"
                     variant="ghost"
@@ -320,23 +342,6 @@ export function GrowthView({
           onDeleteMemory(memory);
           setMemoryDrawerOpen(false);
           setSelectedMemory(null);
-        }}
-      />
-      <CountdownNoteDrawer
-        countdown={noteCountdown}
-        note={countdownNote}
-        onNoteChange={setCountdownNote}
-        onOpenChange={(open) => {
-          if (!open) {
-            setNoteCountdown(null);
-            setCountdownNote('');
-          }
-        }}
-        onSave={() => {
-          if (!noteCountdown) return;
-          onAddCountdownNote(noteCountdown.id, countdownNote);
-          setNoteCountdown(null);
-          setCountdownNote('');
         }}
       />
       <CountdownHistoryDrawer
@@ -1052,54 +1057,6 @@ function ProgressHistoryDrawer({
             ) : (
               <p className="history-empty">还没有成长足迹</p>
             )}
-          </div>
-        )}
-      </DrawerContent>
-    </Drawer>
-  );
-}
-
-function CountdownNoteDrawer({
-  countdown,
-  note,
-  onNoteChange,
-  onOpenChange,
-  onSave,
-}: {
-  countdown: Countdown | null;
-  note: string;
-  onNoteChange: (note: string) => void;
-  onOpenChange: (open: boolean) => void;
-  onSave: () => void;
-}) {
-  return (
-    <Drawer open={!!countdown} onOpenChange={onOpenChange}>
-      <DrawerContent className="sheet-drawer">
-        {countdown && (
-          <div className="drawer-inner stack-form countdown-note-drawer">
-            <DrawerHeader>
-              <DrawerTitle>写给期待的日子</DrawerTitle>
-              <DrawerDescription>
-                这句话会按时间留在“{countdown.title}”的日子手记里。
-              </DrawerDescription>
-            </DrawerHeader>
-            <label className="field-label">
-              今天想说些什么？
-              <Input
-                value={note}
-                onChange={(event) => onNoteChange(event.target.value)}
-                maxLength={120}
-              />
-            </label>
-            <Button
-              type="button"
-              size="lg"
-              onClick={onSave}
-              disabled={!note.trim()}
-            >
-              <NotebookPen />
-              留下今天这句话
-            </Button>
           </div>
         )}
       </DrawerContent>

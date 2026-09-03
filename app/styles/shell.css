@@ -85,7 +85,11 @@
   backdrop-filter: blur(3px);
 }
 .has-wallpaper .countdown-card,
-.has-wallpaper .progress-card,
+.has-wallpaper .progress-card {
+  border-color: transparent;
+  background: color-mix(in srgb, var(--card-accent) 9%, rgb(255 252 250 / 52%));
+  box-shadow: 0 14px 32px rgb(25 21 29 / 16%);
+}
 .has-wallpaper .memory-card {
   border-color: rgb(255 255 255 / 58%);
   background: color-mix(in srgb, var(--card-accent) 9%, rgb(255 252 250 / 52%));
@@ -144,7 +148,7 @@
 .has-wallpaper .save-state,
 .has-wallpaper .day-switcher button,
 .has-wallpaper .photo-heading p {
-  color: #5e5662;
+  color: #48414c;
   font-weight: 800;
 }
 .has-wallpaper .round-button {
@@ -165,48 +169,84 @@
   );
   backdrop-filter: blur(2px);
 }
-.has-wallpaper .eyebrow,
-.has-wallpaper .save-state,
 .has-wallpaper .day-switcher strong,
 .has-wallpaper .day-switcher small,
 .has-wallpaper .section-kicker,
 .has-wallpaper .progress-stamp,
-.has-wallpaper .completed-tasks > button,
-.has-wallpaper .all-done-note,
+.has-wallpaper .completed-tasks > button {
+  -webkit-text-stroke: 2px rgb(255 253 250 / 88%);
+  paint-order: stroke fill;
+  text-shadow: none;
+}
+.has-wallpaper .eyebrow,
 .has-wallpaper .countdown-date,
+.has-wallpaper .goal-top small,
+.has-wallpaper .diary-task-section li > i,
+.has-wallpaper .photo-add {
+  color: color-mix(in srgb, var(--theme-accent-deep), #312d35 26%);
+  font-weight: 900;
+  -webkit-text-stroke: 0;
+}
+.has-wallpaper .countdown-date {
+  color: color-mix(in srgb, var(--card-accent), #312d35 32%);
+}
 .has-wallpaper .countdown-copy p,
 .has-wallpaper .countdown-latest-note,
-.has-wallpaper .countdown-note-button,
+.has-wallpaper .countdown-latest-note time,
 .has-wallpaper .history-trigger,
-.has-wallpaper .goal-top small,
 .has-wallpaper .goal-top p,
 .has-wallpaper .goal-number span,
 .has-wallpaper .progress-adjust > label:first-child span,
 .has-wallpaper .progress-adjust > label:first-child small,
-.has-wallpaper .progress-adjust > [data-slot='button'],
 .has-wallpaper .progress-last-update,
 .has-wallpaper .finish-early,
 .has-wallpaper .journal-date-trigger small,
 .has-wallpaper .journal-word-count,
-.has-wallpaper .photo-add,
-.has-wallpaper .photo-heading p,
-.has-wallpaper .diary-task-section li > i {
-  -webkit-text-stroke: 2px rgb(255 253 250 / 88%);
-  paint-order: stroke fill;
+.has-wallpaper .photo-heading p {
+  color: #4f4853;
+  font-weight: 750;
+  -webkit-text-stroke: 0;
+  text-shadow: none;
+}
+.has-wallpaper .countdown-number span {
+  color: color-mix(in srgb, var(--card-accent), #312d35 34%);
+  font-weight: 900;
+}
+.has-wallpaper .all-done-note {
+  color: #356d5e;
+  font-weight: 800;
+}
+.has-wallpaper .progress-adjust > [data-slot='button'],
+.has-wallpaper .countdown-note-entry > [data-slot='button'] {
+  -webkit-text-stroke: 0;
+  font-weight: 900;
   text-shadow: none;
 }
 .has-wallpaper .task-row > [data-slot='button'],
 .has-wallpaper .sort-handle,
 .has-wallpaper .card-tools [data-slot='button'] {
-  color: #655e69 !important;
-  filter: drop-shadow(0 0 1px rgb(255 255 255 / 96%))
-    drop-shadow(0 0 2px rgb(255 255 255 / 82%));
+  color: #5d5661 !important;
+  filter: none;
   opacity: 1;
 }
 .has-wallpaper .task-row [data-slot='checkbox'] {
   border-color: rgb(79 72 82 / 56%);
   background: rgb(255 255 255 / 36%);
   box-shadow: 0 0 0 2px rgb(255 255 255 / 42%);
+}
+/* The text below sits directly on the wallpaper, so it keeps a crisp paper edge. */
+@supports not (-webkit-text-stroke: 1px white) {
+  .has-wallpaper .day-switcher strong,
+  .has-wallpaper .day-switcher small,
+  .has-wallpaper .section-kicker,
+  .has-wallpaper .progress-stamp,
+  .has-wallpaper .completed-tasks > button {
+    text-shadow:
+      -1px 0 rgb(255 253 250 / 88%),
+      1px 0 rgb(255 253 250 / 88%),
+      0 -1px rgb(255 253 250 / 88%),
+      0 1px rgb(255 253 250 / 88%);
+  }
 }
 
 .binding-holes {

@@ -657,10 +657,6 @@
   margin-top: 5px;
   font-size: 9px;
 }
-.countdown-note-drawer {
-  padding-top: 6px;
-}
-
 .history-trigger {
   display: flex;
   width: 100%;
@@ -965,18 +961,43 @@
   color: #9b929d;
   font-size: 9px;
 }
-.countdown-note-button {
-  width: 100%;
-  min-height: 41px;
+.countdown-note-entry {
+  display: grid;
+  gap: 8px;
   margin-top: 12px;
+}
+.countdown-note-entry > label {
+  display: grid;
+  min-height: 43px;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 7px;
+  padding: 4px 10px;
   border-color: color-mix(in srgb, var(--card-accent), white 65%);
+  border-style: solid;
+  border-width: 1px;
   border-radius: 13px;
   background: color-mix(in srgb, var(--card-accent), white 94%);
-  color: var(--card-accent);
-  font-size: 11px;
 }
-.countdown-note-button svg {
+.countdown-note-entry > label svg {
   width: 15px;
+  color: var(--card-accent);
+}
+.countdown-note-entry [data-slot='input'] {
+  height: 35px;
+  border: 0;
+  background: transparent;
+  color: #504953;
+  box-shadow: none;
+}
+.countdown-note-entry > [data-slot='button'] {
+  min-height: 41px;
+  border: 1px solid color-mix(in srgb, var(--card-accent), white 58%);
+  border-radius: 13px;
+  background: color-mix(in srgb, var(--card-accent), white 84%);
+  color: color-mix(in srgb, var(--card-accent), black 16%);
+  font-size: 11px;
+  font-weight: 900;
 }
 .countdown-notes {
   margin-top: 8px;
