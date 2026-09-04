@@ -300,7 +300,7 @@
 .journal-paper {
   position: relative;
   margin-top: 22px;
-  padding: 0 14px 32px;
+  padding: 0 14px 20px;
   border: 1px solid var(--theme-border);
   border-radius: 22px 17px 24px 19px;
   background: rgb(255 253 249 / 94%);
