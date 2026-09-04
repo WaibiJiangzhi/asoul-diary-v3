@@ -114,22 +114,30 @@ export function normalizeState(candidate: AppState): AppState {
     dailyTasks: candidate.dailyTasks ?? [],
     countdowns: (candidate.countdowns ?? []).map((item) => ({
       ...item,
+      emoji: item.emoji || '✨',
       notes: item.notes ?? [],
       color: item.color ?? '#E799B0',
     })),
     progressGoals: (candidate.progressGoals ?? []).map((goal) => ({
       ...goal,
+      emoji: goal.emoji || '✨',
       color: goal.color ?? '#E799B0',
       events: (goal.events ?? []).map((event) => ({
         ...event,
         note: event.note ?? '',
       })),
     })),
-    memories: candidate.memories ?? [],
+    memories: (candidate.memories ?? []).map((memory) => ({
+      ...memory,
+      emoji: memory.emoji || '✨',
+    })),
     diaries: (candidate.diaries ?? []).map((entry) => ({
       ...entry,
       taskSnapshots: entry.taskSnapshots ?? [],
-      growthSnapshots: entry.growthSnapshots ?? [],
+      growthSnapshots: (entry.growthSnapshots ?? []).map((snapshot) => ({
+        ...snapshot,
+        emoji: snapshot.emoji || '✨',
+      })),
     })),
     dateMarkers: candidate.dateMarkers ?? [],
     settings: {

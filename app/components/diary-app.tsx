@@ -21,6 +21,7 @@ import {
 import {
   createEmptyGrowthDraft,
   pickDailyEmoji,
+  pickGrowthEmoji,
   type GrowthDraft,
 } from '@/components/diary/constants';
 import { GrowthDrawer, GrowthView } from '@/components/diary/growth';
@@ -790,6 +791,7 @@ export default function DiaryApp() {
     setGrowthDraft({
       ...createEmptyGrowthDraft(),
       kind,
+      emoji: pickGrowthEmoji(),
       color: ACCENT_COLORS[stateRef.current?.settings.accent ?? 'jiaran'],
     });
     setGrowthOpen(true);
@@ -801,7 +803,7 @@ export default function DiaryApp() {
         ? {
             id: item.id,
             kind: 'countdown',
-            emoji: item.emoji,
+            emoji: item.emoji || pickGrowthEmoji(),
             title: item.title,
             targetDate: item.targetDate,
             current: '0',
@@ -814,7 +816,7 @@ export default function DiaryApp() {
         : {
             id: item.id,
             kind: 'progress',
-            emoji: item.emoji,
+            emoji: item.emoji || pickGrowthEmoji(),
             title: item.title,
             targetDate: moveDate(dateKey(), 30),
             current: String(item.current),
@@ -839,7 +841,7 @@ export default function DiaryApp() {
       const item: Countdown = {
         id: growthDraft.id ?? createId('countdown'),
         kind: 'countdown',
-        emoji: growthDraft.emoji,
+        emoji: growthDraft.emoji.trim() || pickGrowthEmoji(),
         title: growthDraft.title.trim(),
         targetDate: growthDraft.targetDate,
         note: growthDraft.note.trim(),
@@ -868,7 +870,7 @@ export default function DiaryApp() {
       const item: ProgressGoal = {
         id: growthDraft.id ?? createId('goal'),
         kind: 'progress',
-        emoji: growthDraft.emoji,
+        emoji: growthDraft.emoji.trim() || pickGrowthEmoji(),
         title: growthDraft.title.trim(),
         current: currentValue,
         total,

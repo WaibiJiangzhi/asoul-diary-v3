@@ -75,6 +75,22 @@ export function pickDailyEmoji() {
   return DAILY_EMOJIS[Math.floor(Math.random() * DAILY_EMOJIS.length)];
 }
 
+export const GROWTH_EMOJIS = [
+  '❤️',
+  '✨',
+  '☀️',
+  '🌙',
+  '🌸',
+  '🫧',
+  '📚',
+  '🎵',
+  '🏃',
+] as const;
+
+export function pickGrowthEmoji() {
+  return GROWTH_EMOJIS[Math.floor(Math.random() * GROWTH_EMOJIS.length)];
+}
+
 export const CARD_COLORS: { value: CardColor; label: string }[] = [
   { value: '#E799B0', label: '嘉然柔粉' },
   { value: '#DB7D74', label: '贝拉珊瑚红' },
@@ -90,7 +106,7 @@ export const CARD_COLORS: { value: CardColor; label: string }[] = [
 export function createEmptyGrowthDraft(): GrowthDraft {
   return {
     kind: 'progress',
-    emoji: '',
+    emoji: '✨',
     title: '',
     targetDate: moveDate(dateKey(), 30),
     current: '0',

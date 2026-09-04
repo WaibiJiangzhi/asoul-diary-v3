@@ -398,6 +398,31 @@
   font-size: 10px;
   line-height: 1.5;
 }
+.emoji-picker-panel {
+  display: grid;
+  gap: 10px;
+}
+.emoji-presets {
+  display: grid;
+  grid-template-columns: repeat(9, 1fr);
+  gap: 6px;
+}
+.emoji-presets button {
+  display: grid;
+  min-width: 0;
+  aspect-ratio: 1;
+  place-items: center;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  background: white;
+  font-size: 20px;
+}
+.emoji-presets button.active {
+  border-color: var(--card-accent);
+  background: color-mix(in srgb, var(--card-accent), white 91%);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--card-accent), transparent 80%);
+}
 .sticker-grid {
   display: grid;
   max-height: 268px;
@@ -810,6 +835,10 @@
   color: #3f3944;
   font-weight: 850;
 }
+.has-wallpaper .memory-open > span > small {
+  color: color-mix(in srgb, var(--card-accent), #29252d 46%);
+  font-weight: 900;
+}
 .memory-detail-actions {
   grid-template-columns: repeat(3, 1fr);
 }
@@ -818,11 +847,18 @@
   padding-inline: 7px;
   font-size: 10px;
 }
-.has-wallpaper .growth-section,
 .has-wallpaper .history-trigger,
 .has-wallpaper .progress-adjust,
 .has-wallpaper .memory-section {
-  border-width: 2px;
+  border-top-width: 1.5px;
+  border-right-width: 0;
+  border-bottom-width: 0;
+  border-left-width: 0;
+  border-color: color-mix(
+    in srgb,
+    var(--card-accent, var(--theme-accent-deep)),
+    transparent 48%
+  );
 }
 
 @media (max-width: 380px) {
@@ -904,7 +940,7 @@
   border-top: 1px solid var(--theme-border);
 }
 .decoration-modes {
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   margin-top: 11px;
 }
 .decoration-modes button {
@@ -1361,10 +1397,71 @@
   }
 }
 
-/* Keep the undecorated number optically balanced after final responsive sizing. */
-.countdown-main.no-decoration .countdown-number {
-  top: 54px;
+/* Final carousel geometry: center cards inside the writable area, not the binding. */
+.growth-view .growth-carousel {
+  width: 100%;
+  gap: 11px;
+  margin-inline: 0;
+  padding: 18px 12px 31px;
+  scroll-padding-inline: 12px;
 }
-.countdown-main.no-decoration .countdown-number span {
-  margin-top: 7px;
+.growth-view .growth-carousel > [data-carousel-card] {
+  width: 92%;
+  min-width: 92%;
+  flex-basis: 92%;
+}
+.growth-view .growth-carousel .paper-card.is-active {
+  border-width: 2px;
+  box-shadow:
+    0 0 0 2px color-mix(in srgb, var(--card-accent), transparent 79%),
+    0 9px 18px color-mix(in srgb, var(--card-accent), transparent 73%);
+}
+.has-wallpaper .growth-view .growth-carousel .paper-card.is-active {
+  box-shadow:
+    0 0 0 2px color-mix(in srgb, var(--card-accent), white 36%),
+    0 10px 20px rgb(29 24 34 / 22%);
+}
+
+/* Old/imported blank decorations still keep a safe, non-overlapping layout. */
+.countdown-main.no-decoration {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+.countdown-main.no-decoration .countdown-number {
+  position: static;
+  top: auto;
+  right: auto;
+}
+.countdown-main.no-decoration .countdown-copy {
+  padding-right: 0;
+}
+.goal-top.no-decoration {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.has-wallpaper .memory-all-button {
+  width: fit-content;
+  min-height: 34px;
+  margin: 9px auto 0;
+  padding-inline: 12px;
+  border-radius: 999px;
+  background: rgb(255 252 250 / 66%);
+  box-shadow: 0 5px 15px rgb(38 31 41 / 12%);
+  color: #3f3944;
+  font-weight: 900;
+  backdrop-filter: blur(4px);
+}
+
+@media (max-width: 380px) {
+  .emoji-presets {
+    grid-template-columns: repeat(5, 1fr);
+  }
+  .growth-view .growth-carousel {
+    padding-inline: 9px;
+    scroll-padding-inline: 9px;
+  }
+  .growth-view .growth-carousel > [data-carousel-card] {
+    width: 93%;
+    min-width: 93%;
+    flex-basis: 93%;
+  }
 }

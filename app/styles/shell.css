@@ -81,7 +81,7 @@
 .has-wallpaper .diary-page {
   background-color: transparent;
   background-image: none;
-  box-shadow: 0 0 70px rgb(32 26 36 / 18%);
+  box-shadow: none;
 }
 .has-wallpaper .binding-holes {
   opacity: 0.46;
@@ -98,6 +98,13 @@
   background: rgb(255 252 250 / 52%);
   box-shadow: 0 14px 34px rgb(34 27 38 / 14%);
   backdrop-filter: blur(3px);
+}
+.has-wallpaper .task-row,
+.has-wallpaper .journal-date-nav,
+.has-wallpaper .journal-paper,
+.has-wallpaper .diary-task-section {
+  border-width: 1px;
+  border-color: color-mix(in srgb, var(--theme-accent-deep), white 58%);
 }
 .has-wallpaper .countdown-card,
 .has-wallpaper .progress-card {
@@ -133,9 +140,9 @@
   background-image: repeating-linear-gradient(
     to bottom,
     transparent 0,
-    transparent 35px,
-    color-mix(in srgb, var(--theme-accent), transparent 50%) 35px,
-    color-mix(in srgb, var(--theme-accent), transparent 78%) 37px
+    transparent 34.5px,
+    color-mix(in srgb, var(--theme-accent), transparent 38%) 34.5px,
+    color-mix(in srgb, var(--theme-accent), transparent 38%) 36px
   );
   background-position-y: 3px;
   color: #39333d;

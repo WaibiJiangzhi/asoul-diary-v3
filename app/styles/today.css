@@ -8,7 +8,7 @@
 .day-switcher button {
   position: relative;
   display: flex;
-  min-height: 49px;
+  min-height: 41px;
   align-items: baseline;
   justify-content: center;
   gap: 7px;
@@ -201,9 +201,35 @@
   font-weight: 800;
   backdrop-filter: blur(3px);
 }
-.has-wallpaper .day-switcher,
+.has-wallpaper .day-switcher {
+  border-bottom: 1.5px solid color-mix(in srgb, var(--theme-accent), white 38%);
+}
 .has-wallpaper .completed-tasks {
-  border-width: 2px;
+  border-top: 1.5px dashed
+    color-mix(in srgb, var(--theme-accent-deep), transparent 52%);
+}
+.has-wallpaper .completed-tasks > button {
+  width: fit-content;
+  min-height: 34px;
+  gap: 13px;
+  margin-top: 8px;
+  padding: 0 11px;
+  border-radius: 999px;
+  background: rgb(255 252 250 / 66%);
+  box-shadow: 0 5px 15px rgb(38 31 41 / 12%);
+  color: #443e48;
+  font-weight: 900;
+  backdrop-filter: blur(4px);
+}
+.has-wallpaper .today-section > .gentle-empty {
+  width: fit-content;
+  min-width: min(250px, 82%);
+  margin: 18px auto;
+  padding: 15px 22px;
+  border-radius: 20px;
+  background: rgb(255 252 250 / 60%);
+  box-shadow: 0 8px 22px rgb(38 31 41 / 13%);
+  backdrop-filter: blur(4px);
 }
 
 .all-done-note {
