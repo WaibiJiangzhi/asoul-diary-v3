@@ -365,7 +365,10 @@ export function JournalView({
               </li>
             ))}
             {growthSnapshots.map((item) => (
-              <li className="diary-growth-snapshot" key={item.id}>
+              <li
+                className={`diary-growth-snapshot ${item.emoji ? '' : 'no-decoration'}`}
+                key={item.id}
+              >
                 <Decoration value={item.emoji} alt="成长记录表情" />
                 <span>
                   <strong>{item.title}</strong>
@@ -458,7 +461,10 @@ export function JournalView({
                     (entry) => entry.sourceId === sourceId,
                   );
                   return (
-                    <label key={`${item.id}:${sourceId}`}>
+                    <label
+                      className={item.emoji ? '' : 'no-decoration'}
+                      key={`${item.id}:${sourceId}`}
+                    >
                       <Decoration value={item.emoji} alt="倒计时表情" />
                       <strong>{item.title}</strong>
                       <Checkbox
@@ -478,7 +484,10 @@ export function JournalView({
                     (entry) => entry.sourceId === sourceId,
                   );
                   return (
-                    <label key={`${item.id}:${sourceId}`}>
+                    <label
+                      className={item.emoji ? '' : 'no-decoration'}
+                      key={`${item.id}:${sourceId}`}
+                    >
                       <Decoration value={item.emoji} alt="进度表情" />
                       <strong>{item.title}</strong>
                       <Checkbox

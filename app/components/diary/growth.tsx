@@ -38,12 +38,7 @@ import type {
   ProgressEvent,
   ProgressGoal,
 } from '@/lib/types';
-import {
-  CARD_COLORS,
-  GROWTH_EMOJIS,
-  JIARAN_STICKERS,
-  type GrowthDraft,
-} from './constants';
+import { CARD_COLORS, JIARAN_STICKERS, type GrowthDraft } from './constants';
 import { Decoration, isSticker } from './decoration';
 
 function syncCarouselIndex(
@@ -726,7 +721,11 @@ export function GrowthDrawer({
               <span>
                 <strong>卡片表情</strong>
                 <small>
-                  {decorationMode === 'emoji' ? 'Emoji' : '2026 嘉然动态表情'}
+                  {decorationMode === 'sticker'
+                    ? '2026 嘉然动态表情'
+                    : draft.emoji
+                      ? 'Emoji'
+                      : '留空'}
                 </small>
               </span>
               <Decoration
@@ -743,10 +742,7 @@ export function GrowthDrawer({
                   className={decorationMode === 'emoji' ? 'active' : ''}
                   onClick={() =>
                     patch({
-                      emoji:
-                        draft.emoji && !isSticker(draft.emoji)
-                          ? draft.emoji
-                          : '✨',
+                      emoji: isSticker(draft.emoji) ? '' : draft.emoji,
                     })
                   }
                 >
@@ -768,32 +764,17 @@ export function GrowthDrawer({
               </div>
 
               {decorationMode === 'emoji' && (
-                <div className="emoji-picker-panel">
-                  <div className="emoji-presets" aria-label="温馨 Emoji">
-                    {GROWTH_EMOJIS.map((emoji) => (
-                      <button
-                        type="button"
-                        key={emoji}
-                        className={draft.emoji === emoji ? 'active' : ''}
-                        aria-label={`选择 ${emoji}`}
-                        onClick={() => patch({ emoji })}
-                      >
-                        {emoji}
-                      </button>
-                    ))}
-                  </div>
-                  <div className="emoji-choice">
-                    <Input
-                      aria-label="使用其他 Emoji"
-                      value={draft.emoji}
-                      onChange={(event) =>
-                        patch({
-                          emoji: event.target.value.slice(0, 12) || '✨',
-                        })
-                      }
-                    />
-                    <span>也可点输入框，用手机 Emoji 键盘更换。</span>
-                  </div>
+                <div className="emoji-choice">
+                  <Input
+                    aria-label="使用 Emoji，可留空"
+                    value={draft.emoji}
+                    placeholder="Emoji"
+                    onFocus={(event) => event.currentTarget.select()}
+                    onChange={(event) =>
+                      patch({ emoji: event.target.value.slice(0, 12) })
+                    }
+                  />
+                  <span>可留空，也可用手机 Emoji 键盘输入。</span>
                 </div>
               )}
 

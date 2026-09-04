@@ -144,7 +144,7 @@
     color-mix(in srgb, var(--theme-accent), transparent 38%) 34.5px,
     color-mix(in srgb, var(--theme-accent), transparent 38%) 36px
   );
-  background-position-y: 3px;
+  background-position-y: 0;
   color: #39333d;
   font-weight: 600;
   text-shadow: none;

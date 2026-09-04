@@ -398,31 +398,6 @@
   font-size: 10px;
   line-height: 1.5;
 }
-.emoji-picker-panel {
-  display: grid;
-  gap: 10px;
-}
-.emoji-presets {
-  display: grid;
-  grid-template-columns: repeat(9, 1fr);
-  gap: 6px;
-}
-.emoji-presets button {
-  display: grid;
-  min-width: 0;
-  aspect-ratio: 1;
-  place-items: center;
-  padding: 0;
-  border: 1px solid transparent;
-  border-radius: 12px;
-  background: white;
-  font-size: 20px;
-}
-.emoji-presets button.active {
-  border-color: var(--card-accent);
-  background: color-mix(in srgb, var(--card-accent), white 91%);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--card-accent), transparent 80%);
-}
 .sticker-grid {
   display: grid;
   max-height: 268px;
@@ -629,9 +604,9 @@
   border-radius: 15px;
 }
 .memory-all-button {
-  width: 100%;
+  width: fit-content;
   min-height: 42px;
-  margin-top: 8px;
+  margin: 8px auto 0;
   color: var(--theme-accent-deep);
   font-size: 11px;
 }
@@ -893,6 +868,9 @@
   padding: 8px 12px;
   cursor: pointer;
   list-style: none;
+}
+.decoration-picker > summary:not(:has(.decoration-preview)) {
+  grid-template-columns: minmax(0, 1fr) 20px;
 }
 .decoration-picker > summary::-webkit-details-marker {
   display: none;
@@ -1439,9 +1417,7 @@
 }
 
 .has-wallpaper .memory-all-button {
-  width: fit-content;
   min-height: 34px;
-  margin: 9px auto 0;
   padding-inline: 12px;
   border-radius: 999px;
   background: rgb(255 252 250 / 66%);
@@ -1452,9 +1428,6 @@
 }
 
 @media (max-width: 380px) {
-  .emoji-presets {
-    grid-template-columns: repeat(5, 1fr);
-  }
   .growth-view .growth-carousel {
     padding-inline: 9px;
     scroll-padding-inline: 9px;

@@ -209,10 +209,7 @@
     color-mix(in srgb, var(--theme-accent-deep), transparent 52%);
 }
 .has-wallpaper .completed-tasks > button {
-  width: fit-content;
   min-height: 34px;
-  gap: 13px;
-  margin-top: 8px;
   padding: 0 11px;
   border-radius: 999px;
   background: rgb(255 252 250 / 66%);
@@ -250,10 +247,12 @@
 }
 .completed-tasks > button {
   display: flex;
-  width: 100%;
+  width: fit-content;
   min-height: 45px;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
+  gap: 13px;
+  margin: 8px auto 0;
   padding: 0 5px;
   border: 0;
   background: transparent;
