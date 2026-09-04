@@ -569,6 +569,7 @@ body:has(.photo-viewer) [data-slot='dialog-overlay'] {
 .diary-task-section li > i {
   color: var(--theme-accent-deep);
   font-size: 9px;
+  font-weight: 750;
   font-style: normal;
 }
 .diary-task-section li.diary-growth-snapshot {
@@ -602,6 +603,7 @@ body:has(.photo-viewer) [data-slot='dialog-overlay'] {
   margin-top: 2px;
   color: #756e78;
   font-size: 9px;
+  font-weight: 700;
   line-height: 1.35;
   text-overflow: ellipsis;
   white-space: nowrap;
