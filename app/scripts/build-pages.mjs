@@ -1,6 +1,7 @@
 import { existsSync, rmSync, statSync } from 'node:fs';
 import { spawn } from 'node:child_process';
 import { resolve } from 'node:path';
+import { stampServiceWorker } from './stamp-service-worker.mjs';
 
 const outputDirectory = resolve('dist');
 const entryFile = resolve(outputDirectory, 'client', 'index.html');
@@ -32,7 +33,10 @@ child.on('error', (error) => {
 });
 
 child.on('close', (code) => {
-  if (code === 0) return;
+  if (code === 0) {
+    stampServiceWorker();
+    return;
+  }
 
   const outputIsComplete =
     buildOutput.includes('Build complete.') &&
@@ -40,6 +44,7 @@ child.on('close', (code) => {
     statSync(entryFile).size > 0;
 
   if (outputIsComplete) {
+    stampServiceWorker();
     console.warn(
       'Static export completed; ignoring the known Vinext Windows shutdown error.',
     );

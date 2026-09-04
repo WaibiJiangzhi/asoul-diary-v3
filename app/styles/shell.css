@@ -358,6 +358,7 @@
   background: var(--destructive);
 }
 .round-button {
+  position: relative;
   width: 44px;
   height: 44px;
   border: 0;
@@ -369,6 +370,18 @@
 .round-button:active {
   background: var(--theme-soft);
   transform: scale(0.96);
+}
+.round-button.has-update::after {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 9px;
+  height: 9px;
+  border: 2px solid var(--paper);
+  border-radius: 50%;
+  background: var(--theme-accent);
+  box-shadow: 0 2px 7px var(--theme-shadow);
+  content: '';
 }
 
 .view-stack {
@@ -629,6 +642,11 @@
 .toast [data-slot='button'] {
   color: var(--theme-accent-deep);
 }
+.update-toast [data-slot='button'] {
+  flex: 0 0 auto;
+  border-radius: 12px;
+  background: var(--theme-soft);
+}
 @keyframes toast-in {
   from {
     transform: translateY(12px);
@@ -708,6 +726,38 @@ html:has(.settings-backdrop.is-open) {
   display: grid;
   gap: 15px;
   padding: 0 16px max(28px, env(safe-area-inset-bottom));
+}
+.settings-update {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 13px;
+  border: 1px solid color-mix(in srgb, var(--theme-accent), white 58%);
+  border-radius: 18px;
+  background: var(--theme-faint);
+  box-shadow: 0 8px 22px var(--theme-shadow);
+}
+.settings-update span,
+.settings-update strong,
+.settings-update small {
+  display: block;
+}
+.settings-update strong {
+  font-size: 12px;
+}
+.settings-update small {
+  margin-top: 3px;
+  color: var(--soft-ink);
+  font-size: 9px;
+}
+.settings-update [data-slot='button'] {
+  min-height: 38px;
+  flex: 0 0 auto;
+  border-radius: 12px;
+  background: var(--theme-accent);
+  color: white;
+  font-size: 10px;
 }
 .settings-section {
   padding: 15px;

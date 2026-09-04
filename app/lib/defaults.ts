@@ -47,6 +47,14 @@ export const WALLPAPERS = [
   '/wallpapers/nailin-9.webp',
 ] as const;
 
+// Keep the persisted wallpaper value stable while changing the requested URL
+// whenever bundled wallpaper artwork is replaced under the same filename.
+export const WALLPAPER_ASSET_VERSION = '2026-09-04-1';
+
+export function wallpaperAssetUrl(wallpaper: string) {
+  return `${wallpaper}?v=${WALLPAPER_ASSET_VERSION}`;
+}
+
 export function createId(prefix = 'item') {
   const id =
     globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random()}`;

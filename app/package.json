@@ -8,6 +8,7 @@
   "scripts": {
     "dev": "vinext dev",
     "build": "vinext build",
+    "postbuild": "node scripts/stamp-service-worker.mjs",
     "build:pages": "node scripts/build-pages.mjs",
     "start": "vinext start",
     "lint": "oxlint",

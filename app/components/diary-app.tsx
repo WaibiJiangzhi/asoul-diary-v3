@@ -4,7 +4,7 @@
 
 import type { ChangeEvent, CSSProperties, SyntheticEvent } from 'react';
 import { useEffect, useRef, useState } from 'react';
-import { Candy, IceCreamBowl, RotateCcw, Star } from 'lucide-react';
+import { Candy, IceCreamBowl, RefreshCw, RotateCcw, Star } from 'lucide-react';
 import { createPortal } from 'react-dom';
 
 import { Button } from '@/components/ui/button';
@@ -30,7 +30,12 @@ import {
   TodayDrawer,
   TodayView,
 } from '@/components/diary/today';
-import { ACCENT_COLORS, createDefaultState, createId } from '@/lib/defaults';
+import {
+  ACCENT_COLORS,
+  createDefaultState,
+  createId,
+  wallpaperAssetUrl,
+} from '@/lib/defaults';
 import { dateKey, formatShortDate, moveDate } from '@/lib/date';
 import {
   clearAllData,
@@ -116,9 +121,13 @@ export default function DiaryApp() {
   >('saved');
   const [installPrompt, setInstallPrompt] =
     useState<BeforeInstallPromptEvent | null>(null);
+  const [waitingServiceWorker, setWaitingServiceWorker] =
+    useState<ServiceWorker | null>(null);
+  const [updateNoticeVisible, setUpdateNoticeVisible] = useState(false);
   const stateRef = useRef<AppState | null>(null);
   const storageAvailable = useRef(true);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const updateNoticeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const loaded = useRef(false);
   const isReady = state !== null;
   const activeAccent = state?.settings.accent;
@@ -207,12 +216,98 @@ export default function DiaryApp() {
       setInstallPrompt(event as BeforeInstallPromptEvent);
     };
     window.addEventListener('beforeinstallprompt', handleInstall);
-    if ('serviceWorker' in navigator && process.env.NODE_ENV === 'production') {
-      void navigator.serviceWorker.register('/sw.js');
-    }
     void navigator.storage?.persist?.();
     return () =>
       window.removeEventListener('beforeinstallprompt', handleInstall);
+  }, []);
+
+  useEffect(() => {
+    if (
+      !('serviceWorker' in navigator) ||
+      process.env.NODE_ENV !== 'production'
+    ) {
+      return;
+    }
+
+    let disposed = false;
+    let registration: ServiceWorkerRegistration | null = null;
+    let updateCheckTimer: ReturnType<typeof setInterval> | null = null;
+    const workerListeners: Array<{
+      worker: ServiceWorker;
+      listener: () => void;
+    }> = [];
+    const hadController = Boolean(navigator.serviceWorker.controller);
+
+    const announceUpdate = (worker: ServiceWorker) => {
+      if (disposed) return;
+      setWaitingServiceWorker(worker);
+      setUpdateNoticeVisible(true);
+      if (updateNoticeTimer.current) {
+        clearTimeout(updateNoticeTimer.current);
+      }
+      updateNoticeTimer.current = setTimeout(
+        () => setUpdateNoticeVisible(false),
+        8000,
+      );
+    };
+
+    const watchInstallingWorker = () => {
+      const worker = registration?.installing;
+      if (!worker) return;
+      const handleStateChange = () => {
+        if (
+          worker.state === 'installed' &&
+          navigator.serviceWorker.controller
+        ) {
+          announceUpdate(worker);
+        }
+      };
+      worker.addEventListener('statechange', handleStateChange);
+      workerListeners.push({ worker, listener: handleStateChange });
+    };
+
+    const handleControllerChange = () => {
+      if (hadController) window.location.reload();
+    };
+    const checkForUpdate = () => {
+      if (document.visibilityState === 'visible') void registration?.update();
+    };
+    navigator.serviceWorker.addEventListener(
+      'controllerchange',
+      handleControllerChange,
+    );
+    document.addEventListener('visibilitychange', checkForUpdate);
+
+    void navigator.serviceWorker
+      .register('/sw.js', { updateViaCache: 'none' })
+      .then((nextRegistration) => {
+        if (disposed) return;
+        registration = nextRegistration;
+        if (registration.waiting) announceUpdate(registration.waiting);
+        registration.addEventListener('updatefound', watchInstallingWorker);
+        void registration.update();
+        updateCheckTimer = setInterval(checkForUpdate, 60 * 60 * 1000);
+      })
+      .catch(() => {
+        // The diary still works as a normal website when PWA updates are unavailable.
+      });
+
+    return () => {
+      disposed = true;
+      navigator.serviceWorker.removeEventListener(
+        'controllerchange',
+        handleControllerChange,
+      );
+      registration?.removeEventListener('updatefound', watchInstallingWorker);
+      document.removeEventListener('visibilitychange', checkForUpdate);
+      workerListeners.forEach(({ worker, listener }) =>
+        worker.removeEventListener('statechange', listener),
+      );
+      if (updateCheckTimer) clearInterval(updateCheckTimer);
+      if (updateNoticeTimer.current) {
+        clearTimeout(updateNoticeTimer.current);
+      }
+    };
   }, []);
 
   useEffect(() => {
@@ -395,6 +490,23 @@ export default function DiaryApp() {
     if (toastTimer.current) clearTimeout(toastTimer.current);
     setToast({ message, undo });
     toastTimer.current = setTimeout(() => setToast(null), undo ? 5200 : 3000);
+  }
+
+  async function applyReadyUpdate() {
+    const worker = waitingServiceWorker;
+    if (!worker) return;
+
+    setUpdateNoticeVisible(false);
+    if (stateRef.current && storageAvailable.current) {
+      try {
+        await saveState(stateRef.current);
+        setSaveStatus('saved');
+      } catch {
+        storageAvailable.current = false;
+        setSaveStatus('unavailable');
+      }
+    }
+    worker.postMessage({ type: 'SKIP_WAITING' });
   }
 
   function haptic() {
@@ -1374,7 +1486,7 @@ export default function DiaryApp() {
   const wallpaperStyle =
     state.settings.theme === 'wallpaper'
       ? ({
-          '--selected-wallpaper': `url("${state.settings.wallpaper}")`,
+          '--selected-wallpaper': `url("${wallpaperAssetUrl(state.settings.wallpaper)}")`,
         } as CSSProperties)
       : undefined;
 
@@ -1387,6 +1499,7 @@ export default function DiaryApp() {
         <PaperBinding />
         <AppHeader
           saveStatus={saveStatus}
+          updateAvailable={Boolean(waitingServiceWorker)}
           onOpenSettings={() => setSettingsOpen(true)}
         />
 
@@ -1480,6 +1593,8 @@ export default function DiaryApp() {
         onImport={importData}
         onClear={clearData}
         onInstall={installApp}
+        updateAvailable={Boolean(waitingServiceWorker)}
+        onApplyUpdate={() => void applyReadyUpdate()}
       />
 
       <ConfirmDialog
@@ -1507,6 +1622,22 @@ export default function DiaryApp() {
                 <RotateCcw aria-hidden="true" /> 撤销
               </Button>
             )}
+          </output>,
+          document.body,
+        )}
+      {waitingServiceWorker &&
+        updateNoticeVisible &&
+        !toast &&
+        createPortal(
+          <output
+            className={`toast update-toast theme-${state.settings.accent}`}
+            aria-live="polite"
+          >
+            <span>新版本已经准备好</span>
+            <Button size="sm" onClick={() => void applyReadyUpdate()}>
+              <RefreshCw aria-hidden="true" />
+              立即更新
+            </Button>
           </output>,
           document.body,
         )}

@@ -1,4 +1,5 @@
-const CACHE_NAME = 'asoul-diary-v3-shell-8';
+const SHELL_CACHE = 'asoul-diary-v3-shell-__ASOUL_BUILD_VERSION__';
+const WALLPAPER_CACHE = 'asoul-diary-v3-wallpapers';
 const APP_SHELL = [
   '/',
   '/manifest.webmanifest?v=4',
@@ -8,9 +9,8 @@ const APP_SHELL = [
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL)),
+    caches.open(SHELL_CACHE).then((cache) => cache.addAll(APP_SHELL)),
   );
-  self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
@@ -20,12 +20,19 @@ self.addEventListener('activate', (event) => {
       .then((keys) =>
         Promise.all(
           keys
-            .filter((key) => key !== CACHE_NAME)
+            .filter(
+              (key) =>
+                key.startsWith('asoul-diary-v3-shell-') && key !== SHELL_CACHE,
+            )
             .map((key) => caches.delete(key)),
         ),
-      ),
+      )
+      .then(() => self.clients.claim()),
   );
-  self.clients.claim();
+});
+
+self.addEventListener('message', (event) => {
+  if (event.data?.type === 'SKIP_WAITING') self.skipWaiting();
 });
 
 self.addEventListener('fetch', (event) => {
@@ -39,10 +46,40 @@ self.addEventListener('fetch', (event) => {
       fetch(request)
         .then((response) => {
           const copy = response.clone();
-          void caches.open(CACHE_NAME).then((cache) => cache.put('/', copy));
+          void caches.open(SHELL_CACHE).then((cache) => cache.put('/', copy));
           return response;
         })
         .catch(() => caches.match('/')),
+    );
+    return;
+  }
+
+  // Wallpaper URLs carry their own artwork version. Cache each version once,
+  // and discard an older version of the same friendly filename on replacement.
+  if (url.pathname.startsWith('/wallpapers/')) {
+    event.respondWith(
+      caches.open(WALLPAPER_CACHE).then(async (cache) => {
+        const cached = await cache.match(request);
+        if (cached) return cached;
+
+        const response = await fetch(request);
+        if (response.ok) {
+          const cachedRequests = await cache.keys();
+          await Promise.all(
+            cachedRequests
+              .filter((cachedRequest) => {
+                const cachedUrl = new URL(cachedRequest.url);
+                return (
+                  cachedUrl.pathname === url.pathname &&
+                  cachedRequest.url !== request.url
+                );
+              })
+              .map((cachedRequest) => cache.delete(cachedRequest)),
+          );
+          await cache.put(request, response.clone());
+        }
+        return response;
+      }),
     );
     return;
   }
@@ -54,7 +91,7 @@ self.addEventListener('fetch', (event) => {
         if (response.ok) {
           const copy = response.clone();
           void caches
-            .open(CACHE_NAME)
+            .open(SHELL_CACHE)
             .then((cache) => cache.put(request, copy));
         }
         return response;

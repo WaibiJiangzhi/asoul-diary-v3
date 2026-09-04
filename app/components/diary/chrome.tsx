@@ -9,6 +9,7 @@ import {
   Check,
   Download,
   FileUp,
+  RefreshCw,
   Settings,
   Smartphone,
   Sprout,
@@ -17,7 +18,7 @@ import {
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
-import { ACCENT_THEMES, WALLPAPERS } from '@/lib/defaults';
+import { ACCENT_THEMES, WALLPAPERS, wallpaperAssetUrl } from '@/lib/defaults';
 import type { AppState, AppTab } from '@/lib/types';
 
 export function PaperBinding() {
@@ -32,9 +33,11 @@ export function PaperBinding() {
 
 export function AppHeader({
   saveStatus,
+  updateAvailable,
   onOpenSettings,
 }: {
   saveStatus: 'saved' | 'saving' | 'unavailable';
+  updateAvailable: boolean;
   onOpenSettings: () => void;
 }) {
   const saveLabel =
@@ -56,10 +59,10 @@ export function AppHeader({
         </div>
       </div>
       <Button
-        className="round-button"
+        className={`round-button ${updateAvailable ? 'has-update' : ''}`}
         variant="ghost"
         size="icon"
-        aria-label="打开设置"
+        aria-label={updateAvailable ? '打开设置，有新版本' : '打开设置'}
         onClick={onOpenSettings}
       >
         <Settings aria-hidden="true" />
@@ -77,6 +80,8 @@ export function SettingsDrawer({
   onImport,
   onClear,
   onInstall,
+  updateAvailable,
+  onApplyUpdate,
 }: {
   state: AppState;
   open: boolean;
@@ -86,6 +91,8 @@ export function SettingsDrawer({
   onImport: (event: ChangeEvent<HTMLInputElement>) => void;
   onClear: () => void;
   onInstall: () => void;
+  updateAvailable: boolean;
+  onApplyUpdate: () => void;
 }) {
   const setSettings = (patch: Partial<AppState['settings']>) => {
     onStateChange(
@@ -121,6 +128,19 @@ export function SettingsDrawer({
         </div>
 
         <div className="settings-sheet">
+          {updateAvailable && (
+            <section className="settings-update" aria-live="polite">
+              <span>
+                <strong>新版本已经准备好</strong>
+                <small>更新后会自动重新打开这本日记。</small>
+              </span>
+              <Button onClick={onApplyUpdate}>
+                <RefreshCw aria-hidden="true" />
+                立即更新
+              </Button>
+            </section>
+          )}
+
           <section className="settings-section">
             <h3>主题色</h3>
             <p className="setting-note">
@@ -179,7 +199,7 @@ export function SettingsDrawer({
                   onClick={() => setSettings({ theme: 'wallpaper', wallpaper })}
                 >
                   <Image
-                    src={wallpaper}
+                    src={wallpaperAssetUrl(wallpaper)}
                     alt={`壁纸 ${index + 1}`}
                     fill
                     sizes="(max-width: 560px) 30vw, 170px"
