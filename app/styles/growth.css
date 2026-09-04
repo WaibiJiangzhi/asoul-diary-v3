@@ -1398,9 +1398,9 @@
     0 9px 18px color-mix(in srgb, var(--card-accent), transparent 73%);
 }
 .has-wallpaper .growth-view .growth-carousel .paper-card.is-active {
-  box-shadow:
-    0 0 0 2px color-mix(in srgb, var(--card-accent), white 36%),
-    0 10px 20px rgb(29 24 34 / 22%);
+  border-width: 3px;
+  border-color: color-mix(in srgb, var(--card-accent), white 18%);
+  box-shadow: 0 10px 20px rgb(29 24 34 / 22%);
 }
 
 /* Old/imported blank decorations still keep a safe, non-overlapping layout. */

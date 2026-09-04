@@ -218,6 +218,9 @@
   font-weight: 900;
   backdrop-filter: blur(4px);
 }
+.has-wallpaper .completed-tasks > button[aria-expanded='true'] + .completed-list {
+  margin-top: 8px;
+}
 .has-wallpaper .today-section > .gentle-empty {
   width: fit-content;
   min-width: min(250px, 82%);
