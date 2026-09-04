@@ -193,14 +193,25 @@
   box-shadow: 0 0 0 3px var(--theme-glow);
 }
 .calendar-marker-picker .clear-marker {
-  min-height: 29px;
-  min-width: 42px;
+  min-height: 31px;
+  min-width: 48px;
   justify-self: center;
-  padding: 0 5px;
-  border: 0;
-  background: transparent;
-  color: #817984;
+  padding: 0 9px;
+  border: 1px solid var(--theme-border);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--theme-accent), white 92%);
+  color: var(--theme-accent-deep);
   font-size: 10px;
+  font-weight: 800;
+  transition:
+    background 160ms ease,
+    opacity 160ms ease;
+}
+.calendar-marker-picker .clear-marker:not(:disabled):hover {
+  background: color-mix(in srgb, var(--theme-accent), white 84%);
+}
+.calendar-marker-picker .clear-marker:disabled {
+  opacity: 0.38;
 }
 
 .recent-diaries {
@@ -299,7 +310,7 @@
   width: 100%;
   min-height: 396px;
   resize: none;
-  padding: 24px 0 9px;
+  padding: 9px 0;
   border: 0;
   outline: 0;
   background-image: repeating-linear-gradient(
@@ -517,9 +528,14 @@ body:has(.photo-viewer) [data-slot='dialog-overlay'] {
 }
 .diary-task-heading [data-slot='button'] {
   min-height: 38px;
+  border-color: color-mix(in srgb, var(--theme-accent), white 68%);
   border-radius: 13px;
+  background: var(--theme-soft);
   color: var(--theme-accent-deep);
   font-size: 10px;
+}
+.diary-task-heading [data-slot='button']:hover {
+  background: color-mix(in srgb, var(--theme-accent), white 82%);
 }
 .diary-task-heading svg {
   width: 15px;

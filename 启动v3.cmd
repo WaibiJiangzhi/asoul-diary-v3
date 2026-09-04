@@ -10,8 +10,8 @@ if not exist node_modules goto install
 goto check_running
 
 :check_running
-powershell.exe -NoProfile -Command "$listener = [System.Net.Sockets.TcpListener]::new([System.Net.IPAddress]::Loopback, %APP_PORT%); try { $listener.Start(); $listener.Stop(); exit 0 } catch { exit 1 }"
-if errorlevel 1 goto already_running
+powershell.exe -NoProfile -Command "$connection = Get-NetTCPConnection -LocalAddress 127.0.0.1 -LocalPort %APP_PORT% -State Listen -ErrorAction SilentlyContinue | Select-Object -First 1; if (-not $connection) { exit 0 }; try { $response = Invoke-WebRequest -Uri 'http://127.0.0.1:%APP_PORT%/' -UseBasicParsing -TimeoutSec 3; if ($response.Content -notmatch '<title>Asoul') { exit 2 }; Stop-Process -Id $connection.OwningProcess -Force; Start-Sleep -Milliseconds 650; exit 0 } catch { exit 2 }"
+if errorlevel 2 goto port_in_use
 goto build
 
 :install
@@ -29,10 +29,10 @@ start "" /b powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidde
 call npm.cmd run start -- --port %APP_PORT% --hostname 127.0.0.1
 goto stopped
 
-:already_running
-echo Asoul Diary v3 is already running. Opening it now...
-start "" "http://127.0.0.1:%APP_PORT%/"
-goto done
+:port_in_use
+echo Port %APP_PORT% is being used by another application.
+echo Close that application, then run this launcher again.
+goto hold
 
 :no_node
 echo Node.js was not found. Please install Node.js 22 or newer.
@@ -45,10 +45,6 @@ goto hold
 :stopped
 echo The local server has stopped.
 goto hold
-
-:done
-endlocal
-exit /b 0
 
 :hold
 pause

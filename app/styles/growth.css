@@ -604,6 +604,7 @@
   border-radius: 15px;
 }
 .memory-all-button {
+  display: flex;
   width: fit-content;
   min-height: 42px;
   margin: 8px auto 0;

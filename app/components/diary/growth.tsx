@@ -768,7 +768,6 @@ export function GrowthDrawer({
                   <Input
                     aria-label="使用 Emoji，可留空"
                     value={draft.emoji}
-                    placeholder="Emoji"
                     onFocus={(event) => event.currentTarget.select()}
                     onChange={(event) =>
                       patch({ emoji: event.target.value.slice(0, 12) })
