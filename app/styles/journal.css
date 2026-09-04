@@ -193,8 +193,10 @@
   box-shadow: 0 0 0 3px var(--theme-glow);
 }
 .calendar-marker-picker .clear-marker {
+  display: grid;
   min-height: 31px;
   min-width: 48px;
+  place-items: center;
   justify-self: center;
   padding: 0 9px;
   border: 1px solid var(--theme-border);
@@ -203,6 +205,7 @@
   color: var(--theme-accent-deep);
   font-size: 10px;
   font-weight: 800;
+  line-height: 1;
   transition:
     background 160ms ease,
     opacity 160ms ease;
