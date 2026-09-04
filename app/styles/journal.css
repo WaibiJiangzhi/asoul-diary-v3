@@ -199,7 +199,7 @@
   padding: 0 9px;
   border: 1px solid var(--theme-border);
   border-radius: 999px;
-  background: color-mix(in srgb, var(--theme-accent), white 92%);
+  background: transparent;
   color: var(--theme-accent-deep);
   font-size: 10px;
   font-weight: 800;
@@ -310,7 +310,7 @@
   width: 100%;
   min-height: 396px;
   resize: none;
-  padding: 9px 0;
+  padding: 14px 0 7px;
   border: 0;
   outline: 0;
   background-image: repeating-linear-gradient(
@@ -320,7 +320,7 @@
     color-mix(in srgb, var(--theme-accent), transparent 58%) 34.5px,
     color-mix(in srgb, var(--theme-accent), transparent 58%) 36px
   );
-  background-position-y: 0;
+  background-position-y: -5px;
   background-origin: content-box;
   background-clip: content-box;
   background-attachment: local;
