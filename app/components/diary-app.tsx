@@ -4,7 +4,8 @@
 
 import type { ChangeEvent, CSSProperties, SyntheticEvent } from 'react';
 import { useEffect, useRef, useState } from 'react';
-import { RotateCcw, Sparkles } from 'lucide-react';
+import { Candy, IceCreamBowl, RotateCcw, Star } from 'lucide-react';
+import { createPortal } from 'react-dom';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -43,6 +44,7 @@ import {
 import type {
   AppState,
   AppTab,
+  CardColor,
   CommonItem,
   Countdown,
   CountdownNote,
@@ -51,8 +53,9 @@ import type {
   GrowthMemory,
   ProgressEvent,
   ProgressGoal,
-  V3Backup,
+  DiaryBackup,
 } from '@/lib/types';
+import { prepareLoadedState } from '@/lib/state';
 
 declare global {
   interface Document {
@@ -122,7 +125,8 @@ export default function DiaryApp() {
 
   useEffect(() => {
     loadState()
-      .then((next) => {
+      .then((loadedState) => {
+        const next = prepareLoadedState(loadedState);
         stateRef.current = next;
         setState(next);
         loaded.current = true;
@@ -157,13 +161,45 @@ export default function DiaryApp() {
   useEffect(() => {
     if (!activeAccent) return;
     document.documentElement.dataset.accent = activeAccent;
+    try {
+      localStorage.setItem('asoul-diary-theme-hint', activeAccent);
+    } catch {
+      // Theme persistence is only a loading-screen hint; IndexedDB remains authoritative.
+    }
     document
       .querySelector('meta[name="theme-color"]')
       ?.setAttribute('content', BROWSER_THEME_COLORS[activeAccent]);
-    return () => {
-      delete document.documentElement.dataset.accent;
-    };
   }, [activeAccent]);
+
+  useEffect(() => {
+    if (!isReady) return;
+    let currentDay = dateKey();
+    const refreshDayBoundary = () => {
+      const nextDay = dateKey();
+      if (nextDay !== currentDay) {
+        currentDay = nextDay;
+        setTodayDate(nextDay);
+        setState((current) => current && prepareLoadedState(current, nextDay));
+      }
+      const now = new Date();
+      if (now.getHours() !== 0) return;
+      const noticeKey = `asoul-midnight-notice:${dateKey(now)}`;
+      try {
+        if (localStorage.getItem(noticeKey)) return;
+        localStorage.setItem(noticeKey, 'shown');
+      } catch {
+        // The reminder can still be shown when session storage is unavailable.
+      }
+      showToast('已经是新的一天啦，昨天的小事还可以补进日记。');
+    };
+    refreshDayBoundary();
+    const timer = window.setInterval(refreshDayBoundary, 30_000);
+    document.addEventListener('visibilitychange', refreshDayBoundary);
+    return () => {
+      window.clearInterval(timer);
+      document.removeEventListener('visibilitychange', refreshDayBoundary);
+    };
+  }, [isReady]);
 
   useEffect(() => {
     const handleInstall = (event: Event) => {
@@ -365,6 +401,30 @@ export default function DiaryApp() {
     if (stateRef.current?.settings.haptics) navigator.vibrate?.(18);
   }
 
+  function softChime(kind: 'check' | 'progress') {
+    if (!stateRef.current?.settings.sounds) return;
+    try {
+      const audio = new AudioContext();
+      const gain = audio.createGain();
+      gain.gain.setValueAtTime(0.0001, audio.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.055, audio.currentTime + 0.012);
+      gain.gain.exponentialRampToValueAtTime(0.0001, audio.currentTime + 0.24);
+      gain.connect(audio.destination);
+      const notes = kind === 'check' ? [659, 880] : [523, 659];
+      notes.forEach((frequency, index) => {
+        const oscillator = audio.createOscillator();
+        oscillator.type = 'sine';
+        oscillator.frequency.value = frequency;
+        oscillator.connect(gain);
+        oscillator.start(audio.currentTime + index * 0.055);
+        oscillator.stop(audio.currentTime + 0.22);
+      });
+      window.setTimeout(() => void audio.close(), 320);
+    } catch {
+      // Audio feedback is optional.
+    }
+  }
+
   function askConfirmation(next: Confirmation) {
     setConfirmation(next);
   }
@@ -400,9 +460,13 @@ export default function DiaryApp() {
         },
     );
     haptic();
-    showToast(
-      `${tasks.length} 件小事已放进${todayDate === dateKey() ? '今天' : '明天'}`,
-    );
+    const dayLabel =
+      todayDate === moveDate(dateKey(), -1)
+        ? '昨天'
+        : todayDate === dateKey()
+          ? '今天'
+          : '明天';
+    showToast(`${tasks.length} 件小事已放进${dayLabel}`);
   }
 
   function toggleTodayTask(id: string, done: boolean) {
@@ -415,10 +479,17 @@ export default function DiaryApp() {
               ? { ...task, done, updatedAt: new Date().toISOString() }
               : task,
           ),
+          diaries: current.diaries.map((entry) => ({
+            ...entry,
+            taskSnapshots: entry.taskSnapshots.map((snapshot) =>
+              snapshot.sourceTaskId === id ? { ...snapshot, done } : snapshot,
+            ),
+          })),
         },
     );
     haptic();
     if (done) {
+      softChime('check');
       showToast('完成了，已经替你收好 ✓', () => {
         setState(
           (current) =>
@@ -433,6 +504,14 @@ export default function DiaryApp() {
                     }
                   : task,
               ),
+              diaries: current.diaries.map((entry) => ({
+                ...entry,
+                taskSnapshots: entry.taskSnapshots.map((snapshot) =>
+                  snapshot.sourceTaskId === id
+                    ? { ...snapshot, done: false }
+                    : snapshot,
+                ),
+              })),
             },
         );
       });
@@ -470,18 +549,21 @@ export default function DiaryApp() {
         },
     );
     setTaskEditing(null);
-    showToast(
-      `已删除${task.date === dateKey() ? '今天' : '明天'}的这件事`,
-      () => {
-        setState(
-          (current) =>
-            current && {
-              ...current,
-              dailyTasks: [...current.dailyTasks, task],
-            },
-        );
-      },
-    );
+    const dayLabel =
+      task.date === moveDate(dateKey(), -1)
+        ? '昨天'
+        : task.date === dateKey()
+          ? '今天'
+          : '明天';
+    showToast(`已删除${dayLabel}的这件事`, () => {
+      setState(
+        (current) =>
+          current && {
+            ...current,
+            dailyTasks: [...current.dailyTasks, task],
+          },
+      );
+    });
   }
 
   function saveEditedTask(event: SyntheticEvent<HTMLFormElement>) {
@@ -500,6 +582,19 @@ export default function DiaryApp() {
           dailyTasks: current.dailyTasks.map((task) =>
             task.id === edited.id ? edited : task,
           ),
+          diaries: current.diaries.map((entry) => ({
+            ...entry,
+            taskSnapshots: entry.taskSnapshots.map((snapshot) =>
+              snapshot.sourceTaskId === edited.id
+                ? {
+                    ...snapshot,
+                    emoji: edited.emoji,
+                    title: edited.title,
+                    done: edited.done,
+                  }
+                : snapshot,
+            ),
+          })),
         },
     );
     setTaskEditing(null);
@@ -583,7 +678,7 @@ export default function DiaryApp() {
     setGrowthDraft({
       ...createEmptyGrowthDraft(),
       kind,
-      color: ACCENT_COLORS[stateRef.current?.settings.accent ?? 'bella'],
+      color: ACCENT_COLORS[stateRef.current?.settings.accent ?? 'jiaran'],
     });
     setGrowthOpen(true);
   }
@@ -654,10 +749,7 @@ export default function DiaryApp() {
       );
     } else {
       const total = Math.max(0.01, Number(growthDraft.total) || 1);
-      const currentValue = Math.min(
-        total,
-        Math.max(0, Number(growthDraft.current) || 0),
-      );
+      const currentValue = Math.max(0, Number(growthDraft.current) || 0);
       const previous = state?.progressGoals.find(
         (entry) => entry.id === growthDraft.id,
       );
@@ -698,9 +790,9 @@ export default function DiaryApp() {
       (goal) => goal.id === goalId,
     );
     if (!previous) return;
-    const projected = Math.min(
-      previous.total,
-      Math.max(0, Number((previous.current + requestedDelta).toFixed(4))),
+    const projected = Math.max(
+      0,
+      Number((previous.current + requestedDelta).toFixed(4)),
     );
     const actuallyCompleted =
       previous.current < previous.total && projected >= previous.total;
@@ -710,9 +802,9 @@ export default function DiaryApp() {
         ...current,
         progressGoals: current.progressGoals.map((goal) => {
           if (goal.id !== goalId) return goal;
-          const value = Math.min(
-            goal.total,
-            Math.max(0, Number((goal.current + requestedDelta).toFixed(4))),
+          const value = Math.max(
+            0,
+            Number((goal.current + requestedDelta).toFixed(4)),
           );
           const delta = Number((value - goal.current).toFixed(4));
           if (!delta) return goal;
@@ -736,6 +828,7 @@ export default function DiaryApp() {
       };
     });
     haptic();
+    if (requestedDelta > 0) softChime('progress');
     showToast(
       actuallyCompleted
         ? '到达目标了！这段成长值得收藏 🎉'
@@ -834,9 +927,9 @@ export default function DiaryApp() {
   }
 
   function deleteProgressEvent(goal: ProgressGoal, event: ProgressEvent) {
-    const nextValue = Math.min(
-      goal.total,
-      Math.max(0, Number((goal.current - event.delta).toFixed(4))),
+    const nextValue = Math.max(
+      0,
+      Number((goal.current - event.delta).toFixed(4)),
     );
     askConfirmation({
       title: '删除这条成长足迹？',
@@ -860,9 +953,9 @@ export default function DiaryApp() {
               const events = item.events
                 .filter((entry) => entry.id !== event.id)
                 .map((entry) => {
-                  running = Math.min(
-                    item.total,
-                    Math.max(0, Number((running + entry.delta).toFixed(4))),
+                  running = Math.max(
+                    0,
+                    Number((running + entry.delta).toFixed(4)),
                   );
                   return { ...entry, valueAfter: running };
                 });
@@ -912,43 +1005,70 @@ export default function DiaryApp() {
     });
   }
 
-  function archiveGoal(
-    goal: ProgressGoal,
+  function archiveGrowth(
+    item: Countdown | ProgressGoal,
     completedNaturally: boolean,
     confirmed = false,
   ) {
     if (!completedNaturally && !confirmed) {
       askConfirmation({
-        title: '现在结束这段成长？',
+        title:
+          item.kind === 'countdown'
+            ? '提前结束这个倒计时？'
+            : '现在结束这段成长？',
         description:
-          '它会按目前的进度收进成长纪念册。完成得怎样都没关系，有尝试就很棒了。',
+          item.kind === 'countdown'
+            ? '它会连同日子手记一起收进成长纪念册，之后也可以恢复。'
+            : '它会按目前的进度收进成长纪念册，之后也可以恢复。',
         confirmLabel: '结束并收藏',
-        action: () => archiveGoal(goal, false, true),
+        action: () => archiveGrowth(item, false, true),
       });
       return;
     }
-    const memory: GrowthMemory = {
-      id: createId('memory'),
-      sourceGoalId: goal.id,
-      emoji: goal.emoji,
-      title: goal.title,
-      current: goal.current,
-      total: goal.total,
-      unit: goal.unit,
-      note: goal.note,
-      color: goal.color,
-      completedNaturally,
-      startedAt: goal.createdAt,
-      endedAt: new Date().toISOString(),
-      events: goal.events,
-    };
+    const memory: GrowthMemory =
+      item.kind === 'progress'
+        ? {
+            id: createId('memory'),
+            kind: 'progress',
+            sourceGoalId: item.id,
+            emoji: item.emoji,
+            title: item.title,
+            current: item.current,
+            total: item.total,
+            unit: item.unit,
+            note: item.note,
+            color: item.color,
+            completedNaturally,
+            startedAt: item.createdAt,
+            endedAt: new Date().toISOString(),
+            events: item.events,
+          }
+        : {
+            id: createId('memory'),
+            kind: 'countdown',
+            sourceCountdownId: item.id,
+            emoji: item.emoji,
+            title: item.title,
+            targetDate: item.targetDate,
+            note: item.note,
+            notes: item.notes,
+            color: item.color,
+            startedAt: item.createdAt,
+            endedAt: new Date().toISOString(),
+            endedEarly: !completedNaturally,
+          };
     setState(
       (current) =>
         current && {
           ...current,
-          progressGoals: current.progressGoals.filter(
-            (entry) => entry.id !== goal.id,
-          ),
+          progressGoals:
+            item.kind === 'progress'
+              ? current.progressGoals.filter((entry) => entry.id !== item.id)
+              : current.progressGoals,
+          countdowns:
+            item.kind === 'countdown'
+              ? current.countdowns.filter((entry) => entry.id !== item.id)
+              : current.countdowns,
           memories: [memory, ...current.memories],
         },
     );
@@ -958,29 +1078,97 @@ export default function DiaryApp() {
 
   function copyMemory(memory: GrowthMemory) {
     const now = new Date().toISOString();
-    const goal: ProgressGoal = {
-      id: createId('goal'),
-      kind: 'progress',
-      emoji: memory.emoji,
-      title: memory.title,
-      current: 0,
-      total: memory.total,
-      unit: memory.unit,
-      step: Math.max(0.01, Math.abs(memory.events.at(-1)?.delta ?? 1)),
-      note: memory.note,
-      color: memory.color,
-      events: [],
-      createdAt: now,
-      updatedAt: now,
-    };
-    setState(
-      (current) =>
-        current && {
-          ...current,
-          progressGoals: [...current.progressGoals, goal],
-        },
-    );
+    setState((current) => {
+      if (!current) return current;
+      if (memory.kind === 'countdown') {
+        const originalDays = Math.max(
+          1,
+          Math.ceil(
+            (new Date(`${memory.targetDate}T00:00:00`).getTime() -
+              new Date(
+                `${dateKey(new Date(memory.startedAt))}T00:00:00`,
+              ).getTime()) /
+              86_400_000,
+          ),
+        );
+        const countdown: Countdown = {
+          id: createId('countdown'),
+          kind: 'countdown',
+          emoji: memory.emoji,
+          title: memory.title,
+          targetDate: moveDate(dateKey(), originalDays),
+          note: memory.note,
+          notes: [],
+          color: memory.color,
+          createdAt: now,
+          updatedAt: now,
+        };
+        return { ...current, countdowns: [...current.countdowns, countdown] };
+      }
+      const goal: ProgressGoal = {
+        id: createId('goal'),
+        kind: 'progress',
+        emoji: memory.emoji,
+        title: memory.title,
+        current: 0,
+        total: memory.total,
+        unit: memory.unit,
+        step: Math.max(0.01, Math.abs(memory.events.at(-1)?.delta ?? 1)),
+        note: memory.note,
+        color: memory.color,
+        events: [],
+        createdAt: now,
+        updatedAt: now,
+      };
+      return { ...current, progressGoals: [...current.progressGoals, goal] };
+    });
     showToast('已复制为新的一期');
+  }
+
+  function restoreMemory(memory: GrowthMemory) {
+    setState((current) => {
+      if (!current) return current;
+      if (memory.kind === 'countdown') {
+        const restored: Countdown = {
+          id: memory.sourceCountdownId,
+          kind: 'countdown',
+          emoji: memory.emoji,
+          title: memory.title,
+          targetDate: memory.targetDate,
+          note: memory.note,
+          notes: memory.notes,
+          color: memory.color,
+          createdAt: memory.startedAt,
+          updatedAt: new Date().toISOString(),
+        };
+        return {
+          ...current,
+          countdowns: [...current.countdowns, restored],
+          memories: current.memories.filter((entry) => entry.id !== memory.id),
+        };
+      }
+      const restored: ProgressGoal = {
+        id: memory.sourceGoalId,
+        kind: 'progress',
+        emoji: memory.emoji,
+        title: memory.title,
+        current: memory.current,
+        total: memory.total,
+        unit: memory.unit,
+        step: Math.max(0.01, Math.abs(memory.events.at(-1)?.delta ?? 1)),
+        note: memory.note,
+        color: memory.color,
+        events: memory.events,
+        createdAt: memory.startedAt,
+        updatedAt: new Date().toISOString(),
+      };
+      return {
+        ...current,
+        progressGoals: [...current.progressGoals, restored],
+        memories: current.memories.filter((entry) => entry.id !== memory.id),
+      };
+    });
+    showToast('已恢复到正在发生的成长');
   }
 
   function deleteMemory(memory: GrowthMemory) {
@@ -1017,6 +1205,7 @@ export default function DiaryApp() {
             body: '',
             photoIds: [],
             taskSnapshots: [],
+            growthSnapshots: [],
             createdAt: now,
             updatedAt: now,
             ...patch,
@@ -1031,19 +1220,36 @@ export default function DiaryApp() {
     });
   }
 
+  function setDateMarker(date: string, color: CardColor | null) {
+    setState(
+      (current) =>
+        current && {
+          ...current,
+          dateMarkers: color
+            ? [
+                ...current.dateMarkers.filter((marker) => marker.date !== date),
+                { date, color },
+              ]
+            : current.dateMarkers.filter((marker) => marker.date !== date),
+        },
+    );
+  }
+
   async function addDiaryPhotos(date: string, files: FileList | null) {
     if (!files?.length) return;
     try {
-      const chosen = Array.from(files).slice(0, 6);
-      const stored = await Promise.all(chosen.map(storePhoto));
       const currentIds =
         stateRef.current?.diaries.find((entry) => entry.date === date)
           ?.photoIds ?? [];
+      const remaining = Math.max(0, 9 - currentIds.length);
+      if (!remaining) {
+        showToast('这一页已经放满 9 张照片了');
+        return;
+      }
+      const chosen = Array.from(files).slice(0, remaining);
+      const stored = await Promise.all(chosen.map(storePhoto));
       updateDiary(date, {
-        photoIds: [...currentIds, ...stored.map((photo) => photo.id)].slice(
-          0,
-          9,
-        ),
+        photoIds: [...currentIds, ...stored.map((photo) => photo.id)],
       });
       showToast(`已放进 ${stored.length} 张照片`);
     } catch (error) {
@@ -1115,7 +1321,7 @@ export default function DiaryApp() {
       confirmLabel: '恢复备份',
       action: async () => {
         try {
-          const backup = JSON.parse(await file.text()) as V3Backup;
+          const backup = JSON.parse(await file.text()) as DiaryBackup;
           const restored = await restoreBackup(backup);
           setState(restored);
           showToast('备份已恢复');
@@ -1155,7 +1361,11 @@ export default function DiaryApp() {
   if (!state) {
     return (
       <main className="app-loading">
-        <Sparkles aria-hidden="true" />
+        <span className="loading-motifs" aria-hidden="true">
+          <Candy className="loading-jiaran" />
+          <Star className="loading-bella" />
+          <IceCreamBowl className="loading-nailin" />
+        </span>
         <p>正在翻开今天的一页…</p>
       </main>
     );
@@ -1203,8 +1413,9 @@ export default function DiaryApp() {
             onDeleteEvent={deleteProgressEvent}
             onEdit={openEditGrowth}
             onDelete={deleteGrowth}
-            onArchive={archiveGoal}
+            onArchive={archiveGrowth}
             onCopy={copyMemory}
+            onRestoreMemory={restoreMemory}
             onDeleteMemory={deleteMemory}
             onAddCountdownNote={addCountdownNote}
             onDeleteCountdownNote={deleteCountdownNote}
@@ -1219,11 +1430,11 @@ export default function DiaryApp() {
             onAddPhotos={addDiaryPhotos}
             onRemovePhoto={removeDiaryPhoto}
             onDelete={deleteDiary}
+            onSetDateMarker={setDateMarker}
           />
         )}
+        <BottomNav active={activeTab} onChange={changeTab} />
       </section>
-
-      <BottomNav active={activeTab} onChange={changeTab} />
 
       <TodayDrawer
         state={state}
@@ -1274,25 +1485,31 @@ export default function DiaryApp() {
       <ConfirmDialog
         confirmation={confirmation}
         onClose={() => setConfirmation(null)}
+        accent={state.settings.accent}
       />
 
-      {toast && (
-        <output className="toast" aria-live="polite">
-          <span>{toast.message}</span>
-          {toast.undo && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                toast.undo?.();
-                setToast(null);
-              }}
-            >
-              <RotateCcw aria-hidden="true" /> 撤销
-            </Button>
-          )}
-        </output>
-      )}
+      {toast &&
+        createPortal(
+          <output
+            className={`toast theme-${state.settings.accent}`}
+            aria-live="polite"
+          >
+            <span>{toast.message}</span>
+            {toast.undo && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  toast.undo?.();
+                  setToast(null);
+                }}
+              >
+                <RotateCcw aria-hidden="true" /> 撤销
+              </Button>
+            )}
+          </output>,
+          document.body,
+        )}
     </main>
   );
 }

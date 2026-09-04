@@ -33,25 +33,19 @@ export const WALLPAPERS = [
   '/wallpapers/jiaran-5.webp',
   '/wallpapers/beila-5.webp',
   '/wallpapers/nailin-5.webp',
+  '/wallpapers/jiaran-6.webp',
+  '/wallpapers/beila-6.webp',
+  '/wallpapers/nailin-6.webp',
+  '/wallpapers/jiaran-7.webp',
+  '/wallpapers/beila-7.webp',
+  '/wallpapers/nailin-7.webp',
+  '/wallpapers/jiaran-8.webp',
+  '/wallpapers/beila-8.webp',
+  '/wallpapers/nailin-8.webp',
+  '/wallpapers/jiaran-9.webp',
+  '/wallpapers/beila-9.webp',
+  '/wallpapers/nailin-9.webp',
 ] as const;
-
-const LEGACY_WALLPAPER_PATHS: Record<string, string> = {
-  '/wallpapers/bella-1.webp': '/wallpapers/beila-2.webp',
-  '/wallpapers/bella-2.webp': '/wallpapers/beila-1.webp',
-  '/wallpapers/bella-3.webp': '/wallpapers/beila-3.webp',
-  '/wallpapers/bella-4.webp': '/wallpapers/beila-4.webp',
-  '/wallpapers/bella-5.webp': '/wallpapers/beila-5.webp',
-  '/wallpapers/jiaran-1.webp': '/wallpapers/jiaran-2.webp',
-  '/wallpapers/jiaran-2.webp': '/wallpapers/jiaran-1.webp',
-  '/wallpapers/jiaran-3.webp': '/wallpapers/jiaran-3.webp',
-  '/wallpapers/jiaran-4.webp': '/wallpapers/jiaran-4.webp',
-  '/wallpapers/jiaran-5.webp': '/wallpapers/jiaran-5.webp',
-  '/wallpapers/nailin-1.webp': '/wallpapers/nailin-5.webp',
-  '/wallpapers/nailin-2.webp': '/wallpapers/nailin-2.webp',
-  '/wallpapers/nailin-3.webp': '/wallpapers/nailin-1.webp',
-  '/wallpapers/nailin-4.webp': '/wallpapers/nailin-3.webp',
-  '/wallpapers/nailin-5.webp': '/wallpapers/nailin-4.webp',
-};
 
 export function createId(prefix = 'item') {
   const id =
@@ -62,7 +56,7 @@ export function createId(prefix = 'item') {
 export function createDefaultState(): AppState {
   const now = new Date().toISOString();
   return {
-    version: 3,
+    version: 4,
     commonItems: [
       {
         id: createId('common'),
@@ -91,23 +85,20 @@ export function createDefaultState(): AppState {
     progressGoals: [],
     memories: [],
     diaries: [],
+    dateMarkers: [],
     settings: {
       theme: 'paper',
-      accent: 'bella',
+      accent: 'jiaran',
       wallpaper: WALLPAPERS[0],
-      wallpaperCatalogVersion: 2,
+      wallpaperCatalogVersion: 3,
       haptics: true,
+      sounds: true,
     },
   };
 }
 
 export function normalizeState(candidate: AppState): AppState {
   const fresh = createDefaultState();
-  const storedWallpaper =
-    candidate.settings?.wallpaper ?? fresh.settings.wallpaper;
-  const wallpaper = candidate.settings?.wallpaperCatalogVersion
-    ? storedWallpaper
-    : (LEGACY_WALLPAPER_PATHS[storedWallpaper] ?? storedWallpaper);
   return {
     ...fresh,
     ...candidate,
@@ -116,7 +107,7 @@ export function normalizeState(candidate: AppState): AppState {
     countdowns: (candidate.countdowns ?? []).map((item) => ({
       ...item,
       notes: item.notes ?? [],
-      color: item.color ?? '#DB7D74',
+      color: item.color ?? '#E799B0',
     })),
     progressGoals: (candidate.progressGoals ?? []).map((goal) => ({
       ...goal,
@@ -126,24 +117,26 @@ export function normalizeState(candidate: AppState): AppState {
         note: event.note ?? '',
       })),
     })),
-    memories: (candidate.memories ?? []).map((memory) => ({
-      ...memory,
-      color: memory.color ?? '#E799B0',
-      events: (memory.events ?? []).map((event) => ({
-        ...event,
-        note: event.note ?? '',
-      })),
-    })),
+    memories: candidate.memories ?? [],
     diaries: (candidate.diaries ?? []).map((entry) => ({
       ...entry,
       taskSnapshots: entry.taskSnapshots ?? [],
+      growthSnapshots: entry.growthSnapshots ?? [],
     })),
+    dateMarkers: candidate.dateMarkers ?? [],
     settings: {
       ...fresh.settings,
       ...candidate.settings,
-      accent: candidate.settings?.accent ?? 'bella',
-      wallpaper,
-      wallpaperCatalogVersion: 2,
+      accent: candidate.settings?.accent ?? 'jiaran',
+      sounds: candidate.settings?.sounds ?? true,
+      wallpaper:
+        candidate.settings?.wallpaper &&
+        WALLPAPERS.includes(
+          candidate.settings.wallpaper as (typeof WALLPAPERS)[number],
+        )
+          ? candidate.settings.wallpaper
+          : fresh.settings.wallpaper,
+      wallpaperCatalogVersion: 3,
     },
   };
 }

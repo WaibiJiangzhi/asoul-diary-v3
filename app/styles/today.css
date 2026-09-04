@@ -1,14 +1,14 @@
 .day-switcher {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  margin-top: 16px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+  margin-top: 20px;
   border-bottom: 1px solid var(--theme-border);
 }
 .day-switcher button {
   position: relative;
   display: flex;
-  min-height: 45px;
+  min-height: 49px;
   align-items: baseline;
   justify-content: center;
   gap: 7px;
@@ -149,6 +149,8 @@
   border-radius: 14px;
   background: var(--theme-soft);
   font-size: 21px;
+  line-height: 1;
+  transform: translateY(1px);
 }
 .task-title {
   overflow: hidden;
@@ -183,6 +185,25 @@
   background: var(--theme-accent);
   box-shadow: 0 10px 22px var(--theme-shadow);
   font-weight: 800;
+}
+.today-retention-note {
+  margin: 10px 8px 0;
+  color: #89818b;
+  font-size: 9px;
+  line-height: 1.55;
+  text-align: center;
+}
+.has-wallpaper .today-retention-note {
+  padding: 5px 9px;
+  border-radius: 999px;
+  background: rgb(255 252 250 / 54%);
+  color: #49424d;
+  font-weight: 800;
+  backdrop-filter: blur(3px);
+}
+.has-wallpaper .day-switcher,
+.has-wallpaper .completed-tasks {
+  border-width: 2px;
 }
 
 .all-done-note {

@@ -2,7 +2,12 @@
 
 /* oxlint-disable react/react-compiler -- sortable activator refs are supplied by dnd-kit during render. */
 
-import type { ReactNode, SyntheticEvent } from 'react';
+import type {
+  PointerEvent as ReactPointerEvent,
+  ReactNode,
+  SyntheticEvent,
+  TouchEvent as ReactTouchEvent,
+} from 'react';
 import { useEffect, useRef, useState } from 'react';
 import {
   ArrowLeft,
@@ -49,8 +54,11 @@ export function TodayView({
   onReorder: (draggedId: string, targetId: string) => void;
 }) {
   const today = dateKey();
+  const yesterday = moveDate(today, -1);
   const tomorrow = moveDate(today, 1);
+  const isYesterday = selectedDate === yesterday;
   const isTomorrow = selectedDate === tomorrow;
+  const dayLabel = isYesterday ? '昨天' : isTomorrow ? '明天' : '今天';
   const tasks = state.dailyTasks.filter((task) => task.date === selectedDate);
   const activeTasks = tasks.filter((task) => !task.done);
   const completedTasks = tasks.filter((task) => task.done);
@@ -132,10 +140,18 @@ export function TodayView({
 
   return (
     <div className="view-stack today-view">
-      <section className="day-switcher" aria-label="选择今天或明天">
+      <section className="day-switcher" aria-label="选择昨天、今天或明天">
         <button
           type="button"
-          className={!isTomorrow ? 'active' : ''}
+          className={isYesterday ? 'active' : ''}
+          onClick={() => onDateChange(yesterday)}
+        >
+          <strong>昨天</strong>
+          <small>{formatShortDate(yesterday)}</small>
+        </button>
+        <button
+          type="button"
+          className={!isYesterday && !isTomorrow ? 'active' : ''}
           onClick={() => onDateChange(today)}
         >
           <strong>今天</strong>
@@ -155,9 +171,9 @@ export function TodayView({
         <div className="section-heading">
           <div>
             <p className="section-kicker">
-              {isTomorrow ? 'TOMORROW' : 'TODAY'}
+              {isYesterday ? 'YESTERDAY' : isTomorrow ? 'TOMORROW' : 'TODAY'}
             </p>
-            <h2 id="today-heading">{isTomorrow ? '明天要做' : '今天要做'}</h2>
+            <h2 id="today-heading">{dayLabel}要做</h2>
           </div>
           {!!tasks.length && (
             <span className="progress-stamp">
@@ -219,20 +235,18 @@ export function TodayView({
           </>
         ) : (
           <div className="gentle-empty">
-            <span>🍵</span>
-            <strong>{isTomorrow ? '明天还没有安排' : '今天还没有安排'}</strong>
-            <p>
-              {isTomorrow
-                ? '先写下一件明天想做的小事。'
-                : '不用列很长，先放进一件想做的小事。'}
-            </p>
+            <span>✨</span>
+            <strong>{dayLabel}还没有安排</strong>
           </div>
         )}
 
         <Button className="add-today-button" size="lg" onClick={onAdd}>
           <Plus aria-hidden="true" />
-          添加{isTomorrow ? '明天' : '今天'}要做的事
+          添加{dayLabel}要做的事
         </Button>
+        <p className="today-retention-note">
+          每日事项只保留到次日结束，想长期留下可以收进日记。
+        </p>
       </section>
     </div>
   );
@@ -267,12 +281,15 @@ export function TodayDrawer({
   onReorderCommon: (draggedId: string, targetId: string) => void;
 }) {
   const isTomorrow = selectedDate === moveDate(dateKey(), 1);
+  const isYesterday = selectedDate === moveDate(dateKey(), -1);
+  const dayLabel = isYesterday ? '昨天' : isTomorrow ? '明天' : '今天';
   const [emoji, setEmoji] = useState<string>('✨');
   const [title, setTitle] = useState('');
   const [editing, setEditing] = useState<CommonItem | null>(null);
   const [selectedCommonIds, setSelectedCommonIds] = useState<Set<string>>(
     new Set(),
   );
+  const [sorting, setSorting] = useState(false);
 
   useEffect(() => {
     if (open) setEmoji(pickDailyEmoji());
@@ -280,6 +297,7 @@ export function TodayDrawer({
 
   function handleOpenChange(nextOpen: boolean) {
     if (!nextOpen) {
+      setSorting(false);
       setSelectedCommonIds(new Set());
       setTitle('');
       setEmoji(pickDailyEmoji());
@@ -307,14 +325,20 @@ export function TodayDrawer({
   }
 
   return (
-    <Drawer open={open} onOpenChange={handleOpenChange}>
-      <DrawerContent className="sheet-drawer">
+    <Drawer
+      open={open}
+      onOpenChange={(nextOpen, details) => {
+        if (sorting && details.reason === 'swipe') return;
+        handleOpenChange(nextOpen);
+      }}
+    >
+      <DrawerContent
+        className={`sheet-drawer ${sorting ? 'sorting-inside' : ''}`}
+      >
         <div className="drawer-inner">
           <DrawerHeader>
             <DrawerTitle>
-              {mode === 'add'
-                ? `${isTomorrow ? '明天' : '今天'}想做什么？`
-                : '管理常用事项'}
+              {mode === 'add' ? `${dayLabel}想做什么？` : '管理常用事项'}
             </DrawerTitle>
             <DrawerDescription className="sr-only">
               选择或编辑事项
@@ -383,12 +407,12 @@ export function TodayDrawer({
                   <Input
                     value={title}
                     onChange={(event) => setTitle(event.target.value)}
-                    placeholder="例如：练琴 30 分钟"
+                    placeholder="写下一件小事"
                     maxLength={50}
                   />
                 </div>
                 <Button type="submit" size="lg" disabled={!title.trim()}>
-                  添加到{isTomorrow ? '明天' : '今天'}
+                  添加到{dayLabel}
                 </Button>
               </form>
               <Button
@@ -432,6 +456,7 @@ export function TodayDrawer({
                 onDragStart={() => {
                   if (state.settings.haptics) navigator.vibrate?.(12);
                 }}
+                onDraggingChange={setSorting}
               >
                 {(id, handle, isDragging) => {
                   const item = state.commonItems.find(
@@ -494,6 +519,8 @@ function SortHandle({
   handle: SortableHandle;
   label: string;
 }) {
+  const pointerDown = handle.listeners?.onPointerDown;
+  const touchStart = handle.listeners?.onTouchStart;
   return (
     <Button
       ref={handle.setActivatorNodeRef}
@@ -503,6 +530,14 @@ function SortHandle({
       aria-label={label}
       {...handle.attributes}
       {...handle.listeners}
+      onPointerDown={(event: ReactPointerEvent<HTMLButtonElement>) => {
+        pointerDown?.(event);
+        event.stopPropagation();
+      }}
+      onTouchStart={(event: ReactTouchEvent<HTMLButtonElement>) => {
+        touchStart?.(event);
+        event.stopPropagation();
+      }}
     >
       <GripVertical aria-hidden="true" />
     </Button>
@@ -527,7 +562,12 @@ export function TaskEditDrawer({
           <form className="drawer-inner stack-form" onSubmit={onSave}>
             <DrawerHeader>
               <DrawerTitle>
-                修改{task.date === moveDate(dateKey(), 1) ? '明天' : '今天'}
+                修改
+                {task.date === moveDate(dateKey(), -1)
+                  ? '昨天'
+                  : task.date === moveDate(dateKey(), 1)
+                    ? '明天'
+                    : '今天'}
                 这件事
               </DrawerTitle>
               <DrawerDescription>

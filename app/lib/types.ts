@@ -75,8 +75,9 @@ export interface ProgressGoal {
   updatedAt: string;
 }
 
-export interface GrowthMemory {
+export interface ProgressMemory {
   id: string;
+  kind: 'progress';
   sourceGoalId: string;
   emoji: string;
   title: string;
@@ -91,6 +92,23 @@ export interface GrowthMemory {
   events: ProgressEvent[];
 }
 
+export interface CountdownMemory {
+  id: string;
+  kind: 'countdown';
+  sourceCountdownId: string;
+  emoji: string;
+  title: string;
+  targetDate: string;
+  note: string;
+  notes: CountdownNote[];
+  color: CardColor;
+  startedAt: string;
+  endedAt: string;
+  endedEarly: boolean;
+}
+
+export type GrowthMemory = ProgressMemory | CountdownMemory;
+
 export interface DiaryTaskSnapshot {
   id: string;
   sourceTaskId: string;
@@ -99,32 +117,65 @@ export interface DiaryTaskSnapshot {
   done: boolean;
 }
 
+export type DiaryGrowthSnapshot =
+  | {
+      id: string;
+      kind: 'countdown';
+      sourceId: string;
+      emoji: string;
+      title: string;
+      remainingDays: number;
+      note: string;
+      capturedAt: string;
+    }
+  | {
+      id: string;
+      kind: 'progress';
+      sourceId: string;
+      emoji: string;
+      title: string;
+      delta: number;
+      current: number;
+      total: number;
+      unit: string;
+      note: string;
+      capturedAt: string;
+    };
+
 export interface DiaryEntry {
   date: string;
   mood: Mood;
   body: string;
   photoIds: string[];
   taskSnapshots: DiaryTaskSnapshot[];
+  growthSnapshots: DiaryGrowthSnapshot[];
   createdAt: string;
   updatedAt: string;
+}
+
+export interface DateMarker {
+  date: string;
+  color: CardColor;
 }
 
 export interface AppSettings {
   theme: ThemeMode;
   accent: AccentTheme;
   wallpaper: string;
-  wallpaperCatalogVersion: 2;
+  wallpaperCatalogVersion: 3;
   haptics: boolean;
+  sounds: boolean;
 }
 
 export interface AppState {
-  version: 3;
+  version: 4;
   commonItems: CommonItem[];
   dailyTasks: DailyTask[];
   countdowns: Countdown[];
   progressGoals: ProgressGoal[];
   memories: GrowthMemory[];
   diaries: DiaryEntry[];
+  dateMarkers: DateMarker[];
   settings: AppSettings;
 }
 
@@ -142,7 +193,7 @@ export interface BackupPhoto {
   createdAt: string;
 }
 
-export interface V3Backup {
+export interface DiaryBackup {
   product: 'asoul-diary-v3';
   exportedAt: string;
   state: AppState;

@@ -1,5 +1,5 @@
 import { createDefaultState, createId, normalizeState } from './defaults';
-import type { AppState, StoredPhoto, V3Backup } from './types';
+import type { AppState, DiaryBackup, StoredPhoto } from './types';
 
 const DB_NAME = 'asoul-diary-v3';
 const DB_VERSION = 1;
@@ -72,7 +72,7 @@ export async function loadState(): Promise<AppState> {
     transaction.objectStore('state').get(STATE_KEY),
   );
   database.close();
-  if (!stored || (stored as AppState).version !== 3)
+  if (!stored || (stored as AppState).version !== 4)
     return createDefaultState();
   return normalizeState(stored as AppState);
 }
@@ -87,18 +87,28 @@ export async function saveState(state: AppState): Promise<void> {
 
 async function compressImage(file: File): Promise<Blob> {
   if (!file.type.startsWith('image/')) throw new Error('只能添加图片');
-  if (file.size < 1_200_000 || typeof createImageBitmap === 'undefined')
+  if (typeof createImageBitmap === 'undefined') return file;
+  try {
+    const bitmap = await createImageBitmap(file);
+    const largestSide = Math.max(bitmap.width, bitmap.height);
+    if (file.size < 450_000 && largestSide <= 1600) {
+      bitmap.close();
+      return file;
+    }
+    const scale = Math.min(1, 1600 / largestSide);
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.round(bitmap.width * scale);
+    canvas.height = Math.round(bitmap.height * scale);
+    canvas
+      .getContext('2d')
+      ?.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+    bitmap.close();
+    return await new Promise((resolve) => {
+      canvas.toBlob((blob) => resolve(blob ?? file), 'image/webp', 0.82);
+    });
+  } catch {
     return file;
-  const bitmap = await createImageBitmap(file);
-  const scale = Math.min(1, 1920 / Math.max(bitmap.width, bitmap.height));
-  const canvas = document.createElement('canvas');
-  canvas.width = Math.round(bitmap.width * scale);
-  canvas.height = Math.round(bitmap.height * scale);
-  canvas.getContext('2d')?.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-  bitmap.close();
-  return new Promise((resolve) => {
-    canvas.toBlob((blob) => resolve(blob ?? file), 'image/webp', 0.84);
-  });
+  }
 }
 
 export async function storePhoto(file: File): Promise<StoredPhoto> {
@@ -160,7 +170,7 @@ function dataUrlToBlob(dataUrl: string) {
   return new Blob([bytes], { type: mime });
 }
 
-export async function createBackup(state: AppState): Promise<V3Backup> {
+export async function createBackup(state: AppState): Promise<DiaryBackup> {
   const database = await openDatabase();
   const transaction = database.transaction('photos', 'readonly');
   const photos = (await requestResult(
@@ -182,8 +192,8 @@ export async function createBackup(state: AppState): Promise<V3Backup> {
   };
 }
 
-export async function restoreBackup(backup: V3Backup): Promise<AppState> {
-  if (backup.product !== 'asoul-diary-v3' || backup.state?.version !== 3) {
+export async function restoreBackup(backup: DiaryBackup): Promise<AppState> {
+  if (backup.product !== 'asoul-diary-v3' || backup.state?.version !== 4) {
     throw new Error('这不是 Asoul 一个魂生活日记 v3 备份');
   }
   const restored = normalizeState(backup.state);

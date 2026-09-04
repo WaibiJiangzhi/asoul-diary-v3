@@ -14,6 +14,7 @@ import {
   NotebookPen,
   Pencil,
   Plus,
+  RotateCcw,
   Save,
   Sparkles,
   Trash2,
@@ -69,6 +70,7 @@ export function GrowthView({
   onDelete,
   onArchive,
   onCopy,
+  onRestoreMemory,
   onDeleteMemory,
   onAddCountdownNote,
   onDeleteCountdownNote,
@@ -79,8 +81,9 @@ export function GrowthView({
   onDeleteEvent: (goal: ProgressGoal, event: ProgressEvent) => void;
   onEdit: (item: Countdown | ProgressGoal) => void;
   onDelete: (item: Countdown | ProgressGoal) => void;
-  onArchive: (goal: ProgressGoal, natural: boolean) => void;
+  onArchive: (item: Countdown | ProgressGoal, natural: boolean) => void;
   onCopy: (memory: GrowthMemory) => void;
+  onRestoreMemory: (memory: GrowthMemory) => void;
   onDeleteMemory: (memory: GrowthMemory) => void;
   onAddCountdownNote: (countdownId: string, text: string) => void;
   onDeleteCountdownNote: (countdown: Countdown, note: CountdownNote) => void;
@@ -145,7 +148,6 @@ export function GrowthView({
           >
             {state.countdowns.map((item, index) => {
               const days = daysUntil(item.targetDate);
-              const latestNote = item.notes.at(-1);
               const noteDraft = countdownNotes[item.id] ?? '';
               return (
                 <article
@@ -174,13 +176,6 @@ export function GrowthView({
                       <span>{days >= 0 ? '天后' : '天前'}</span>
                     </div>
                   </div>
-                  {latestNote && (
-                    <p className="countdown-latest-note">
-                      <NotebookPen />
-                      <span>{latestNote.text}</span>
-                      <time>{formatMoment(latestNote.createdAt)}</time>
-                    </p>
-                  )}
                   <form
                     className="countdown-note-entry"
                     onSubmit={(event) => {
@@ -221,6 +216,14 @@ export function GrowthView({
                       <Footprints /> 日子手记 · {item.notes.length}
                     </span>
                     <ChevronRight />
+                  </Button>
+                  <Button
+                    className={days <= 0 ? 'archive-button' : 'finish-early'}
+                    variant={days <= 0 ? 'default' : 'ghost'}
+                    onClick={() => onArchive(item, days <= 0)}
+                  >
+                    {days <= 0 ? <Sparkles /> : <Archive />}
+                    {days <= 0 ? '日子到了，收进纪念册' : '提前结束倒计时'}
                   </Button>
                   <div className="card-tools">
                     <Button
@@ -281,7 +284,6 @@ export function GrowthView({
           <div className="gentle-empty roomy">
             <span>🌱</span>
             <strong>还没有正在记录的进度</strong>
-            <p>比如“这个月跑 30 km”，每点一次，进度就向前一点。</p>
             <Button variant="outline" onClick={() => onAdd('progress')}>
               <Plus />
               开始一个
@@ -338,6 +340,11 @@ export function GrowthView({
           setMemoryDrawerOpen(false);
           setSelectedMemory(null);
         }}
+        onRestore={(memory) => {
+          onRestoreMemory(memory);
+          setMemoryDrawerOpen(false);
+          setSelectedMemory(null);
+        }}
         onDelete={(memory) => {
           onDeleteMemory(memory);
           setMemoryDrawerOpen(false);
@@ -382,8 +389,9 @@ function MemoryRow({
           </small>
           <strong>{memory.title}</strong>
           <span>
-            {memory.current}/{memory.total} {memory.unit} ·{' '}
-            {memory.events.length} 条足迹
+            {memory.kind === 'progress'
+              ? `${memory.current}/${memory.total} ${memory.unit} · ${memory.events.length} 条足迹`
+              : `${formatShortDate(memory.targetDate)} · ${memory.notes.length} 条手记`}
           </span>
         </span>
       </button>
@@ -527,24 +535,16 @@ function ProgressCard({
         <ChevronRight />
       </Button>
 
-      {goal.current >= goal.total ? (
-        <Button
-          className="archive-button"
-          onClick={() => onArchive(goal, true)}
-        >
-          <Sparkles />
-          完成了，收进纪念册
-        </Button>
-      ) : (
-        <Button
-          className="finish-early"
-          variant="ghost"
-          onClick={() => onArchive(goal, false)}
-        >
-          <Archive />
-          现在结束这段成长
-        </Button>
-      )}
+      <Button
+        className={
+          goal.current >= goal.total ? 'archive-button' : 'finish-early'
+        }
+        variant={goal.current >= goal.total ? 'default' : 'ghost'}
+        onClick={() => onArchive(goal, goal.current >= goal.total)}
+      >
+        {goal.current >= goal.total ? <Sparkles /> : <Archive />}
+        {goal.current >= goal.total ? '完成了，收进纪念册' : '现在结束这段成长'}
+      </Button>
     </article>
   );
 }
@@ -637,7 +637,7 @@ export function GrowthDrawer({
               value={draft.title}
               onChange={(event) => patch({ title: event.target.value })}
               placeholder={
-                draft.kind === 'progress' ? '例如：九月跑量' : '例如：去看演出'
+                draft.kind === 'progress' ? '进度名称' : '期待的日子'
               }
               maxLength={40}
             />
@@ -829,6 +829,7 @@ function MemoryLibraryDrawer({
   onSelect,
   onOpenChange,
   onCopy,
+  onRestore,
   onDelete,
 }: {
   open: boolean;
@@ -837,6 +838,7 @@ function MemoryLibraryDrawer({
   onSelect: (memory: GrowthMemory | null) => void;
   onOpenChange: (open: boolean) => void;
   onCopy: (memory: GrowthMemory) => void;
+  onRestore: (memory: GrowthMemory) => void;
   onDelete: (memory: GrowthMemory) => void;
 }) {
   return (
@@ -870,8 +872,16 @@ function MemoryLibraryDrawer({
                   )}
                 </div>
                 <strong className="memory-final-value">
-                  {memory.current.toLocaleString()}
-                  <small>{memory.unit}</small>
+                  {memory.kind === 'progress'
+                    ? memory.current.toLocaleString()
+                    : Math.abs(daysUntil(memory.targetDate))}
+                  <small>
+                    {memory.kind === 'progress'
+                      ? memory.unit
+                      : daysUntil(memory.targetDate) >= 0
+                        ? '天后'
+                        : '天前'}
+                  </small>
                 </strong>
               </div>
             </DrawerHeader>
@@ -880,7 +890,9 @@ function MemoryLibraryDrawer({
               <div>
                 <small>最后走到</small>
                 <strong>
-                  {memory.current}/{memory.total} {memory.unit}
+                  {memory.kind === 'progress'
+                    ? `${memory.current}/${memory.total} ${memory.unit}`
+                    : formatShortDate(memory.targetDate)}
                 </strong>
               </div>
               <div>
@@ -897,21 +909,34 @@ function MemoryLibraryDrawer({
                 <Footprints />
                 这一路的足迹
               </h3>
-              {memory.events.length ? (
+              {(
+                memory.kind === 'progress'
+                  ? memory.events.length
+                  : memory.notes.length
+              ) ? (
                 <ol>
-                  {memory.events.map((event) => (
-                    <li key={event.id}>
-                      <span className="footstep-copy">
-                        <span>{formatMoment(event.createdAt)}</span>
-                        {event.note && <small>{event.note}</small>}
-                      </span>
-                      <strong>
-                        {event.delta >= 0 ? '+' : ''}
-                        {event.delta} {memory.unit}
-                      </strong>
-                      <small>累计 {event.valueAfter}</small>
-                    </li>
-                  ))}
+                  {memory.kind === 'progress'
+                    ? memory.events.map((event) => (
+                        <li key={event.id}>
+                          <span className="footstep-copy">
+                            <span>{formatMoment(event.createdAt)}</span>
+                            {event.note && <small>{event.note}</small>}
+                          </span>
+                          <strong>
+                            {event.delta >= 0 ? '+' : ''}
+                            {event.delta} {memory.unit}
+                          </strong>
+                          <small>累计 {event.valueAfter}</small>
+                        </li>
+                      ))
+                    : memory.notes.map((note) => (
+                        <li key={note.id}>
+                          <span className="footstep-copy">
+                            <span>{formatMoment(note.createdAt)}</span>
+                            <small>{note.text}</small>
+                          </span>
+                        </li>
+                      ))}
                 </ol>
               ) : (
                 <p>这次没有留下单独的调整记录，但尝试本身已经值得收藏。</p>
@@ -919,6 +944,10 @@ function MemoryLibraryDrawer({
             </section>
 
             <div className="memory-detail-actions">
+              <Button variant="outline" onClick={() => onRestore(memory)}>
+                <RotateCcw />
+                恢复
+              </Button>
               <Button onClick={() => onCopy(memory)}>
                 <Copy />
                 再来一期

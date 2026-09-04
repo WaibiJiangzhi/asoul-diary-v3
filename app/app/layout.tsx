@@ -31,8 +31,16 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="zh-CN">
-      <body>{children}</body>
+    <html lang="zh-CN" data-accent="jiaran" suppressHydrationWarning>
+      <body>
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "try{var a=localStorage.getItem('asoul-diary-theme-hint');if(a==='jiaran'||a==='bella'||a==='nailin')document.documentElement.dataset.accent=a}catch(e){}",
+          }}
+        />
+        {children}
+      </body>
     </html>
   );
 }

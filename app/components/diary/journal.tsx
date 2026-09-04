@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
 import { zhCN } from 'date-fns/locale';
 import {
@@ -30,6 +30,15 @@ import {
 import { dateKey, formatFullDate, fromDateKey, moveDate } from '@/lib/date';
 import { getPhotos } from '@/lib/db';
 import type { AppState, DiaryEntry } from '@/lib/types';
+import type {
+  CardColor,
+  Countdown,
+  DiaryGrowthSnapshot,
+  GrowthMemory,
+  ProgressGoal,
+} from '@/lib/types';
+import { CARD_COLORS } from './constants';
+import { Decoration } from './decoration';
 
 export function JournalView({
   state,
@@ -39,6 +48,7 @@ export function JournalView({
   onAddPhotos,
   onRemovePhoto,
   onDelete,
+  onSetDateMarker,
 }: {
   state: AppState;
   selectedDate: string;
@@ -47,9 +57,11 @@ export function JournalView({
   onAddPhotos: (date: string, files: FileList | null) => void;
   onRemovePhoto: (date: string, id: string) => void;
   onDelete: (entry: DiaryEntry) => void;
+  onSetDateMarker: (date: string, color: CardColor | null) => void;
 }) {
   const entry = state.diaries.find((item) => item.date === selectedDate);
   const taskSnapshots = entry?.taskSnapshots ?? [];
+  const growthSnapshots = entry?.growthSnapshots ?? [];
   const dayTasks = state.dailyTasks.filter(
     (task) => task.date === selectedDate,
   );
@@ -59,10 +71,14 @@ export function JournalView({
       entry.body ||
       entry.mood ||
       entry.photoIds.length ||
-      taskSnapshots.length
+      taskSnapshots.length ||
+      growthSnapshots.length
     );
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [taskPickerOpen, setTaskPickerOpen] = useState(false);
+  const [pickerTab, setPickerTab] = useState<
+    'tasks' | 'countdowns' | 'progress'
+  >('tasks');
   const [calendarMonth, setCalendarMonth] = useState(fromDateKey(selectedDate));
   const [photoUrls, setPhotoUrls] = useState<Record<string, string>>({});
   const [activePhotoId, setActivePhotoId] = useState<string | null>(null);
@@ -70,6 +86,40 @@ export function JournalView({
   const photoKey = photoIds.join('|');
   const activePhotoIndex = activePhotoId ? photoIds.indexOf(activePhotoId) : -1;
   const activePhotoUrl = activePhotoId ? photoUrls[activePhotoId] : undefined;
+  const selectedMarker = state.dateMarkers.find(
+    (marker) => marker.date === selectedDate,
+  );
+  const { countdownSources, progressSources } = useMemo(() => {
+    const archivedOnSelectedDate = state.memories.filter(
+      (memory) => dateKey(new Date(memory.endedAt)) === selectedDate,
+    );
+    return {
+      countdownSources: [
+        ...state.countdowns,
+        ...archivedOnSelectedDate.filter(
+          (memory) => memory.kind === 'countdown',
+        ),
+      ] as (Countdown | GrowthMemory)[],
+      progressSources: [
+        ...state.progressGoals,
+        ...archivedOnSelectedDate.filter(
+          (memory) => memory.kind === 'progress',
+        ),
+      ] as (ProgressGoal | GrowthMemory)[],
+    };
+  }, [selectedDate, state.countdowns, state.memories, state.progressGoals]);
+  const markerModifiers = useMemo(
+    () =>
+      Object.fromEntries(
+        CARD_COLORS.map((color, index) => [
+          `dateMarker${index}`,
+          state.dateMarkers
+            .filter((marker) => marker.color === color.value)
+            .map((marker) => fromDateKey(marker.date)),
+        ]),
+      ),
+    [state.dateMarkers],
+  );
 
   const moveActivePhoto = (direction: -1 | 1) => {
     if (!photoIds.length) return;
@@ -119,6 +169,64 @@ export function JournalView({
     onUpdate(selectedDate, { taskSnapshots: next });
   };
 
+  const toggleGrowthSnapshot = (
+    item: Countdown | ProgressGoal | GrowthMemory,
+    included: boolean,
+  ) => {
+    const sourceId =
+      item.kind === 'countdown' && 'sourceCountdownId' in item
+        ? item.sourceCountdownId
+        : item.kind === 'progress' && 'sourceGoalId' in item
+          ? item.sourceGoalId
+          : item.id;
+    const id = `growth-snapshot-${sourceId}`;
+    let snapshot: DiaryGrowthSnapshot;
+    if (item.kind === 'countdown') {
+      const selectedTime = fromDateKey(selectedDate).getTime();
+      const targetTime = fromDateKey(item.targetDate).getTime();
+      const sameDayNotes = item.notes.filter(
+        (note) => dateKey(new Date(note.createdAt)) === selectedDate,
+      );
+      snapshot = {
+        id,
+        kind: 'countdown',
+        sourceId,
+        emoji: item.emoji,
+        title: item.title,
+        remainingDays: Math.ceil((targetTime - selectedTime) / 86_400_000),
+        note: sameDayNotes.at(-1)?.text ?? '',
+        capturedAt: new Date().toISOString(),
+      };
+    } else {
+      const sameDayEvents = item.events.filter(
+        (event) => dateKey(new Date(event.createdAt)) === selectedDate,
+      );
+      snapshot = {
+        id,
+        kind: 'progress',
+        sourceId,
+        emoji: item.emoji,
+        title: item.title,
+        delta: Number(
+          sameDayEvents.reduce((sum, event) => sum + event.delta, 0).toFixed(4),
+        ),
+        current: sameDayEvents.at(-1)?.valueAfter ?? item.current,
+        total: item.total,
+        unit: item.unit,
+        note:
+          [...sameDayEvents].reverse().find((event) => event.note)?.note ?? '',
+        capturedAt: new Date().toISOString(),
+      };
+    }
+    const next = included
+      ? [
+          ...growthSnapshots.filter((entry) => entry.sourceId !== sourceId),
+          snapshot,
+        ]
+      : growthSnapshots.filter((entry) => entry.sourceId !== sourceId);
+    onUpdate(selectedDate, { growthSnapshots: next });
+  };
+
   return (
     <div className="view-stack journal-view">
       <section className="journal-date-nav">
@@ -164,8 +272,8 @@ export function JournalView({
           <div className="drawer-inner">
             <DrawerHeader>
               <DrawerTitle>翻一翻以前的日记</DrawerTitle>
-              <DrawerDescription>
-                有粉色小点的日子，已经留下过一页。
+              <DrawerDescription className="sr-only">
+                选择日期或给特别的日子做颜色标记。
               </DrawerDescription>
             </DrawerHeader>
             <Calendar
@@ -178,17 +286,56 @@ export function JournalView({
               modifiers={{
                 hasDiary: state.diaries
                   .filter(
-                    (item) => item.body || item.mood || item.photoIds.length,
+                    (item) =>
+                      item.body ||
+                      item.mood ||
+                      item.photoIds.length ||
+                      item.taskSnapshots.length ||
+                      item.growthSnapshots.length,
                   )
                   .map((item) => fromDateKey(item.date)),
+                ...markerModifiers,
               }}
-              modifiersClassNames={{ hasDiary: 'has-diary' }}
+              modifiersClassNames={{
+                hasDiary: 'has-diary',
+                ...Object.fromEntries(
+                  CARD_COLORS.map((_, index) => [
+                    `dateMarker${index}`,
+                    `date-marker-${index}`,
+                  ]),
+                ),
+              }}
               onSelect={(date) => {
                 if (!date) return;
                 onDateChange(dateKey(date));
                 setCalendarOpen(false);
               }}
             />
+            <fieldset className="calendar-marker-picker">
+              <legend>标记 {formatFullDate(selectedDate)}</legend>
+              <div>
+                {CARD_COLORS.map((color) => (
+                  <button
+                    key={color.value}
+                    type="button"
+                    className={
+                      selectedMarker?.color === color.value ? 'active' : ''
+                    }
+                    style={{ background: color.value }}
+                    aria-label={`用${color.label}标记这一天`}
+                    onClick={() => onSetDateMarker(selectedDate, color.value)}
+                  />
+                ))}
+                <button
+                  type="button"
+                  className="clear-marker"
+                  disabled={!selectedMarker}
+                  onClick={() => onSetDateMarker(selectedDate, null)}
+                >
+                  清除
+                </button>
+              </div>
+            </fieldset>
             <RecentDiaryList
               entries={state.diaries}
               onSelect={(date) => {
@@ -200,28 +347,43 @@ export function JournalView({
         </DrawerContent>
       </Drawer>
 
-      {(dayTasks.length > 0 || taskSnapshots.length > 0) && (
-        <section className="diary-task-section">
-          <div className="diary-task-heading">
-            <h2>今日小事</h2>
-            <Button variant="outline" onClick={() => setTaskPickerOpen(true)}>
-              <ListPlus />
-              选择
-            </Button>
-          </div>
-          {taskSnapshots.length > 0 && (
-            <ul>
-              {taskSnapshots.map((item) => (
-                <li key={item.id}>
-                  <span>{item.emoji}</span>
+      <section className="diary-task-section">
+        <div className="diary-task-heading">
+          <h2>今日小事</h2>
+          <Button variant="outline" onClick={() => setTaskPickerOpen(true)}>
+            <ListPlus />
+            选择
+          </Button>
+        </div>
+        {(taskSnapshots.length > 0 || growthSnapshots.length > 0) && (
+          <ul>
+            {taskSnapshots.map((item) => (
+              <li key={item.id}>
+                <span>{item.emoji}</span>
+                <strong>{item.title}</strong>
+                <i>{item.done ? '已完成' : '未完成'}</i>
+              </li>
+            ))}
+            {growthSnapshots.map((item) => (
+              <li className="diary-growth-snapshot" key={item.id}>
+                <Decoration value={item.emoji} alt="成长记录表情" />
+                <span>
                   <strong>{item.title}</strong>
-                  <i>{item.done ? '已完成' : '未完成'}</i>
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
-      )}
+                  <small>
+                    {item.kind === 'countdown'
+                      ? item.remainingDays >= 0
+                        ? `还有 ${item.remainingDays} 天`
+                        : `已经过去 ${Math.abs(item.remainingDays)} 天`
+                      : `今天 ${item.delta >= 0 ? '+' : ''}${item.delta} ${item.unit} · ${item.current}/${item.total}`}
+                    {item.note ? ` · ${item.note}` : ''}
+                  </small>
+                </span>
+                <i>{item.kind === 'countdown' ? '倒计时' : '进度'}</i>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
 
       <section className="journal-paper">
         <textarea
@@ -240,28 +402,94 @@ export function JournalView({
           <div className="drawer-inner diary-task-picker">
             <DrawerHeader>
               <DrawerTitle>收进这一天的小事</DrawerTitle>
-              <DrawerDescription>
-                这里只留下一份当时的记录，以后修改事项不会改动日记。
+              <DrawerDescription className="sr-only">
+                选择要保存到日记的事项或成长记录。
               </DrawerDescription>
             </DrawerHeader>
-            <div>
-              {dayTasks.map((task) => {
-                const included = taskSnapshots.some(
-                  (item) => item.sourceTaskId === task.id,
-                );
-                return (
-                  <label key={task.id}>
-                    <span>{task.emoji}</span>
-                    <strong>{task.title}</strong>
-                    <Checkbox
-                      checked={included}
-                      onCheckedChange={(checked) =>
-                        toggleTaskSnapshot(task.id, checked === true)
-                      }
-                    />
-                  </label>
-                );
-              })}
+            <div className="segmented diary-picker-tabs">
+              <button
+                type="button"
+                className={pickerTab === 'tasks' ? 'active' : ''}
+                onClick={() => setPickerTab('tasks')}
+              >
+                今日事项
+              </button>
+              <button
+                type="button"
+                className={pickerTab === 'countdowns' ? 'active' : ''}
+                onClick={() => setPickerTab('countdowns')}
+              >
+                倒计时
+              </button>
+              <button
+                type="button"
+                className={pickerTab === 'progress' ? 'active' : ''}
+                onClick={() => setPickerTab('progress')}
+              >
+                进度
+              </button>
+            </div>
+            <div className="diary-picker-options">
+              {pickerTab === 'tasks' &&
+                dayTasks.map((task) => {
+                  const included = taskSnapshots.some(
+                    (item) => item.sourceTaskId === task.id,
+                  );
+                  return (
+                    <label key={task.id}>
+                      <span>{task.emoji}</span>
+                      <strong>{task.title}</strong>
+                      <Checkbox
+                        checked={included}
+                        onCheckedChange={(checked) =>
+                          toggleTaskSnapshot(task.id, checked === true)
+                        }
+                      />
+                    </label>
+                  );
+                })}
+              {pickerTab === 'countdowns' &&
+                countdownSources.map((item) => {
+                  const sourceId =
+                    'sourceCountdownId' in item
+                      ? item.sourceCountdownId
+                      : item.id;
+                  const included = growthSnapshots.some(
+                    (entry) => entry.sourceId === sourceId,
+                  );
+                  return (
+                    <label key={`${item.id}:${sourceId}`}>
+                      <Decoration value={item.emoji} alt="倒计时表情" />
+                      <strong>{item.title}</strong>
+                      <Checkbox
+                        checked={included}
+                        onCheckedChange={(checked) =>
+                          toggleGrowthSnapshot(item, checked === true)
+                        }
+                      />
+                    </label>
+                  );
+                })}
+              {pickerTab === 'progress' &&
+                progressSources.map((item) => {
+                  const sourceId =
+                    'sourceGoalId' in item ? item.sourceGoalId : item.id;
+                  const included = growthSnapshots.some(
+                    (entry) => entry.sourceId === sourceId,
+                  );
+                  return (
+                    <label key={`${item.id}:${sourceId}`}>
+                      <Decoration value={item.emoji} alt="进度表情" />
+                      <strong>{item.title}</strong>
+                      <Checkbox
+                        checked={included}
+                        onCheckedChange={(checked) =>
+                          toggleGrowthSnapshot(item, checked === true)
+                        }
+                      />
+                    </label>
+                  );
+                })}
             </div>
             <Button onClick={() => setTaskPickerOpen(false)}>选好了</Button>
           </div>
@@ -409,16 +637,21 @@ function RecentDiaryList({
   entries: DiaryEntry[];
   onSelect: (date: string) => void;
 }) {
-  const recent = entries
-    .filter(
-      (entry) =>
-        entry.body.trim() ||
-        entry.mood ||
-        entry.photoIds.length ||
-        entry.taskSnapshots.length,
-    )
-    .sort((first, second) => second.date.localeCompare(first.date))
-    .slice(0, 5);
+  const recent = useMemo(
+    () =>
+      entries
+        .filter(
+          (entry) =>
+            entry.body.trim() ||
+            entry.mood ||
+            entry.photoIds.length ||
+            entry.taskSnapshots.length ||
+            entry.growthSnapshots.length,
+        )
+        .sort((first, second) => second.date.localeCompare(first.date))
+        .slice(0, 5),
+    [entries],
+  );
 
   return (
     <section className="recent-diaries">
@@ -432,14 +665,14 @@ function RecentDiaryList({
                 key={entry.date}
                 onClick={() => onSelect(entry.date)}
               >
-                <span>📖</span>
+                <span>📒</span>
                 <span>
                   <strong>{formatFullDate(entry.date)}</strong>
                   <small>
                     {entry.body.trim().slice(0, 24) ||
                       (entry.photoIds.length
                         ? `${entry.photoIds.length} 张照片`
-                        : `${entry.taskSnapshots.length} 件小事`)}
+                        : `${entry.taskSnapshots.length + entry.growthSnapshots.length} 件小事`)}
                   </small>
                 </span>
                 <ChevronRight />

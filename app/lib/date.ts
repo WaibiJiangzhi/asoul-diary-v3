@@ -24,9 +24,10 @@ export function formatFullDate(value: string) {
 }
 
 export function formatShortDate(value: string) {
-  return new Intl.DateTimeFormat('zh-CN', { month: 'short', day: 'numeric' }).format(
-    fromDateKey(value),
-  );
+  return new Intl.DateTimeFormat('zh-CN', {
+    month: 'short',
+    day: 'numeric',
+  }).format(fromDateKey(value));
 }
 
 export function daysUntil(value: string) {

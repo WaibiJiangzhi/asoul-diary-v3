@@ -101,6 +101,91 @@
   .rdp-day_button[data-selected-single='true']::after {
   background: white;
 }
+.calendar-drawer
+  [data-slot='calendar']
+  [class*='date-marker-'].rdp-day_button::before,
+.calendar-drawer
+  [data-slot='calendar']
+  [class*='date-marker-']
+  .rdp-day_button::before {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 7px;
+  height: 7px;
+  border: 2px solid rgb(255 255 255 / 86%);
+  border-radius: 50%;
+  background: var(--date-marker-color);
+  box-shadow: 0 1px 4px rgb(53 45 54 / 18%);
+  content: '';
+}
+.calendar-drawer .date-marker-0 {
+  --date-marker-color: #e799b0;
+}
+.calendar-drawer .date-marker-1 {
+  --date-marker-color: #db7d74;
+}
+.calendar-drawer .date-marker-2 {
+  --date-marker-color: #576690;
+}
+.calendar-drawer .date-marker-3 {
+  --date-marker-color: #d8946b;
+}
+.calendar-drawer .date-marker-4 {
+  --date-marker-color: #c89b4b;
+}
+.calendar-drawer .date-marker-5 {
+  --date-marker-color: #6f9a76;
+}
+.calendar-drawer .date-marker-6 {
+  --date-marker-color: #5b9292;
+}
+.calendar-drawer .date-marker-7 {
+  --date-marker-color: #8b78a8;
+}
+.calendar-drawer .date-marker-8 {
+  --date-marker-color: #84787e;
+}
+.calendar-marker-picker {
+  margin: 8px 0 16px;
+  padding: 11px;
+  border: 1px solid var(--theme-border);
+  border-radius: 16px;
+  background: var(--theme-faint);
+}
+.calendar-marker-picker legend {
+  padding: 0 5px;
+  color: #655e69;
+  font-size: 10px;
+  font-weight: 800;
+}
+.calendar-marker-picker > div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 2px;
+}
+.calendar-marker-picker button:not(.clear-marker) {
+  width: 27px;
+  height: 27px;
+  flex: 0 0 27px;
+  border: 4px solid white;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px #ded4d5;
+}
+.calendar-marker-picker button.active {
+  box-shadow: 0 0 0 3px var(--theme-glow);
+}
+.calendar-marker-picker .clear-marker {
+  min-height: 29px;
+  margin-left: auto;
+  padding: 0 8px;
+  border: 0;
+  background: transparent;
+  color: #817984;
+  font-size: 10px;
+}
 
 .recent-diaries {
   margin-top: 6px;
@@ -170,7 +255,7 @@
 .journal-delete {
   min-height: 36px;
   padding: 0 8px;
-  color: #b8696d;
+  color: var(--theme-accent-deep);
   font-size: 10px;
 }
 .has-wallpaper .journal-delete {
@@ -205,8 +290,10 @@
     to bottom,
     transparent 0,
     transparent 35px,
-    color-mix(in srgb, var(--theme-accent), transparent 86%) 36px
+    color-mix(in srgb, var(--theme-accent), transparent 72%) 35px,
+    color-mix(in srgb, var(--theme-accent), transparent 88%) 37px
   );
+  background-position-y: 3px;
   background-attachment: local;
   color: #48424d;
   font-family: 'KaiTi', 'STKaiti', var(--serif);
@@ -258,6 +345,10 @@
   font-size: 10px;
   font-weight: 800;
   cursor: pointer;
+}
+.has-wallpaper .photo-add {
+  border-width: 2px;
+  border-color: color-mix(in srgb, var(--theme-accent), white 40%);
 }
 .photo-add svg {
   width: 17px;
@@ -446,6 +537,38 @@ body:has(.photo-viewer) [data-slot='dialog-overlay'] {
   font-size: 9px;
   font-style: normal;
 }
+.diary-task-section li.diary-growth-snapshot {
+  grid-template-columns: 38px minmax(0, 1fr) auto;
+  min-height: 58px;
+}
+.diary-growth-snapshot > [data-decoration] {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 11px;
+  background: var(--theme-soft);
+  font-size: 19px;
+}
+.diary-growth-snapshot > [data-decoration] img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.diary-growth-snapshot > span > strong,
+.diary-growth-snapshot > span > small {
+  display: block;
+}
+.diary-growth-snapshot > span > small {
+  overflow: hidden;
+  margin-top: 2px;
+  color: #756e78;
+  font-size: 9px;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .diary-task-picker {
   display: grid;
   gap: 10px;
@@ -453,6 +576,17 @@ body:has(.photo-viewer) [data-slot='dialog-overlay'] {
 .diary-task-picker > div {
   display: grid;
   gap: 7px;
+}
+.diary-task-picker .diary-picker-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+}
+.diary-task-picker .diary-picker-options {
+  display: grid;
+  max-height: 46dvh;
+  gap: 7px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 .diary-task-picker label {
   display: grid;
@@ -468,6 +602,21 @@ body:has(.photo-viewer) [data-slot='dialog-overlay'] {
 .diary-task-picker label > span {
   font-size: 21px;
   text-align: center;
+}
+.diary-task-picker label > [data-decoration] {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 10px;
+  background: var(--theme-soft);
+  font-size: 20px;
+}
+.diary-task-picker label > [data-decoration] img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 .diary-task-picker label > strong {
   overflow: hidden;
@@ -526,4 +675,12 @@ body:has(.photo-viewer) [data-slot='dialog-overlay'] {
 }
 .bili-tags a.nailin > svg:first-child {
   color: var(--nailin);
+}
+
+.has-wallpaper .journal-date-nav,
+.has-wallpaper .journal-paper,
+.has-wallpaper .diary-task-section,
+.has-wallpaper .bili-tags,
+.has-wallpaper .recent-diaries {
+  border-width: 2px;
 }

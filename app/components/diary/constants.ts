@@ -76,8 +76,8 @@ export function pickDailyEmoji() {
 }
 
 export const CARD_COLORS: { value: CardColor; label: string }[] = [
-  { value: '#DB7D74', label: '贝拉珊瑚红' },
   { value: '#E799B0', label: '嘉然柔粉' },
+  { value: '#DB7D74', label: '贝拉珊瑚红' },
   { value: '#576690', label: '乃琳夜蓝' },
   { value: '#D8946B', label: '杏桃' },
   { value: '#C89B4B', label: '暖金' },

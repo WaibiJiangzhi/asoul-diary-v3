@@ -11,7 +11,9 @@
     "build:pages": "node scripts/build-pages.mjs",
     "start": "vinext start",
     "lint": "oxlint",
-    "format": "oxfmt"
+    "format": "oxfmt",
+    "fixture:two-years": "node scripts/generate-two-year-fixture.mjs",
+    "wallpapers:optimize": "node scripts/optimize-wallpapers.mjs"
   },
   "dependencies": {
     "@base-ui/react": "1.7.0",

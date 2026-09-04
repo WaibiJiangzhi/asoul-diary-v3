@@ -768,6 +768,75 @@
   }
 }
 
+/* A quiet rail for ordinary cards; the centered card gets the v2 focus ring. */
+.growth-view .growth-carousel {
+  margin-right: -14px;
+  margin-left: 0;
+  padding: 13px 7% 28px 8px;
+  scroll-padding-right: 7%;
+  scroll-padding-left: 8px;
+}
+.growth-carousel .paper-card {
+  border-width: 1px;
+  box-shadow: none;
+}
+.growth-carousel .paper-card.is-active {
+  border-width: 2px;
+  border-color: var(--card-accent);
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--card-accent), transparent 82%),
+    0 14px 28px color-mix(in srgb, var(--card-accent), transparent 72%);
+}
+.has-wallpaper .growth-carousel .paper-card.is-active {
+  border-color: color-mix(in srgb, var(--card-accent), white 18%);
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--card-accent), transparent 64%),
+    0 15px 30px rgb(29 24 34 / 24%);
+}
+.countdown-main.no-decoration .countdown-number {
+  top: 54px;
+}
+.countdown-main.no-decoration .countdown-number span {
+  margin-top: 7px;
+}
+.memory-open small {
+  color: #5b545f;
+  font-size: 10px;
+  font-weight: 850;
+}
+.has-wallpaper .memory-open small,
+.has-wallpaper .memory-open > span > span,
+.has-wallpaper .memory-all-button {
+  color: #3f3944;
+  font-weight: 850;
+}
+.memory-detail-actions {
+  grid-template-columns: repeat(3, 1fr);
+}
+.memory-detail-actions [data-slot='button'] {
+  min-width: 0;
+  padding-inline: 7px;
+  font-size: 10px;
+}
+.has-wallpaper .growth-section,
+.has-wallpaper .history-trigger,
+.has-wallpaper .progress-adjust,
+.has-wallpaper .memory-section {
+  border-width: 2px;
+}
+
+@media (max-width: 380px) {
+  .growth-view .growth-carousel {
+    padding-right: 5%;
+  }
+  .memory-detail-actions {
+    grid-template-columns: 1fr 1fr;
+  }
+  .memory-detail-actions .danger-text {
+    grid-column: 1 / -1;
+  }
+}
+
 @media (max-width: 380px) {
   .sticker-grid {
     grid-template-columns: repeat(3, 1fr);
@@ -1290,4 +1359,12 @@
     grid-column: 2;
     text-align: left;
   }
+}
+
+/* Keep the undecorated number optically balanced after final responsive sizing. */
+.countdown-main.no-decoration .countdown-number {
+  top: 54px;
+}
+.countdown-main.no-decoration .countdown-number span {
+  margin-top: 7px;
 }

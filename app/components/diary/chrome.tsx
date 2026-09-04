@@ -13,6 +13,7 @@ import {
   Smartphone,
   Sprout,
   Trash2,
+  Volume2,
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -121,25 +122,10 @@ export function SettingsDrawer({
 
         <div className="settings-sheet">
           <section className="settings-section">
-            <h3>主题</h3>
-            <button
-              type="button"
-              className={`paper-theme-card ${state.settings.theme === 'paper' ? 'active' : ''}`}
-              onClick={() => setSettings({ theme: 'paper' })}
-            >
-              <span>
-                <i />
-                <i />
-                <i />
-              </span>
-              <div>
-                <strong>温馨日记纸</strong>
-                <small>横线、纸张和装订孔陪着你写</small>
-              </div>
-              {state.settings.theme === 'paper' && <Check />}
-            </button>
-
-            <p className="wallpaper-label">选择整本日记的主题色</p>
+            <h3>主题色</h3>
+            <p className="setting-note">
+              主题色会统一改变标题、按钮、线条和选择状态。
+            </p>
             <div className="accent-theme-grid">
               {ACCENT_THEMES.map((theme) => (
                 <button
@@ -157,7 +143,28 @@ export function SettingsDrawer({
                 </button>
               ))}
             </div>
-            <p className="wallpaper-label">或者选一张收藏壁纸</p>
+          </section>
+
+          <section className="settings-section">
+            <h3>日记背景</h3>
+            <button
+              type="button"
+              className={`paper-theme-card ${state.settings.theme === 'paper' ? 'active' : ''}`}
+              onClick={() => setSettings({ theme: 'paper' })}
+            >
+              <span>
+                <i />
+                <i />
+                <i />
+              </span>
+              <div>
+                <strong>温馨日记纸</strong>
+                <small>横线、纸张和装订孔陪着你写</small>
+              </div>
+              {state.settings.theme === 'paper' && <Check />}
+            </button>
+
+            <p className="wallpaper-label">或选择一张收藏壁纸</p>
             <div className="wallpaper-grid">
               {WALLPAPERS.map((wallpaper, index) => (
                 <button
@@ -208,6 +215,21 @@ export function SettingsDrawer({
                 checked={state.settings.haptics}
                 onChange={(event) =>
                   setSettings({ haptics: event.target.checked })
+                }
+              />
+            </label>
+            <label className="toggle-row">
+              <span>
+                <strong>
+                  <Volume2 /> 轻柔音效
+                </strong>
+                <small>完成事项和增加进度时轻轻回应</small>
+              </span>
+              <input
+                type="checkbox"
+                checked={state.settings.sounds}
+                onChange={(event) =>
+                  setSettings({ sounds: event.target.checked })
                 }
               />
             </label>

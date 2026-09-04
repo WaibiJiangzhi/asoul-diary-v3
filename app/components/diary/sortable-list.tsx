@@ -31,12 +31,14 @@ export function SortableList({
   className,
   onReorder,
   onDragStart,
+  onDraggingChange,
   children,
 }: {
   ids: string[];
   className?: string;
   onReorder: (activeId: string, overId: string) => void;
   onDragStart?: () => void;
+  onDraggingChange?: (dragging: boolean) => void;
   children: (
     id: string,
     handle: SortableHandle,
@@ -57,14 +59,19 @@ export function SortableList({
     if (event.over && event.active.id !== event.over.id) {
       onReorder(String(event.active.id), String(event.over.id));
     }
+    onDraggingChange?.(false);
   }
 
   return (
     <DndContext
       sensors={sensors}
       collisionDetection={closestCenter}
-      onDragStart={onDragStart}
+      onDragStart={() => {
+        onDraggingChange?.(true);
+        onDragStart?.();
+      }}
       onDragEnd={finishDrag}
+      onDragCancel={() => onDraggingChange?.(false)}
     >
       <SortableContext items={ids} strategy={verticalListSortingStrategy}>
         <div className={className}>
