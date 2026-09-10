@@ -745,15 +745,11 @@
 .growth-carousel .paper-card.is-active {
   border-width: 2px;
   border-color: var(--card-accent);
-  box-shadow:
-    0 0 0 3px color-mix(in srgb, var(--card-accent), transparent 82%),
-    0 14px 28px color-mix(in srgb, var(--card-accent), transparent 72%);
+  box-shadow: none;
 }
 .has-wallpaper .growth-carousel .paper-card.is-active {
   border-color: color-mix(in srgb, var(--card-accent), white 18%);
-  box-shadow:
-    0 0 0 3px color-mix(in srgb, var(--card-accent), transparent 64%),
-    0 15px 30px rgb(29 24 34 / 24%);
+  box-shadow: none;
 }
 .countdown-main.no-decoration .countdown-number {
   top: 54px;
@@ -1350,14 +1346,12 @@
 }
 .growth-view .growth-carousel .paper-card.is-active {
   border-width: 2px;
-  box-shadow:
-    0 0 0 2px color-mix(in srgb, var(--card-accent), transparent 79%),
-    0 9px 18px color-mix(in srgb, var(--card-accent), transparent 73%);
+  box-shadow: none;
 }
 .has-wallpaper .growth-view .growth-carousel .paper-card.is-active {
   border-width: 3px;
   border-color: color-mix(in srgb, var(--card-accent), white 18%);
-  box-shadow: 0 10px 20px rgb(29 24 34 / 22%);
+  box-shadow: none;
 }
 
 /* Old/imported blank decorations still keep a safe, non-overlapping layout. */

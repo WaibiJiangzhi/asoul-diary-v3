@@ -727,3 +727,33 @@ body:has(.photo-viewer) [data-slot='dialog-overlay'] {
   border-left-width: 0;
   border-color: color-mix(in srgb, var(--theme-accent-deep), transparent 46%);
 }
+
+.diary-task-section li {
+  position: relative;
+  padding-right: 38px;
+}
+.snapshot-remove {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 36px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  background: transparent;
+  color: #8b7e8c;
+  border-radius: 12px;
+}
+.snapshot-remove:focus-visible {
+  outline: 2px solid var(--theme-accent);
+  outline-offset: -3px;
+}
+.diary-growth-snapshot > [data-decoration='sticker'] {
+  background: transparent;
+  overflow: visible;
+}
+.diary-growth-snapshot > [data-decoration='sticker'] img {
+  object-fit: contain;
+}

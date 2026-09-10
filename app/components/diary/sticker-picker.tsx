@@ -90,6 +90,7 @@ export function StickerPanel({
   const [recents, setRecents] = useState(preferences.recents);
   const [customEmoji, setCustomEmoji] = useState('');
   const [copyMode, setCopyMode] = useState(false);
+  const [managing, setManaging] = useState(false);
   const [notice, setNotice] = useState('');
   const tabs = useRef<HTMLDivElement>(null);
   const grid = useRef<HTMLDivElement>(null);
@@ -112,6 +113,7 @@ export function StickerPanel({
         ? recents
         : (pack?.stickers.map((item) => item.token) ?? []);
   function changePack(id: string) {
+    setManaging(false);
     setPackId(id);
     try {
       localStorage.setItem(PACK_KEY, id);
@@ -120,6 +122,17 @@ export function StickerPanel({
     }
   }
   async function choose(value: string) {
+    if (managing && packId === 'recent') {
+      const next = recents.filter((item) => item !== value);
+      setRecents(next);
+      try {
+        localStorage.setItem(RECENTS_KEY, JSON.stringify(next));
+      } catch {
+        /* Recent preferences are optional. */
+      }
+      setNotice('已从最近使用移除');
+      return;
+    }
     if (copyMode) {
       try {
         await navigator.clipboard.writeText(getSticker(value)?.token ?? value);
@@ -149,9 +162,29 @@ export function StickerPanel({
             {pack?.name ?? (packId === 'recent' ? '最近使用' : 'Emoji')}
           </strong>
           <small aria-live="polite">
-            {notice || (copyMode ? '点一个表情，复制文字代号' : title)}
+            {notice ||
+              (managing
+                ? '点叉移除，不影响已经写下的表情'
+                : copyMode
+                  ? '点一个表情，复制文字代号'
+                  : title)}
           </small>
         </div>
+        {packId === 'recent' && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            aria-pressed={managing}
+            onClick={() => {
+              setManaging(!managing);
+              setCopyMode(false);
+              setNotice('');
+            }}
+          >
+            {managing ? '完成' : '管理'}
+          </Button>
+        )}
         <Button
           type="button"
           variant="ghost"
@@ -160,6 +193,7 @@ export function StickerPanel({
           aria-pressed={copyMode}
           onClick={() => {
             setCopyMode(!copyMode);
+            setManaging(false);
             setNotice('');
           }}
         >
@@ -201,10 +235,14 @@ export function StickerPanel({
             <button
               type="button"
               key={value}
-              aria-label={`${copyMode ? '复制' : '选择'}${sticker?.name ?? value}`}
+              className={managing ? 'is-removing-recent' : undefined}
+              aria-label={`${managing ? '从最近移除' : copyMode ? '复制' : '选择'}${sticker?.name ?? value}`}
               onClick={() => void choose(value)}
             >
               <Decoration value={value} className="sticker-option-image" />
+              {managing && (
+                <X className="recent-remove-mark" aria-hidden="true" />
+              )}
               {sticker && (
                 <span className="sticker-option-name">{sticker.name}</span>
               )}

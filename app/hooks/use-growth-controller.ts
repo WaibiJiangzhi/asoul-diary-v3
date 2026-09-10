@@ -404,8 +404,7 @@ export function useGrowthController({
         },
     );
     haptic();
-    if (celebrating) softChime('celebrate');
-    else if (outcome !== null) softChime('progress');
+    if (outcome !== null) softChime('check');
     showToast(
       outcome === null
         ? '已取消这天的状态，文字足迹仍保留'

@@ -47,6 +47,54 @@ export function useJournalController({
     });
   }
 
+  function removeDiarySnapshot(
+    date: string,
+    kind: 'taskSnapshots' | 'growthSnapshots',
+    id: string,
+  ) {
+    const entry = stateRef.current?.diaries.find((item) => item.date === date);
+    const snapshot = entry?.[kind].find((item) => item.id === id);
+    if (!entry || !snapshot) return;
+    const index = entry[kind].findIndex((item) => item.id === id);
+    setState(
+      (current) =>
+        current && {
+          ...current,
+          diaries: current.diaries.map((item) =>
+            item.date !== date
+              ? item
+              : {
+                  ...item,
+                  [kind]: item[kind].filter((value) => value.id !== id),
+                  updatedAt: new Date().toISOString(),
+                },
+          ),
+        },
+    );
+    showToast('已从这篇日记移除', () => {
+      setState(
+        (current) =>
+          current && {
+            ...current,
+            diaries: current.diaries.map((item) => {
+              if (
+                item.date !== date ||
+                item[kind].some((value) => value.id === id)
+              )
+                return item;
+              const restored = [...item[kind]];
+              restored.splice(Math.min(index, restored.length), 0, snapshot);
+              return {
+                ...item,
+                [kind]: restored,
+                updatedAt: new Date().toISOString(),
+              };
+            }),
+          },
+      );
+    });
+  }
+
   function setDateMarker(date: string, color: CardColor | null) {
     setState(
       (current) =>
@@ -125,6 +173,7 @@ export function useJournalController({
 
   return {
     updateDiary,
+    removeDiarySnapshot,
     setDateMarker,
     addDiaryPhotos,
     removeDiaryPhoto,

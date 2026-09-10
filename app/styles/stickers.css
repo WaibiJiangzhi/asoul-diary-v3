@@ -196,3 +196,18 @@
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
+
+.is-removing-recent {
+  position: relative;
+}
+.sticker-grid .recent-remove-mark {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--theme-surface);
+  color: var(--theme-accent-deep);
+  padding: 2px;
+}

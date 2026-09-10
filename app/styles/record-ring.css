@@ -390,3 +390,28 @@
     animation: none;
   }
 }
+
+.record-overview-legend .record-legend-copy {
+  display: block;
+  min-width: 0;
+  flex: 1;
+}
+.record-overview-legend .record-legend-name {
+  display: block;
+  line-height: 1.4;
+}
+.record-legend-copy b {
+  display: block;
+  margin-top: 1px;
+}
+.record-overview-legend {
+  gap: 8px 12px;
+}
+.record-overview-legend .record-legend-badge {
+  width: 32px;
+  height: 36px;
+}
+.record-legend-image {
+  width: 32px;
+  height: 32px;
+}

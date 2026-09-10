@@ -54,6 +54,7 @@ export function JournalView({
   onUpdate,
   onAddPhotos,
   onRemovePhoto,
+  onRemoveSnapshot,
   onDelete,
   onSetDateMarker,
 }: {
@@ -63,6 +64,11 @@ export function JournalView({
   onUpdate: (date: string, patch: Partial<DiaryEntry>) => void;
   onAddPhotos: (date: string, files: FileList | null) => void;
   onRemovePhoto: (date: string, id: string) => void;
+  onRemoveSnapshot: (
+    date: string,
+    kind: 'taskSnapshots' | 'growthSnapshots',
+    id: string,
+  ) => void;
   onDelete: (entry: DiaryEntry) => void;
   onSetDateMarker: (date: string, color: CardColor | null) => void;
 }) {
@@ -390,6 +396,15 @@ export function JournalView({
                 />
                 <strong>{item.title}</strong>
                 <i>{item.done ? '已完成' : '未完成'}</i>
+                <button
+                  className="snapshot-remove"
+                  aria-label={`从这篇日记移除${item.title}`}
+                  onClick={() =>
+                    onRemoveSnapshot(selectedDate, 'taskSnapshots', item.id)
+                  }
+                >
+                  <X size={15} />
+                </button>
               </li>
             ))}
             {growthSnapshots.map((item) => (
@@ -413,6 +428,15 @@ export function JournalView({
                 {!(item.kind === 'progress' && item.challengeResult) && (
                   <i>{item.kind === 'countdown' ? '倒计时' : '进度'}</i>
                 )}
+                <button
+                  className="snapshot-remove"
+                  aria-label={`从这篇日记移除${item.title}`}
+                  onClick={() =>
+                    onRemoveSnapshot(selectedDate, 'growthSnapshots', item.id)
+                  }
+                >
+                  <X size={15} />
+                </button>
               </li>
             ))}
           </ul>

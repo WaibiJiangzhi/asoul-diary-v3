@@ -120,16 +120,8 @@ export function ChallengeChart({
               y2={130 - Math.cos(angle) * 114}
             />
             <text
-              x={Math.max(30, Math.min(230, 130 + Math.sin(angle) * 114))}
-              y={Math.max(
-                8,
-                Math.min(
-                  252,
-                  130 -
-                    Math.cos(angle) * 114 +
-                    (Math.cos(angle) > 0 ? -14 : 14),
-                ),
-              )}
+              x={Math.max(30, Math.min(230, 130 + Math.sin(angle) * 83))}
+              y={Math.max(8, Math.min(252, 130 - Math.cos(angle) * 83))}
               textAnchor="middle"
               dominantBaseline="central"
             >
@@ -165,11 +157,13 @@ export function ChallengeChart({
                   <i style={{ background: state.color }} />
                 )}
               </span>
-              <span className="record-legend-name">{state.name}</span>
-              <b>
-                {stats.counts[state.id]}
-                <small> 天</small>
-              </b>
+              <span className="record-legend-copy">
+                <span className="record-legend-name">{state.name}</span>
+                <b>
+                  {stats.counts[state.id]}
+                  <small> 天</small>
+                </b>
+              </span>
             </div>
           ))}
         </div>

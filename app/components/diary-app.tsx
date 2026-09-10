@@ -208,6 +208,7 @@ export default function DiaryApp() {
               onUpdate={journal.updateDiary}
               onAddPhotos={journal.addDiaryPhotos}
               onRemovePhoto={journal.removeDiaryPhoto}
+              onRemoveSnapshot={journal.removeDiarySnapshot}
               onDelete={journal.deleteDiary}
               onSetDateMarker={journal.setDateMarker}
             />
