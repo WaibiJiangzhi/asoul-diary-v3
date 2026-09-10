@@ -64,21 +64,21 @@
 .calendar-drawer .drawer-inner {
   padding-bottom: max(26px, env(safe-area-inset-bottom));
 }
-.calendar-drawer [data-slot='calendar'] {
+.diary-calendar[data-slot='calendar'] {
   --cell-size: clamp(38px, 11vw, 50px);
   width: 100%;
   margin: 8px auto 0;
   padding: 10px 2px;
 }
-.calendar-drawer [data-slot='calendar'] .rdp-month,
-.calendar-drawer [data-slot='calendar'] .rdp-month_grid {
+.diary-calendar[data-slot='calendar'] .rdp-month,
+.diary-calendar[data-slot='calendar'] .rdp-month_grid {
   width: 100%;
 }
-.calendar-drawer [data-slot='calendar'] .rdp-weekday {
+.diary-calendar[data-slot='calendar'] .rdp-weekday {
   color: #948b96;
   font-size: 11px;
 }
-.calendar-drawer [data-slot='calendar'] .rdp-day_button {
+.diary-calendar[data-slot='calendar'] .rdp-day_button {
   position: relative;
   min-height: var(--cell-size);
   border-radius: 14px;
@@ -86,16 +86,13 @@
   box-shadow: none;
   outline: none;
 }
-.calendar-drawer
-  [data-slot='calendar']
-  .rdp-day_button[data-selected-single='true']:focus-visible {
-  box-shadow: inset 0 0 0 2px rgb(255 255 255 / 72%);
+.diary-calendar[data-slot='calendar'] .rdp-day_button:focus-visible {
+  box-shadow: inset 0 0 0 2px var(--theme-accent-deep);
 }
-.calendar-drawer [data-slot='calendar'] .rdp-day[data-selected='true'] {
+.diary-calendar[data-slot='calendar'] .rdp-day[data-selected='true'] {
   background: transparent;
 }
-.calendar-drawer
-  [data-slot='calendar']
+.diary-calendar[data-slot='calendar']
   .rdp-today:has(.rdp-day_button[data-selected-single='true']) {
   background: transparent;
 }

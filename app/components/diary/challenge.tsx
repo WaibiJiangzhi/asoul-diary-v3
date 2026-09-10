@@ -25,6 +25,7 @@ import { dateKey, fromDateKey } from '@/lib/date';
 import type { ProgressGoal, ProgressMemory } from '@/lib/types';
 import { Decoration } from './decoration';
 import { ProgressDatePicker } from './growth-calendar';
+import { useRingReveal } from '@/hooks/use-ring-reveal';
 import { progressEventDate } from '@/lib/progress';
 
 const shortRangeDate = (date: string) => {
@@ -34,10 +35,13 @@ const shortRangeDate = (date: string) => {
 
 export function ChallengeChart({
   goal,
+  active = true,
 }: {
   goal: ProgressGoal | ProgressMemory;
+  active?: boolean;
 }) {
   const [view, setView] = useState<'date' | 'overview'>('date');
+  const reveal = useRingReveal(view, active);
   const stats = challengeStats(goal);
   const states = recordStates(goal);
   const target = goal.challenge!.targetDays;
@@ -95,24 +99,37 @@ export function ChallengeChart({
         className="record-ring"
         aria-label={`已记录 ${stats.recorded}/${goal.total} 天，${states.map((state) => `${state.name} ${stats.counts[state.id]} 天`).join('，')}${targetState && target ? `，期待${targetState.name} ${target} 天` : ''}`}
       >
-        <div className="record-ring-track" style={{ background: gradient }}>
-          <div className="record-ring-hatch" style={{ maskImage: hatchMask }} />
+        <div className="record-ring-reveal" ref={reveal} aria-hidden="true">
+          <div className="record-ring-track" style={{ background: gradient }}>
+            <div
+              className="record-ring-hatch"
+              style={{ maskImage: hatchMask }}
+            />
+          </div>
         </div>
         {showTarget && (
           <svg
             className="record-ring-marker"
-            viewBox="0 0 220 220"
+            viewBox="0 0 260 260"
             aria-hidden="true"
           >
             <line
-              x1={110 + Math.sin(angle) * 91}
-              y1={110 - Math.cos(angle) * 91}
-              x2={110 + Math.sin(angle) * 100}
-              y2={110 - Math.cos(angle) * 100}
+              x1={130 + Math.sin(angle) * 104}
+              y1={130 - Math.cos(angle) * 104}
+              x2={130 + Math.sin(angle) * 114}
+              y2={130 - Math.cos(angle) * 114}
             />
             <text
-              x={Math.max(24, Math.min(196, 110 + Math.sin(angle) * 106))}
-              y={Math.max(8, Math.min(210, 110 - Math.cos(angle) * 107))}
+              x={Math.max(30, Math.min(230, 130 + Math.sin(angle) * 114))}
+              y={Math.max(
+                8,
+                Math.min(
+                  252,
+                  130 -
+                    Math.cos(angle) * 114 +
+                    (Math.cos(angle) > 0 ? -14 : 14),
+                ),
+              )}
               textAnchor="middle"
               dominantBaseline="central"
             >
@@ -120,7 +137,10 @@ export function ChallengeChart({
             </text>
           </svg>
         )}
-        <div className="record-ring-center">
+        <div
+          className="record-ring-center"
+          key={goal.events.map((event) => event.createdAt).join()}
+        >
           <strong className={String(goal.total).length > 3 ? 'is-long' : ''}>
             {showTarget ? stats.targetCount : stats.recorded}
             <small> / {showTarget ? target : goal.total}</small>
@@ -134,11 +154,26 @@ export function ChallengeChart({
       {view === 'overview' && (
         <div className="record-overview-legend">
           {states.map((state) => (
-            <span key={state.id}>
-              <i style={{ background: state.color }} />
-              {state.name}
-              <b>{stats.counts[state.id]}</b>
-            </span>
+            <div className="record-legend-item" key={state.id}>
+              <span
+                className="record-legend-badge"
+                style={{ '--status-color': state.color } as CSSProperties}
+              >
+                {state.emoji ? (
+                  <Decoration
+                    value={state.emoji}
+                    className="record-legend-image"
+                  />
+                ) : (
+                  <i style={{ background: state.color }} />
+                )}
+              </span>
+              <span className="record-legend-name">{state.name}</span>
+              <b>
+                {stats.counts[state.id]}
+                <small> 天</small>
+              </b>
+            </div>
           ))}
         </div>
       )}
@@ -176,7 +211,7 @@ export function ChallengeCard({
   onRecord: (
     id: string,
     date: string,
-    outcome: ChallengeOutcome,
+    outcome: ChallengeOutcome | null,
     note?: string,
   ) => void;
   onAdjust: (id: string, delta: number, note?: string, date?: string) => void;
@@ -187,6 +222,7 @@ export function ChallengeCard({
   date: string;
   onDateChange: (date: string) => void;
 }) {
+  const [drafts, setDrafts] = useState<Record<string, string>>({});
   const today = dateKey();
   const end = challengeEnd(goal);
   const event = challengeDays(goal).find((entry) => entry.date === date);
@@ -231,7 +267,7 @@ export function ChallengeCard({
           </Button>
         </div>
       </div>
-      <ChallengeChart goal={goal} />
+      <ChallengeChart goal={goal} active={active} />
       <ProgressDatePicker
         goal={goal}
         date={date}
@@ -239,12 +275,20 @@ export function ChallengeCard({
         onOpen={() => onOpenHistory(goal.id)}
       />
       <ChallengeEntry
-        key={`${date}:${event?.createdAt ?? ''}`}
         goal={goal}
         date={date}
         allowed={allowed}
         outcome={event?.outcome}
         initialNote={event?.note ?? ''}
+        note={drafts[date] ?? event?.note ?? ''}
+        onNoteChange={(value) =>
+          setDrafts((current) => {
+            const next = { ...current };
+            if (value === null) delete next[date];
+            else next[date] = value;
+            return next;
+          })
+        }
         onRecord={onRecord}
         onAdjust={onAdjust}
       />
@@ -277,6 +321,8 @@ function ChallengeEntry({
   allowed,
   outcome,
   initialNote,
+  note,
+  onNoteChange,
   onRecord,
   onAdjust,
 }: {
@@ -285,15 +331,16 @@ function ChallengeEntry({
   allowed: boolean;
   outcome?: ChallengeOutcome;
   initialNote: string;
+  note: string;
+  onNoteChange: (note: string | null) => void;
   onRecord: (
     id: string,
     date: string,
-    outcome: ChallengeOutcome,
+    outcome: ChallengeOutcome | null,
     note?: string,
   ) => void;
   onAdjust: (id: string, delta: number, note?: string, date?: string) => void;
 }) {
-  const [note, setNote] = useState(initialNote);
   return (
     <div className="challenge-entry">
       {!allowed && <p className="challenge-day-status">还没开始，先期待一下</p>}
@@ -305,7 +352,17 @@ function ChallengeEntry({
             disabled={!allowed}
             aria-pressed={outcome === status.id}
             style={{ '--status-color': status.color } as CSSProperties}
-            onClick={() => onRecord(goal.id, date, status.id, note)}
+            onClick={() => {
+              onRecord(
+                goal.id,
+                date,
+                outcome === status.id ? null : status.id,
+                note,
+              );
+              // Saved words remain in the footstep when the state is cleared.
+              if (outcome !== status.id || note === initialNote)
+                onNoteChange(null);
+            }}
           >
             {status.emoji ? (
               <Decoration
@@ -319,39 +376,39 @@ function ChallengeEntry({
           </Button>
         ))}
       </div>
-      <details className="challenge-note">
-        <summary>
-          <NotebookPen />
-          {initialNote ? '查看 / 修改这天的话' : '留一句话（可选）'}
-        </summary>
-        <Input
-          aria-label="挑战足迹内容"
-          maxLength={100}
-          value={note}
-          onChange={(e) => setNote(e.target.value)}
-          placeholder="今天的感受，或新的约定"
-        />
-        <div className="challenge-note-actions">
-          {outcome && (
-            <Button
-              variant="ghost"
-              onClick={() => onRecord(goal.id, date, outcome, note)}
-            >
-              保存到这天
-            </Button>
-          )}
-          <Button
-            variant="ghost"
-            disabled={!allowed || !note.trim()}
-            onClick={() => {
-              onAdjust(goal.id, 0, note, date);
-              setNote('');
-            }}
-          >
-            只留文字足迹
-          </Button>
-        </div>
-      </details>
+      <form
+        className="record-note-form"
+        onSubmit={(event) => {
+          event.preventDefault();
+          if (!allowed) return;
+          if (outcome) {
+            onRecord(goal.id, date, outcome, note);
+            onNoteChange(null);
+          } else if (note.trim()) {
+            onAdjust(goal.id, 0, note, date);
+            onNoteChange('');
+          }
+        }}
+      >
+        <label className="progress-adjust-note">
+          <NotebookPen aria-hidden="true" />
+          <Input
+            aria-label="为这天留一句话（可选）"
+            maxLength={100}
+            disabled={!allowed}
+            value={note}
+            onChange={(event) => onNoteChange(event.target.value)}
+            placeholder="留一句话（可选）"
+          />
+        </label>
+        <Button
+          type="submit"
+          variant="ghost"
+          disabled={!allowed || (outcome ? note === initialNote : !note.trim())}
+        >
+          保存
+        </Button>
+      </form>
     </div>
   );
 }

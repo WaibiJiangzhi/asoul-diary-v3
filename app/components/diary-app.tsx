@@ -1,7 +1,7 @@
 'use client';
 
 import type { CSSProperties } from 'react';
-import { useState } from 'react';
+import { useState, useLayoutEffect, useRef } from 'react';
 import { Candy, IceCreamBowl, RefreshCw, RotateCcw, Star } from 'lucide-react';
 import { createPortal } from 'react-dom';
 
@@ -54,6 +54,20 @@ export default function DiaryApp() {
     isReady,
   } = useDiaryState(showToast);
   const [activeTab, setActiveTab] = useState<AppTab>('today');
+  const [visitedTabs, setVisitedTabs] = useState<Set<AppTab>>(
+    () => new Set(['today']),
+  );
+  const scrollPositions = useRef<Record<AppTab, number>>({
+    today: 0,
+    growth: 0,
+    journal: 0,
+  });
+  useLayoutEffect(() => {
+    window.scrollTo({
+      top: scrollPositions.current[activeTab],
+      behavior: 'instant',
+    });
+  }, [activeTab]);
   const [journalDate, setJournalDate] = useState(dateKey());
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [confirmation, setConfirmation] = useState<Confirmation | null>(null);
@@ -108,8 +122,11 @@ export default function DiaryApp() {
   });
 
   function changeTab(tab: AppTab) {
+    if (tab === activeTab) return;
+    scrollPositions.current[activeTab] = window.scrollY;
+    (document.activeElement as HTMLElement | null)?.blur();
+    setVisitedTabs((current) => new Set([...current, tab]));
     setActiveTab(tab);
-    requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: 'auto' }));
   }
 
   if (!state) {
@@ -145,49 +162,56 @@ export default function DiaryApp() {
           onOpenSettings={() => setSettingsOpen(true)}
         />
 
-        {activeTab === 'today' && (
-          <TodayView
-            key={todayDate}
-            state={state}
-            selectedDate={todayDate}
-            onDateChange={setTodayDate}
-            onAdd={() => {
-              today.setTodayDrawerMode('add');
-              today.setTodayDrawerOpen(true);
-            }}
-            onToggle={today.toggleTodayTask}
-            onEdit={today.setTaskEditing}
-            onReorder={today.reorderTodayTasks}
-          />
+        {visitedTabs.has('today') && (
+          <div className="app-tab-panel" hidden={activeTab !== 'today'}>
+            <TodayView
+              key={todayDate}
+              state={state}
+              selectedDate={todayDate}
+              onDateChange={setTodayDate}
+              onAdd={() => {
+                today.setTodayDrawerMode('add');
+                today.setTodayDrawerOpen(true);
+              }}
+              onToggle={today.toggleTodayTask}
+              onEdit={today.setTaskEditing}
+              onReorder={today.reorderTodayTasks}
+            />
+          </div>
         )}
-        {activeTab === 'growth' && (
-          <GrowthView
-            state={state}
-            onAdd={growth.openNewGrowth}
-            onAdjust={growth.adjustProgress}
-            onRecordChallenge={growth.recordChallenge}
-            onDeleteEvent={growth.deleteProgressEvent}
-            onEdit={growth.openEditGrowth}
-            onDelete={growth.deleteGrowth}
-            onArchive={growth.archiveGrowth}
-            onCopy={growth.copyMemory}
-            onRestoreMemory={growth.restoreMemory}
-            onDeleteMemory={growth.deleteMemory}
-            onAddCountdownNote={growth.addCountdownNote}
-            onDeleteCountdownNote={growth.deleteCountdownNote}
-          />
+        {visitedTabs.has('growth') && (
+          <div className="app-tab-panel" hidden={activeTab !== 'growth'}>
+            <GrowthView
+              visible={activeTab === 'growth'}
+              state={state}
+              onAdd={growth.openNewGrowth}
+              onAdjust={growth.adjustProgress}
+              onRecordChallenge={growth.recordChallenge}
+              onDeleteEvent={growth.deleteProgressEvent}
+              onEdit={growth.openEditGrowth}
+              onDelete={growth.deleteGrowth}
+              onArchive={growth.archiveGrowth}
+              onCopy={growth.copyMemory}
+              onRestoreMemory={growth.restoreMemory}
+              onDeleteMemory={growth.deleteMemory}
+              onAddCountdownNote={growth.addCountdownNote}
+              onDeleteCountdownNote={growth.deleteCountdownNote}
+            />
+          </div>
         )}
-        {activeTab === 'journal' && (
-          <JournalView
-            state={state}
-            selectedDate={journalDate}
-            onDateChange={setJournalDate}
-            onUpdate={journal.updateDiary}
-            onAddPhotos={journal.addDiaryPhotos}
-            onRemovePhoto={journal.removeDiaryPhoto}
-            onDelete={journal.deleteDiary}
-            onSetDateMarker={journal.setDateMarker}
-          />
+        {visitedTabs.has('journal') && (
+          <div className="app-tab-panel" hidden={activeTab !== 'journal'}>
+            <JournalView
+              state={state}
+              selectedDate={journalDate}
+              onDateChange={setJournalDate}
+              onUpdate={journal.updateDiary}
+              onAddPhotos={journal.addDiaryPhotos}
+              onRemovePhoto={journal.removeDiaryPhoto}
+              onDelete={journal.deleteDiary}
+              onSetDateMarker={journal.setDateMarker}
+            />
+          </div>
         )}
         <BottomNav active={activeTab} onChange={changeTab} />
       </section>

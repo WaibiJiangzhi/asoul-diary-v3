@@ -129,6 +129,7 @@ export function ProgressHistoryDrawer({
             <DrawerDescription>{goal.title}</DrawerDescription>
           </DrawerHeader>
           <Calendar
+            className="diary-calendar"
             mode="single"
             locale={zhCN}
             month={month}

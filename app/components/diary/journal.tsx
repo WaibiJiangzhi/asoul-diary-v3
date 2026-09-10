@@ -29,7 +29,11 @@ import {
 } from '@/components/ui/drawer';
 import { dateKey, formatFullDate, fromDateKey, moveDate } from '@/lib/date';
 import { getPhotos } from '@/lib/db';
-import { challengeDays, progressEventLabel } from '@/lib/challenge';
+import {
+  challengeDays,
+  progressEventLabel,
+  recordStates,
+} from '@/lib/challenge';
 import { progressEventDate, progressValueOnDate } from '@/lib/progress';
 import type { AppState, DiaryEntry } from '@/lib/types';
 import type {
@@ -210,11 +214,14 @@ export function JournalView({
         (event) => progressEventDate(event) === selectedDate,
       );
       const dayOutcome = sameDayEvents.find((event) => event.outcome);
+      const dayState = item.challenge
+        ? recordStates(item).find((status) => status.id === dayOutcome?.outcome)
+        : undefined;
       snapshot = {
         id,
         kind: 'progress',
         sourceId,
-        emoji: item.emoji,
+        emoji: dayState?.emoji || item.emoji,
         title: item.title,
         delta: Number(
           sameDayEvents.reduce((sum, event) => sum + event.delta, 0).toFixed(4),
@@ -294,6 +301,7 @@ export function JournalView({
               </DrawerDescription>
             </DrawerHeader>
             <Calendar
+              className="diary-calendar"
               mode="single"
               locale={zhCN}
               selected={fromDateKey(selectedDate)}
@@ -402,13 +410,9 @@ export function JournalView({
                     {item.note ? ` · ${item.note}` : ''}
                   </small>
                 </span>
-                <i>
-                  {item.kind === 'countdown'
-                    ? '倒计时'
-                    : item.challengeResult
-                      ? '挑战'
-                      : '进度'}
-                </i>
+                {!(item.kind === 'progress' && item.challengeResult) && (
+                  <i>{item.kind === 'countdown' ? '倒计时' : '进度'}</i>
+                )}
               </li>
             ))}
           </ul>

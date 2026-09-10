@@ -27,39 +27,6 @@
   color: #827787;
   text-align: center;
 }
-.growth-calendar [data-slot='calendar'] {
-  width: 100%;
-  padding: 0;
-  --cell-size: 2.5rem;
-}
-.growth-calendar [data-slot='calendar'] button {
-  min-width: 0;
-}
-.growth-calendar .rdp-day button {
-  min-height: 40px;
-  position: relative;
-}
-.growth-calendar .growth-day-done button::after,
-.growth-calendar .growth-day-missed button::after,
-.growth-calendar .growth-day-noted button::after {
-  content: '';
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  position: absolute;
-  bottom: 4px;
-  background: var(--card-accent);
-}
-.growth-calendar .growth-day-missed button::after {
-  background: #82738c;
-}
-.growth-calendar .growth-day-noted button::after {
-  background: transparent;
-  border: 1px solid #82738c;
-}
-.growth-calendar .rdp-selected button::after {
-  outline: 1px solid white;
-}
 .growth-calendar-legend {
   display: flex;
   flex-wrap: wrap;

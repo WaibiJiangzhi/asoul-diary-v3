@@ -807,8 +807,6 @@
   }
 }
 
-
-
 .decoration-picker {
   display: block;
   padding: 0;
@@ -912,6 +910,8 @@
 
 .growth-carousel {
   display: flex;
+  align-items: flex-start;
+  overflow-y: hidden;
   width: auto;
   gap: 11px;
   margin-inline: -10px;
@@ -1333,6 +1333,8 @@
 /* Final carousel geometry: center cards inside the writable area, not the binding. */
 .growth-view .growth-carousel {
   width: 100%;
+  align-items: flex-start;
+  overflow-y: hidden;
   gap: 11px;
   margin-inline: 0;
   padding: 18px 12px 31px;

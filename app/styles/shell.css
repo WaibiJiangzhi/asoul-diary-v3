@@ -1092,3 +1092,7 @@ html:has(.settings-backdrop.is-open) {
     padding-left: 34px;
   }
 }
+
+.app-tab-panel[hidden] {
+  display: none;
+}

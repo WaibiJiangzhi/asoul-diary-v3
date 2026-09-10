@@ -205,7 +205,9 @@ export function StickerPanel({
               onClick={() => void choose(value)}
             >
               <Decoration value={value} className="sticker-option-image" />
-              <span>{sticker?.name ?? value}</span>
+              {sticker && (
+                <span className="sticker-option-name">{sticker.name}</span>
+              )}
             </button>
           );
         })}

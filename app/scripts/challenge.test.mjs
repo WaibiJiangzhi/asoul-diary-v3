@@ -18,6 +18,7 @@ async function loadModule(path) {
 }
 const {
   recordChallengeDay,
+  clearChallengeDay,
   challengeStats,
   canRecordChallenge,
   rebuildChallenge,
@@ -373,4 +374,77 @@ await test('calendar selection stays in range after challenge edits and legacy d
     progressEventDate({ createdAt: new Date(2026, 8, 7, 12).toISOString() }),
     '2026-09-07',
   );
+});
+
+await test('clearing a state keeps its text and other days, and future clears are ignored', () => {
+  let goal = record(initial, '2026-09-08', 'done', 'first', '很开心');
+  goal = record(goal, '2026-09-09', 'missed');
+  const cleared = clearChallengeDay(
+    goal,
+    '2026-09-08',
+    '2026-09-10T06:00:00Z',
+    '2026-09-10',
+  );
+  assert.equal(cleared.current, 1);
+  assert.equal(cleared.events.find((e) => e.id === 'first').note, '很开心');
+  assert.equal(cleared.events.find((e) => e.id === 'first').outcome, undefined);
+  assert.equal(cleared.events.find((e) => e.id === 'first').delta, 0);
+  assert.deepEqual(challengeStats(cleared).counts, { done: 0, missed: 1 });
+  assert.equal(
+    clearChallengeDay(cleared, '2026-09-08', goal.updatedAt, '2026-09-10'),
+    cleared,
+  );
+  assert.equal(
+    clearChallengeDay(goal, '2026-09-09', goal.updatedAt, '2026-09-08'),
+    goal,
+  );
+  const again = record(cleared, '2026-09-08', 'missed', 'second');
+  assert.equal(again.current, 2);
+  assert.equal(again.events.filter((e) => e.note === '很开心').length, 1);
+  assert.equal(
+    clearChallengeDay(goal, '2026-09-09', goal.updatedAt, '2026-09-10').events
+      .length,
+    1,
+  );
+});
+
+await test('expired today tasks are pruned without changing independent diary snapshots', async () => {
+  const { prepareLoadedState } = await loadModule('../lib/state.ts');
+  const state = createDefaultState();
+  state.dailyTasks = [
+    '2026-09-08',
+    '2026-09-09',
+    '2026-09-10',
+    '2026-09-11',
+  ].map((date, i) => ({
+    id: String(i),
+    date,
+    title: '小事',
+    emoji: '🌱',
+    done: true,
+  }));
+  state.diaries = [
+    {
+      date: '2026-09-08',
+      body: '想留下的话',
+      taskSnapshots: [
+        {
+          id: 'saved',
+          sourceTaskId: '0',
+          title: '小事',
+          done: true,
+          emoji: '🌱',
+        },
+      ],
+      growthSnapshots: [],
+      photoIds: [],
+    },
+  ];
+  const next = prepareLoadedState(state, '2026-09-10');
+  assert.deepEqual(
+    next.dailyTasks.map((task) => task.date),
+    ['2026-09-09', '2026-09-10', '2026-09-11'],
+  );
+  assert.equal(next.diaries, state.diaries);
+  assert.equal(next.diaries[0].taskSnapshots[0].done, true);
 });

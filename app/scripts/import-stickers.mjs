@@ -12,6 +12,23 @@ import sharp from 'sharp';
 
 const app = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const source = resolve(app, '../本地素材（不上传）/姐仨表情包合集');
+// Optional transparent replacements are matched by token, never by folder order.
+const replacements = new Map();
+async function indexReplacements(directory) {
+  for (const entry of await readdir(directory, { withFileTypes: true })) {
+    const path = resolve(directory, entry.name);
+    if (entry.isDirectory()) await indexReplacements(path);
+    else if (/\.(png|webp|gif)$/i.test(entry.name)) {
+      const token = entry.name.replace(/\.[^.]+$/, '').replace(/^\[\s+/, '[');
+      if (replacements.has(token))
+        throw new Error('Duplicate replacement: ' + token);
+      replacements.set(token, path);
+    }
+  }
+}
+if (process.argv[2])
+  await indexReplacements(resolve(process.cwd(), process.argv[2]));
+let replaced = 0;
 /** @type {Array<[string, string, string[]]>} */
 const members = [
   ['嘉然', 'jiaran', ['笔芯', '可爱捏', '哈哈哈', '画！', '比心', '你在干嘛']],
@@ -40,23 +57,30 @@ for (const [member, memberId, covers] of members) {
       const token = file.replace(/\.[^.]+$/, '');
       const name = token.slice(token.lastIndexOf('_') + 1, -1);
       const key = createHash('sha256').update(token).digest('hex').slice(0, 12);
-      const animated = file.endsWith('.gif');
+      const replacement = replacements.get(token.replace(/^\[\s+/, '['));
+      const input = replacement ?? resolve(directory, file);
+      if (replacement) replaced++;
+      const bytes = await readFile(input);
+      const version = createHash('sha256')
+        .update(bytes)
+        .digest('hex')
+        .slice(0, 10);
+      const animated = input.toLowerCase().endsWith('.gif');
       const assetName = `${key}.${animated ? 'gif' : 'webp'}`;
-      if (animated)
-        await copyFile(resolve(directory, file), resolve(output, assetName));
+      if (animated) await copyFile(input, resolve(output, assetName));
       else
-        await sharp(await readFile(resolve(directory, file)))
+        await sharp(bytes)
           .webp({ quality: 88 })
           .toFile(resolve(output, assetName));
       stickers.push({
         id: `${id}:${key}`,
         name,
         token,
-        src: `/stickers/${id}/${assetName}`,
+        src: `/stickers/${id}/${assetName}?v=${version}`,
         animated,
       });
       if (name === covers[order])
-        await sharp(await readFile(resolve(directory, file)))
+        await sharp(bytes)
           .resize(80, 80, { fit: 'inside', withoutEnlargement: true })
           .webp({ quality: 90 })
           .toFile(resolve(output, 'cover.webp'));
@@ -67,7 +91,10 @@ for (const [member, memberId, covers] of members) {
       id,
       member,
       name: folder.name.replace(/^\d+-_?/, ''),
-      cover: `/stickers/${id}/cover.webp`,
+      cover: `/stickers/${id}/cover.webp?v=${createHash('sha256')
+        .update(await readFile(resolve(output, 'cover.webp')))
+        .digest('hex')
+        .slice(0, 10)}`,
       stickers,
     });
   }
@@ -79,3 +106,8 @@ await writeFile(
 console.log(
   `Imported ${packs.length} packs / ${packs.reduce((n, p) => n + p.stickers.length, 0)} stickers.`,
 );
+
+if (replacements.size)
+  console.log(
+    `Matched ${replaced}/${replacements.size} transparent replacements.`,
+  );

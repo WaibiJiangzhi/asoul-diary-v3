@@ -42,6 +42,7 @@ import { CARD_COLORS, type GrowthDraft } from './constants';
 import { Decoration } from './decoration';
 import { DecorationPicker } from './sticker-picker';
 import { RecordStateFields } from './record-state-fields';
+import { GrowthCarousel } from './growth-carousel';
 import { ChallengeCard, ChallengeChart } from './challenge';
 import { ProgressDatePicker, ProgressHistoryDrawer } from './growth-calendar';
 import { progressEventDate, progressRecordDate } from '@/lib/progress';
@@ -69,6 +70,7 @@ function syncCarouselIndex(
 
 export function GrowthView({
   state,
+  visible = true,
   onAdd,
   onAdjust,
   onRecordChallenge,
@@ -83,12 +85,13 @@ export function GrowthView({
   onDeleteCountdownNote,
 }: {
   state: AppState;
+  visible?: boolean;
   onAdd: (kind: GrowthDraft['kind']) => void;
   onAdjust: (id: string, delta: number, note?: string, date?: string) => void;
   onRecordChallenge: (
     id: string,
     date: string,
-    outcome: ChallengeOutcome,
+    outcome: ChallengeOutcome | null,
     note?: string,
   ) => void;
   onDeleteEvent: (goal: ProgressGoal, event: ProgressEvent) => void;
@@ -160,7 +163,8 @@ export function GrowthView({
               {visibleCountdownIndex + 1} / {state.countdowns.length}
             </span>
           </div>
-          <div
+          <GrowthCarousel
+            activeIndex={visibleCountdownIndex}
             className="countdown-grid growth-carousel"
             onScroll={(event) => syncCarouselIndex(event, setCountdownIndex)}
           >
@@ -264,7 +268,7 @@ export function GrowthView({
                 </article>
               );
             })}
-          </div>
+          </GrowthCarousel>
         </section>
       )}
 
@@ -281,7 +285,8 @@ export function GrowthView({
           )}
         </div>
         {state.progressGoals.length ? (
-          <div
+          <GrowthCarousel
+            activeIndex={visibleProgressIndex}
             className="goal-list growth-carousel"
             onScroll={(event) => syncCarouselIndex(event, setProgressIndex)}
           >
@@ -290,7 +295,7 @@ export function GrowthView({
                 <ChallengeCard
                   key={goal.id}
                   goal={goal}
-                  active={index === visibleProgressIndex}
+                  active={visible && index === visibleProgressIndex}
                   onRecord={onRecordChallenge}
                   onAdjust={onAdjust}
                   onEdit={onEdit}
@@ -302,7 +307,7 @@ export function GrowthView({
                 />
               ) : (
                 <ProgressCard
-                  key={`${goal.id}:${goal.step}`}
+                  key={goal.id}
                   goal={goal}
                   active={index === visibleProgressIndex}
                   onAdjust={onAdjust}
@@ -315,7 +320,7 @@ export function GrowthView({
                 />
               ),
             )}
-          </div>
+          </GrowthCarousel>
         ) : (
           <div className="gentle-empty roomy">
             <span>🌱</span>
@@ -472,8 +477,21 @@ function ProgressCard({
   date: string;
   onDateChange: (date: string) => void;
 }) {
-  const [amount, setAmount] = useState(String(goal.step));
-  const [note, setNote] = useState('');
+  const [drafts, setDrafts] = useState<
+    Record<string, { amount?: string; note?: string }>
+  >({});
+  const amount = drafts[date]?.amount ?? String(goal.step);
+  const note = drafts[date]?.note ?? '';
+  const setAmount = (amount: string) =>
+    setDrafts((current) => ({
+      ...current,
+      [date]: { ...current[date], amount },
+    }));
+  const setNote = (note: string) =>
+    setDrafts((current) => ({
+      ...current,
+      [date]: { ...current[date], note },
+    }));
   const percentage = Math.min(
     100,
     Math.round((goal.current / goal.total) * 100),

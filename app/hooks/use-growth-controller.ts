@@ -16,6 +16,7 @@ import { dateKey, moveDate } from '@/lib/date';
 import { adjustProgressEntry } from '@/lib/progress';
 import {
   canRecordChallenge,
+  clearChallengeDay,
   recordStates,
   isDateKey,
   progressEventLabel,
@@ -360,7 +361,7 @@ export function useGrowthController({
   function recordChallenge(
     goalId: string,
     date: string,
-    outcome: ChallengeOutcome,
+    outcome: ChallengeOutcome | null,
     note = '',
   ) {
     const previous = stateRef.current?.progressGoals.find(
@@ -369,7 +370,8 @@ export function useGrowthController({
     if (
       !previous ||
       !canRecordChallenge(previous, date) ||
-      !recordStates(previous).some((status) => status.id === outcome)
+      (outcome !== null &&
+        !recordStates(previous).some((status) => status.id === outcome))
     ) {
       showToast('请选择开始日期之后、今天及以前的日期');
       return;
@@ -379,7 +381,16 @@ export function useGrowthController({
     );
     const now = new Date().toISOString();
     const id = createId('event');
-    const next = recordChallengeDay(previous, date, outcome, note, id, now);
+    const update = (goal: ProgressGoal) =>
+      outcome === null
+        ? clearChallengeDay(goal, date, now)
+        : recordChallengeDay(goal, date, outcome, note, id, now);
+    const next = update(previous);
+    if (next === previous) return;
+    const previousDay = previous.events.filter((event) => event.date === date);
+    const nextDay = JSON.stringify(
+      next.events.filter((event) => event.date === date),
+    );
     const celebrating =
       !previous.challenge?.targetCelebrated &&
       !!next.challenge?.targetCelebrated;
@@ -388,21 +399,21 @@ export function useGrowthController({
         current && {
           ...current,
           progressGoals: current.progressGoals.map((goal) =>
-            goal.id === goalId
-              ? recordChallengeDay(goal, date, outcome, note, id, now)
-              : goal,
+            goal.id === goalId ? update(goal) : goal,
           ),
         },
     );
     haptic();
     if (celebrating) softChime('celebrate');
-    else if (!original) softChime('progress');
+    else if (outcome !== null) softChime('progress');
     showToast(
-      celebrating
-        ? '积累到了期待的天数，这段成长值得庆祝 ✨'
-        : original
-          ? '这一天的记录已修改'
-          : '这一天也好好记下了 ✨',
+      outcome === null
+        ? '已取消这天的状态，文字足迹仍保留'
+        : celebrating
+          ? '积累到了期待的天数，这段成长值得庆祝 ✨'
+          : original
+            ? '这一天的记录已修改'
+            : '这一天也好好记下了 ✨',
       () => {
         setState(
           (current) =>
@@ -410,18 +421,18 @@ export function useGrowthController({
               ...current,
               progressGoals: current.progressGoals.map((goal) => {
                 if (goal.id !== goalId) return goal;
-                const latest = goal.events.find(
-                  (entry) => entry.date === date && entry.outcome,
-                );
-                if (latest?.createdAt !== now) return goal;
+                if (
+                  JSON.stringify(
+                    goal.events.filter((event) => event.date === date),
+                  ) !== nextDay
+                )
+                  return goal;
                 return rebuildChallenge({
                   ...goal,
                   updatedAt: new Date().toISOString(),
                   events: [
-                    ...goal.events.filter(
-                      (entry) => !(entry.date === date && entry.outcome),
-                    ),
-                    ...(original ? [original] : []),
+                    ...goal.events.filter((entry) => entry.date !== date),
+                    ...previousDay,
                   ],
                 });
               }),

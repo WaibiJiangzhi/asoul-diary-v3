@@ -164,6 +164,28 @@ export function recordChallengeDay(
   return next;
 }
 
+/** Clearing a day's state keeps its words as an independent footstep. */
+export function clearChallengeDay(
+  goal: ProgressGoal,
+  date: string,
+  now: string,
+  today = dateKey(),
+): ProgressGoal {
+  if (!canRecordChallenge(goal, date, today)) return goal;
+  if (!goal.events.some((event) => event.date === date && event.outcome))
+    return goal;
+  return rebuildChallenge({
+    ...goal,
+    updatedAt: now,
+    events: goal.events.flatMap((event) => {
+      if (event.date !== date || !event.outcome) return [event];
+      return event.note?.trim()
+        ? [{ ...event, outcome: undefined, delta: 0, createdAt: now }]
+        : [];
+    }),
+  });
+}
+
 /** Recompute from daily facts, including after edits, deletes and backup import. */
 export function rebuildChallenge<T extends ProgressGoal | ProgressMemory>(
   source: T,
