@@ -155,10 +155,7 @@ export function ChallengeChart({
         <div className="record-overview-legend">
           {states.map((state) => (
             <div className="record-legend-item" key={state.id}>
-              <span
-                className="record-legend-badge"
-                style={{ '--status-color': state.color } as CSSProperties}
-              >
+              <span className="record-legend-badge">
                 {state.emoji ? (
                   <Decoration
                     value={state.emoji}

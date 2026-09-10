@@ -43,10 +43,13 @@
 }
 .task-emoji[data-decoration='sticker'],
 .quick-item-emoji[data-decoration='sticker'] {
-  display: inline-flex;
-  width: 34px;
-  height: 34px;
+  display: grid;
+  width: 42px;
+  height: 42px;
   flex: none;
+  background: transparent;
+  border-radius: 0;
+  transform: none;
 }
 .manage-row > [data-decoration],
 .diary-task-snapshot [data-decoration],

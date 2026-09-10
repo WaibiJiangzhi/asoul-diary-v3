@@ -313,9 +313,6 @@
   height: 30px;
   display: grid;
   place-items: center;
-  border-radius: 50%;
-  background: color-mix(in srgb, var(--status-color), white 88%);
-  border: 1px solid color-mix(in srgb, var(--status-color), white 35%);
 }
 .record-legend-image {
   width: 26px;

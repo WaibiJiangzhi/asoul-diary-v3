@@ -40,7 +40,7 @@ await test('all packs and covers exist, canonical tokens are unique, and chosen 
     '哈哈哈',
     '送花',
     '不是吧',
-    '突然出现',
+    '摸脑袋',
     '小狐狸',
     '打招呼',
     '哈哈哈',
