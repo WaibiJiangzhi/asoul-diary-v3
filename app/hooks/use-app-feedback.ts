@@ -37,9 +37,7 @@ export function useAppFeedback(stateRef: MutableRefObject<AppState | null>) {
           const notes =
             kind === 'celebrate'
               ? [523.25, 659.25, 783.99, 1046.5]
-              : kind === 'progress'
-                ? [659.25, 880]
-                : [783.99, 1046.5];
+              : [783.99, 1046.5];
           const master = audio.createGain();
           master.gain.value = 0.8 / Math.sqrt(Math.min(notes.length, 2));
           master.connect(audio.destination);

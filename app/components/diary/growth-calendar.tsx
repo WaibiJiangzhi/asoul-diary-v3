@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, type CSSProperties } from 'react';
+import { useEffect, useState, type CSSProperties } from 'react';
 import { CalendarDays, ChevronLeft, ChevronRight, Trash2 } from 'lucide-react';
 import { zhCN } from 'react-day-picker/locale';
 import { Button } from '@/components/ui/button';
@@ -85,6 +85,11 @@ export function ProgressHistoryDrawer({
   onDelete: (goal: ProgressGoal, event: ProgressEvent) => void;
 }) {
   const [month, setMonth] = useState(fromDateKey(date));
+  const [open, setOpen] = useState(false);
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => setOpen(true));
+    return () => cancelAnimationFrame(frame);
+  }, []);
   const [all, setAll] = useState(false);
   const today = dateKey();
   const outcomes = new Map(
@@ -118,7 +123,13 @@ export function ProgressHistoryDrawer({
       ? `这天 ${dayDelta > 0 ? '+' : ''}${dayDelta} ${goal.unit}`
       : '这天还没有足迹';
   return (
-    <Drawer open onOpenChange={onOpenChange}>
+    <Drawer
+      open={open}
+      onOpenChange={setOpen}
+      onOpenChangeComplete={(isOpen) => {
+        if (!isOpen) onOpenChange(false);
+      }}
+    >
       <DrawerContent className="sheet-drawer tall history-drawer">
         <div
           className="drawer-inner growth-history growth-calendar"
@@ -208,7 +219,7 @@ export function ProgressHistoryDrawer({
             <Button
               size="sm"
               disabled={!allowed}
-              onClick={() => onOpenChange(false)}
+              onClick={() => setOpen(false)}
             >
               记录这一天
             </Button>

@@ -120,7 +120,7 @@
 }
 
 /* Shared record markers: selected dates stay legible in both calendars. */
-.diary-calendar .rdp-day_button[data-selected-single='true'] {
+.diary-calendar [data-selected-single='true'] {
   --calendar-record-color: white;
 }
 .diary-calendar .has-diary .rdp-day_button::after,

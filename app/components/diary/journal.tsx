@@ -464,9 +464,7 @@ export function JournalView({
                     {item.note ? ` · ${item.note}` : ''}
                   </small>
                 </span>
-                {!(item.kind === 'progress' && item.challengeResult) && (
-                  <i>{item.kind === 'countdown' ? '倒计时' : '进度'}</i>
-                )}
+                <i>{item.kind === 'countdown' ? '倒计时' : '进度'}</i>
                 {editingSnapshots && (
                   <button
                     type="button"

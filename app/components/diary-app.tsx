@@ -91,6 +91,7 @@ export default function DiaryApp() {
   useDiaryWebMcp({ isReady, stateRef, setState });
 
   const today = useTodayController({
+    state,
     selectedDate: todayDate,
     setState,
     showToast,

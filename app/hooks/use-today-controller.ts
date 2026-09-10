@@ -9,15 +9,17 @@ import type { AppState, CommonItem, DailyTask } from '@/lib/types';
 import type { ShowToast } from '@/hooks/use-toast';
 
 interface TodayControllerOptions {
+  state: AppState | null;
   selectedDate: string;
   setState: Dispatch<SetStateAction<AppState | null>>;
   showToast: ShowToast;
   haptic: () => void;
-  softChime: (kind: 'check' | 'progress') => void;
+  softChime: (kind: 'check' | 'progress' | 'celebrate') => void;
   askConfirmation: (confirmation: Confirmation) => void;
 }
 
 export function useTodayController({
+  state,
   selectedDate,
   setState,
   showToast,
@@ -67,6 +69,13 @@ export function useTodayController({
   }
 
   function toggleTodayTask(id: string, done: boolean) {
+    const task = state?.dailyTasks.find((item) => item.id === id);
+    if (!task || task.done === done) return;
+    const completesDay =
+      done &&
+      state!.dailyTasks
+        .filter((item) => item.date === task.date)
+        .every((item) => item.id === id || item.done);
     setState(
       (current) =>
         current && {
@@ -86,7 +95,7 @@ export function useTodayController({
     );
     haptic();
     if (done) {
-      softChime('check');
+      softChime(completesDay ? 'celebrate' : 'check');
       showToast('完成了，已经替你收好 ✓', () => {
         setState(
           (current) =>

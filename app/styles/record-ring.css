@@ -146,6 +146,27 @@
   font-size: 10px;
   color: #75677e;
 }
+.record-legend-transition {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition:
+    grid-template-rows 300ms ease,
+    opacity 220ms ease;
+}
+.record-legend-transition[data-expanded='true'] {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+.record-legend-clip {
+  min-height: 0;
+  overflow: hidden;
+}
+@media (prefers-reduced-motion: reduce) {
+  .record-legend-transition {
+    transition: none;
+  }
+}
 .record-overview-legend span {
   overflow-wrap: anywhere;
 }

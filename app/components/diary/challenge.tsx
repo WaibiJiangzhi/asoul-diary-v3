@@ -144,31 +144,37 @@ export function ChallengeChart({
           </span>
         </div>
       </figure>
-      {view === 'overview' && (
-        <div className="record-overview-legend">
-          {states.map((state) => (
-            <div className="record-legend-item" key={state.id}>
-              <span className="record-legend-badge">
-                {state.emoji ? (
-                  <Decoration
-                    value={state.emoji}
-                    className="record-legend-image"
-                  />
-                ) : (
-                  <i style={{ background: state.color }} />
-                )}
-              </span>
-              <span className="record-legend-copy">
-                <span className="record-legend-name">{state.name}</span>
-                <b>
-                  {stats.counts[state.id]}
-                  <small> 天</small>
-                </b>
-              </span>
-            </div>
-          ))}
+      <div
+        className="record-legend-transition"
+        data-expanded={view === 'overview'}
+        aria-hidden={view !== 'overview'}
+      >
+        <div className="record-legend-clip">
+          <div className="record-overview-legend">
+            {states.map((state) => (
+              <div className="record-legend-item" key={state.id}>
+                <span className="record-legend-badge">
+                  {state.emoji ? (
+                    <Decoration
+                      value={state.emoji}
+                      className="record-legend-image"
+                    />
+                  ) : (
+                    <i style={{ background: state.color }} />
+                  )}
+                </span>
+                <span className="record-legend-copy">
+                  <span className="record-legend-name">{state.name}</span>
+                  <b>
+                    {stats.counts[state.id]}
+                    <small> 天</small>
+                  </b>
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
-      )}
+      </div>
       <div className="record-empty-legend">
         <span>
           <i className="is-unrecorded" />
