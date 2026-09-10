@@ -16,6 +16,7 @@ import { dateKey, moveDate } from '@/lib/date';
 import { adjustProgressEntry } from '@/lib/progress';
 import {
   canRecordChallenge,
+  challengeComplete,
   clearChallengeDay,
   recordStates,
   isDateKey,
@@ -392,9 +393,7 @@ export function useGrowthController({
     const nextDay = JSON.stringify(
       next.events.filter((event) => event.date === date),
     );
-    const celebrating =
-      !previous.challenge?.targetCelebrated &&
-      !!next.challenge?.targetCelebrated;
+    const celebrating = !challengeComplete(previous) && challengeComplete(next);
     setState(
       (current) =>
         current && {
@@ -410,7 +409,9 @@ export function useGrowthController({
       outcome === null
         ? '已取消这天的状态，文字足迹仍保留'
         : celebrating
-          ? '积累到了期待的天数，这段成长值得庆祝 ✨'
+          ? next.challenge?.targetDays
+            ? '积累到了期待的天数，这段成长值得庆祝 ✨'
+            : '每一天都留下记录了，这段成长值得庆祝 ✨'
           : original
             ? '这一天的记录已修改'
             : '这一天也好好记下了 ✨',

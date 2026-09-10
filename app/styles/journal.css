@@ -96,23 +96,6 @@
   .rdp-today:has(.rdp-day_button[data-selected-single='true']) {
   background: transparent;
 }
-.calendar-drawer [data-slot='calendar'] .has-diary .rdp-day_button::after {
-  content: '';
-  position: absolute;
-  right: 50%;
-  bottom: 5px;
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: var(--theme-accent);
-  transform: translateX(50%);
-}
-.calendar-drawer
-  [data-slot='calendar']
-  .has-diary
-  .rdp-day_button[data-selected-single='true']::after {
-  background: white;
-}
 .calendar-drawer
   [data-slot='calendar']
   [class*='date-marker-'].rdp-day_button::before,

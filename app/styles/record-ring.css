@@ -285,21 +285,6 @@
 .record-calendar-day {
   position: relative;
 }
-.record-calendar-day.has-recording::after {
-  content: '';
-  position: absolute;
-  bottom: 4px;
-  left: calc(50% - 3px);
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--record-day-color);
-}
-.record-calendar-day.has-recording.text-only::after {
-  background: transparent;
-  border: 1px solid var(--record-day-color);
-}
-
 .record-ring-reveal {
   position: absolute;
   inset: 0;

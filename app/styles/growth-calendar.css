@@ -118,3 +118,28 @@
 .growth-calendar .history-value .outcome-missed {
   color: #82738c;
 }
+
+/* Shared record markers: selected dates stay legible in both calendars. */
+.diary-calendar .rdp-day_button[data-selected-single='true'] {
+  --calendar-record-color: white;
+}
+.diary-calendar .has-diary .rdp-day_button::after,
+.diary-calendar .record-calendar-day.has-recording::after {
+  content: '';
+  position: absolute;
+  right: 50%;
+  bottom: 5px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  transform: translateX(50%);
+  background: var(
+    --calendar-record-color,
+    var(--record-day-color, var(--theme-accent))
+  );
+}
+.diary-calendar .record-calendar-day.has-recording.text-only::after {
+  background: transparent;
+  border: 1px solid
+    var(--calendar-record-color, var(--record-day-color, var(--theme-accent)));
+}

@@ -15,6 +15,7 @@ import { Input } from '@/components/ui/input';
 import {
   canRecordChallenge,
   challengeDays,
+  challengeComplete,
   challengeEnd,
   challengeStats,
   challengeSegments,
@@ -215,13 +216,12 @@ export function ChallengeCard({
 }) {
   const [drafts, setDrafts] = useState<Record<string, string>>({});
   const today = dateKey();
-  const end = challengeEnd(goal);
   const event = challengeDays(goal).find((entry) => entry.date === date);
   const dayCount = goal.events.filter(
     (entry) => progressEventDate(entry) === date,
   ).length;
   const allowed = canRecordChallenge(goal, date, today);
-  const finished = today > end || challengeStats(goal).recorded === goal.total;
+  const finished = challengeComplete(goal);
   return (
     <article
       className={`paper-card progress-card challenge-card ${active ? 'is-active' : ''}`}

@@ -63,6 +63,16 @@ export function challengeStats(source: ChallengeSource) {
   };
 }
 
+/** Completion is a fact about current records, not a permanent celebration flag. */
+export function challengeComplete(source: ChallengeSource) {
+  if (!source.challenge) return false;
+  const stats = challengeStats(source);
+  const target = source.challenge.targetDays;
+  return target && source.challenge.targetStateId
+    ? stats.targetCount >= target
+    : stats.recorded >= source.total;
+}
+
 export function challengeSegments(
   source: ChallengeSource,
   view: 'date' | 'overview',
@@ -152,15 +162,6 @@ export function recordChallengeDay(
       event,
     ],
   });
-  const target = goal.challenge?.targetDays;
-  if (
-    target &&
-    !goal.challenge?.targetCelebrated &&
-    challengeStats(goal).targetCount < target &&
-    challengeStats(next).targetCount >= target
-  ) {
-    next.challenge = { ...next.challenge!, targetCelebrated: true };
-  }
   return next;
 }
 
@@ -196,6 +197,10 @@ export function rebuildChallenge<T extends ProgressGoal | ProgressMemory>(
   return {
     ...source,
     current: days.length,
+    challenge: {
+      ...source.challenge,
+      targetCelebrated: challengeComplete(source),
+    },
     events: source.events
       .filter((event) => !event.outcome || ranks.has(event.id))
       .map((event) =>

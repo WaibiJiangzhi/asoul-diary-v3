@@ -20,6 +20,7 @@ const {
   recordChallengeDay,
   clearChallengeDay,
   challengeStats,
+  challengeComplete,
   canRecordChallenge,
   rebuildChallenge,
   challengeEnd,
@@ -107,7 +108,7 @@ await test('four states retain calendar order; overview groups the expectation f
   assert.equal(progressEventLabel(goal, goal.events[0]), '其他');
 });
 
-await test('a full single-color ring is one segment and only the first expectation crossing celebrates', () => {
+await test('a full single-color ring resets completion when a recorded result changes', () => {
   let goal = { ...initial, total: 3 };
   goal = record(goal, '2026-09-08', 'done');
   goal = record(goal, '2026-09-09', 'done');
@@ -119,7 +120,7 @@ await test('a full single-color ring is one segment and only the first expectati
       { stateId: 'done', days: 3 },
     ]);
   const edited = record(goal, '2026-09-10', 'missed');
-  assert.equal(edited.challenge.targetCelebrated, true);
+  assert.equal(edited.challenge.targetCelebrated, false);
   assert.equal(
     record(edited, '2026-09-10', 'done').challenge.targetCelebrated,
     true,
@@ -447,4 +448,69 @@ await test('expired today tasks are pruned without changing independent diary sn
   );
   assert.equal(next.diaries, state.diaries);
   assert.equal(next.diaries[0].taskSnapshots[0].done, true);
+});
+
+await test('completion resets after cancellation, history deletion, undo rebuild and stale backup flags', () => {
+  let goal = { ...initial, total: 3 };
+  for (const date of ['2026-09-08', '2026-09-09', '2026-09-10'])
+    goal = record(goal, date, 'done');
+  assert.equal(challengeComplete(goal), true);
+  const cleared = clearChallengeDay(
+    goal,
+    '2026-09-10',
+    '2026-09-10T22:00:00Z',
+    '2026-09-10',
+  );
+  assert.equal(challengeComplete(cleared), false);
+  assert.equal(cleared.challenge.targetCelebrated, false);
+  assert.equal(challengeComplete(record(cleared, '2026-09-10', 'done')), true);
+  const undone = rebuildChallenge({
+    ...goal,
+    events: goal.events.filter((event) => event.date !== '2026-09-10'),
+  });
+  assert.equal(undone.challenge.targetCelebrated, false);
+  const imported = normalizeState({
+    ...createDefaultState(),
+    progressGoals: [
+      { ...undone, challenge: { ...undone.challenge, targetCelebrated: true } },
+    ],
+  }).progressGoals[0];
+  assert.equal(imported.challenge.targetCelebrated, false);
+  assert.equal(challengeComplete(imported), false);
+});
+
+await test('expectation completion differs from elapsed dates and all-days recording', () => {
+  let goal = { ...initial, total: 3 };
+  goal = record(
+    record(record(goal, '2026-09-08', 'done'), '2026-09-09', 'done'),
+    '2026-09-10',
+    'missed',
+  );
+  assert.equal(goal.current, goal.total);
+  assert.equal(challengeComplete(goal), false);
+  const withoutTarget = rebuildChallenge({
+    ...goal,
+    challenge: {
+      ...goal.challenge,
+      targetDays: undefined,
+      targetStateId: undefined,
+    },
+  });
+  assert.equal(challengeComplete(withoutTarget), true);
+  assert.equal(
+    challengeComplete(
+      clearChallengeDay(
+        withoutTarget,
+        '2026-09-10',
+        '2026-09-11T00:00:00Z',
+        '2026-09-11',
+      ),
+    ),
+    false,
+  );
+  const lowerExpectation = rebuildChallenge({
+    ...goal,
+    challenge: { ...goal.challenge, targetDays: 2 },
+  });
+  assert.equal(challengeComplete(lowerExpectation), true);
 });
