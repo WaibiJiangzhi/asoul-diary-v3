@@ -609,14 +609,18 @@
   text-align: left;
 }
 .memory-final-value {
+  display: flex;
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: 4px;
+  white-space: nowrap;
   color: var(--card-accent);
   font-size: 28px;
   line-height: 1;
   text-align: right;
 }
 .memory-final-value small {
-  display: block;
-  margin-top: 5px;
+  flex: none;
   font-size: 9px;
 }
 .history-trigger {
@@ -1325,6 +1329,7 @@
   }
   .memory-final-value {
     grid-column: 2;
+    justify-content: flex-start;
     text-align: left;
   }
 }

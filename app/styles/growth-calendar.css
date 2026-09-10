@@ -23,8 +23,9 @@
 }
 .progress-expected-date {
   margin: 5px 0 0;
-  font-size: 11px;
-  color: #827787;
+  font-size: 12px;
+  font-weight: 500;
+  color: #625866;
   text-align: center;
 }
 .growth-calendar-legend {
@@ -107,8 +108,9 @@
   max-width: 105px;
   overflow-wrap: anywhere;
 }
-.has-wallpaper .progress-expected-date {
+.has-wallpaper .paper-card .progress-expected-date {
   color: #625866;
+  font-weight: 500;
 }
 .growth-calendar .history-value .outcome-done {
   color: color-mix(in srgb, var(--card-accent), #63576b 60%);

@@ -6,9 +6,14 @@
 }
 .challenge-chart-toolbar .challenge-date-range {
   margin: 0;
-  font-size: 11px;
+  font-size: 12px;
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
+}
+.challenge-chart-toolbar .challenge-date-range,
+.progress-expected-date strong {
+  color: color-mix(in srgb, var(--card-accent), #302b32 48%);
+  font-weight: 600;
 }
 .challenge-chart-toolbar .challenge-view-switch {
   gap: 2px;

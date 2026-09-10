@@ -567,7 +567,7 @@ function ProgressCard({
 
       {goal.expectedDate && (
         <p className="progress-expected-date">
-          希望在 {formatShortDate(goal.expectedDate)} 完成
+          希望在 <strong>{formatShortDate(goal.expectedDate)}</strong> 完成
         </p>
       )}
       <ProgressDatePicker

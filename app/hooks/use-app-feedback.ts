@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef } from 'react';
 import type { MutableRefObject } from 'react';
 import type { AppState } from '@/lib/types';
 
-/** A soft two-note bell: each voice has its own attack and lingering decay. */
+/** Everyday bells and a resolving C-major ascent share the same soft timbre. */
 export function useAppFeedback(stateRef: MutableRefObject<AppState | null>) {
   const context = useRef<AudioContext | null>(null);
   const lastSound = useRef(0);
@@ -23,7 +23,8 @@ export function useAppFeedback(stateRef: MutableRefObject<AppState | null>) {
     (kind: 'check' | 'progress' | 'celebrate') => {
       if (!stateRef.current?.settings.sounds) return;
       const now = performance.now();
-      if (now - lastSound.current < 120) return;
+      // A goal reached by a quick second tap still deserves its completion cue.
+      if (kind !== 'celebrate' && now - lastSound.current < 120) return;
       lastSound.current = now;
       try {
         const audio =
@@ -35,17 +36,27 @@ export function useAppFeedback(stateRef: MutableRefObject<AppState | null>) {
             return;
           const notes =
             kind === 'celebrate'
-              ? [659.25, 783.99, 1046.5]
+              ? [523.25, 659.25, 783.99, 1046.5]
               : kind === 'progress'
                 ? [659.25, 880]
                 : [783.99, 1046.5];
           const master = audio.createGain();
-          master.gain.value = 0.8 / Math.sqrt(notes.length);
+          master.gain.value = 0.8 / Math.sqrt(Math.min(notes.length, 2));
           master.connect(audio.destination);
           let voices = notes.length * 3;
           notes.forEach((frequency, index) => {
-            const start = audio.currentTime + 0.008 + index * 0.085;
-            const duration = index === notes.length - 1 ? 0.62 : 0.44;
+            const start =
+              audio.currentTime +
+              0.008 +
+              (kind === 'celebrate'
+                ? [0, 0.11, 0.22, 0.39][index]
+                : index * 0.085);
+            const duration =
+              index === notes.length - 1
+                ? kind === 'celebrate'
+                  ? 0.88
+                  : 0.62
+                : 0.44;
             [1, 2, 3].forEach((partial, harmonic) => {
               const oscillator = audio.createOscillator();
               const envelope = audio.createGain();

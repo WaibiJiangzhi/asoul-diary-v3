@@ -346,7 +346,8 @@ export function useGrowthController({
       };
     });
     haptic();
-    if (requestedDelta > 0) softChime('progress');
+    if (requestedDelta > 0)
+      softChime(actuallyCompleted ? 'celebrate' : 'progress');
     showToast(
       requestedDelta === 0
         ? '这句话已留下，进度保持不变'
@@ -404,7 +405,7 @@ export function useGrowthController({
         },
     );
     haptic();
-    if (outcome !== null) softChime('check');
+    if (outcome !== null) softChime(celebrating ? 'celebrate' : 'check');
     showToast(
       outcome === null
         ? '已取消这天的状态，文字足迹仍保留'
