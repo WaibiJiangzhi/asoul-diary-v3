@@ -73,6 +73,26 @@ export function challengeComplete(source: ChallengeSource) {
     : stats.recorded >= source.total;
 }
 
+/** Filling every date and reaching the optional expectation are separate milestones. */
+export function challengeMilestone(
+  previous: ChallengeSource,
+  next: ChallengeSource,
+) {
+  if (
+    next.challenge?.targetDays &&
+    next.challenge.targetStateId &&
+    !challengeComplete(previous) &&
+    challengeComplete(next)
+  )
+    return 'target';
+  if (
+    challengeStats(previous).recorded < previous.total &&
+    challengeStats(next).recorded === next.total
+  )
+    return 'recorded';
+  return null;
+}
+
 export function challengeSegments(
   source: ChallengeSource,
   view: 'date' | 'overview',

@@ -4,6 +4,7 @@ import type { Dispatch, MutableRefObject, SetStateAction } from 'react';
 import { pickDailyEmoji } from '@/components/diary/constants';
 import { createId } from '@/lib/defaults';
 import { dateKey } from '@/lib/date';
+import { adjustProgressEntry } from '@/lib/progress';
 import type { AppState, DailyTask } from '@/lib/types';
 
 declare global {
@@ -175,7 +176,7 @@ export function useDiaryWebMcp({
               const changedAt = new Date().toISOString();
               if (goal.challenge)
                 throw new Error(
-                  '挑战卡请在页面中按日期记录结果，不能直接增减进度',
+                  '圆环卡请在页面中按日期记录结果，不能直接增减进度',
                 );
               setState(
                 (current) =>
@@ -183,29 +184,14 @@ export function useDiaryWebMcp({
                     ...current,
                     progressGoals: current.progressGoals.map((item) => {
                       if (item.id !== goalId) return item;
-                      const nextValue = Math.min(
-                        item.total,
-                        Math.max(0, Number((item.current + delta).toFixed(4))),
+                      return adjustProgressEntry(
+                        item,
+                        delta,
+                        note ?? '',
+                        dateKey(),
+                        createId('event'),
+                        changedAt,
                       );
-                      const appliedDelta = Number(
-                        (nextValue - item.current).toFixed(4),
-                      );
-                      if (!appliedDelta) return item;
-                      return {
-                        ...item,
-                        current: nextValue,
-                        updatedAt: changedAt,
-                        events: [
-                          ...item.events,
-                          {
-                            id: createId('event'),
-                            delta: appliedDelta,
-                            valueAfter: nextValue,
-                            note: note?.trim().slice(0, 100) ?? '',
-                            createdAt: changedAt,
-                          },
-                        ],
-                      };
                     }),
                   },
               );

@@ -1,4 +1,4 @@
-import type { ChangeEvent, Dispatch, SetStateAction } from 'react';
+import type { ChangeEvent } from 'react';
 
 import type { Confirmation } from '@/components/diary/confirm-dialog';
 import { dateKey } from '@/lib/date';
@@ -8,7 +8,7 @@ import type { ShowToast } from '@/hooks/use-toast';
 
 interface DataControllerOptions {
   state: AppState | null;
-  setState: Dispatch<SetStateAction<AppState | null>>;
+  replaceData: (operation: () => Promise<AppState>) => Promise<void>;
   showToast: ShowToast;
   askConfirmation: (confirmation: Confirmation) => void;
   onClear: () => void;
@@ -16,7 +16,7 @@ interface DataControllerOptions {
 
 export function useDataController({
   state,
-  setState,
+  replaceData,
   showToast,
   askConfirmation,
   onClear,
@@ -24,16 +24,22 @@ export function useDataController({
   async function exportData() {
     if (!state) return;
     showToast('正在整理本地备份…');
-    const backup = await createBackup(state);
-    const url = URL.createObjectURL(
-      new Blob([JSON.stringify(backup)], { type: 'application/json' }),
-    );
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `asoul-diary-v3-${dateKey()}.json`;
-    link.click();
-    URL.revokeObjectURL(url);
-    showToast('完整备份已下载');
+    try {
+      const backup = await createBackup(state);
+      const url = URL.createObjectURL(
+        new Blob([JSON.stringify(backup)], { type: 'application/json' }),
+      );
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `asoul-diary-v3-${dateKey()}.json`;
+      link.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      showToast('完整备份已下载');
+    } catch (error) {
+      showToast(
+        error instanceof Error ? error.message : '备份导出失败，请稍后重试',
+      );
+    }
   }
 
   async function importData(event: ChangeEvent<HTMLInputElement>) {
@@ -47,8 +53,7 @@ export function useDataController({
       action: async () => {
         try {
           const backup = JSON.parse(await file.text()) as DiaryBackup;
-          const restored = await restoreBackup(backup);
-          setState(restored);
+          await replaceData(() => restoreBackup(backup));
           showToast('备份已恢复');
         } catch (error) {
           showToast(error instanceof Error ? error.message : '备份恢复失败');
@@ -65,10 +70,15 @@ export function useDataController({
       confirmLabel: '确认全部清空',
       destructive: true,
       action: async () => {
-        const fresh = await clearAllData();
-        setState(fresh);
-        onClear();
-        showToast('数据已清空，又是新的一页');
+        try {
+          await replaceData(clearAllData);
+          onClear();
+          showToast('数据已清空，又是新的一页');
+        } catch (error) {
+          showToast(
+            error instanceof Error ? error.message : '清空失败，记录仍保留',
+          );
+        }
       },
     });
   }

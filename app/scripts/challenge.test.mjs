@@ -21,6 +21,7 @@ const {
   clearChallengeDay,
   challengeStats,
   challengeComplete,
+  challengeMilestone,
   canRecordChallenge,
   rebuildChallenge,
   challengeEnd,
@@ -513,4 +514,61 @@ await test('expectation completion differs from elapsed dates and all-days recor
     challenge: { ...goal.challenge, targetDays: 2 },
   });
   assert.equal(challengeComplete(lowerExpectation), true);
+});
+
+await test('all days recorded celebrates even with an unmet target, including cancel and repeat', () => {
+  let goal = { ...initial, total: 3 };
+  goal = record(record(goal, '2026-09-08', 'done'), '2026-09-09', 'missed');
+  const finished = record(goal, '2026-09-10', 'missed');
+  assert.equal(challengeMilestone(goal, finished), 'recorded');
+  assert.equal(challengeComplete(finished), false);
+  assert.equal(
+    challengeMilestone(finished, record(finished, '2026-09-10', 'done')),
+    null,
+  );
+  const cleared = clearChallengeDay(
+    finished,
+    '2026-09-10',
+    initial.updatedAt,
+    '2026-09-10',
+  );
+  assert.equal(challengeMilestone(finished, cleared), null);
+  assert.equal(
+    challengeMilestone(cleared, record(cleared, '2026-09-10', 'missed')),
+    'recorded',
+  );
+  const noTarget = {
+    ...goal,
+    challenge: {
+      ...goal.challenge,
+      targetDays: undefined,
+      targetStateId: undefined,
+    },
+  };
+  assert.equal(
+    challengeMilestone(noTarget, record(noTarget, '2026-09-10', 'missed')),
+    'recorded',
+  );
+});
+
+await test('expectation and full recording reached together produce one milestone', () => {
+  const goal = record(
+    record({ ...initial, total: 3 }, '2026-09-08', 'done'),
+    '2026-09-09',
+    'done',
+  );
+  assert.equal(
+    challengeMilestone(goal, record(goal, '2026-09-10', 'done')),
+    'target',
+  );
+  const over = adjustProgressEntry(
+    { ...initial, challenge: undefined, current: 12, total: 10 },
+    1,
+    '',
+    '2026-09-10',
+    'more',
+    initial.updatedAt,
+    '2026-09-10',
+  );
+  assert.equal(over.current, 13);
 });

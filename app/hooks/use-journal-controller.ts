@@ -1,8 +1,13 @@
-import type { Dispatch, MutableRefObject, SetStateAction } from 'react';
+import {
+  useRef,
+  type Dispatch,
+  type MutableRefObject,
+  type SetStateAction,
+} from 'react';
 
 import type { Confirmation } from '@/components/diary/confirm-dialog';
 import { formatShortDate } from '@/lib/date';
-import { deletePhotos, storePhoto } from '@/lib/db';
+import { dataGeneration, deletePhotos, storePhotos } from '@/lib/db';
 import type { AppState, CardColor, DiaryEntry } from '@/lib/types';
 import type { ShowToast } from '@/hooks/use-toast';
 
@@ -19,6 +24,22 @@ export function useJournalController({
   showToast,
   askConfirmation,
 }: JournalControllerOptions) {
+  const photoQueue = useRef<Promise<void>>(Promise.resolve());
+  function queuePhotoChange(operation: () => Promise<void>) {
+    const generation = dataGeneration();
+    const run = async () => {
+      if (generation !== dataGeneration()) return;
+      try {
+        await operation();
+      } catch (error) {
+        showToast(
+          error instanceof Error ? error.message : '照片操作失败，请重试',
+        );
+      }
+    };
+    photoQueue.current = photoQueue.current.then(run, run);
+    return photoQueue.current;
+  }
   function updateDiary(date: string, patch: Partial<DiaryEntry>) {
     const now = new Date().toISOString();
     setState((current) => {
@@ -112,24 +133,34 @@ export function useJournalController({
 
   async function addDiaryPhotos(date: string, files: FileList | null) {
     if (!files?.length) return;
-    try {
-      const currentIds =
-        stateRef.current?.diaries.find((entry) => entry.date === date)
-          ?.photoIds ?? [];
-      const remaining = Math.max(0, 9 - currentIds.length);
-      if (!remaining) {
-        showToast('这一页已经放满 9 张照片了');
-        return;
+    const selected = Array.from(files);
+    const generation = dataGeneration();
+    const append = async () => {
+      try {
+        if (generation !== dataGeneration()) return;
+        const currentIds =
+          stateRef.current?.diaries.find((entry) => entry.date === date)
+            ?.photoIds ?? [];
+        const remaining = Math.max(0, 9 - currentIds.length);
+        if (!remaining) {
+          showToast('这一页已经放满 9 张照片了');
+          return;
+        }
+        const chosen = selected.slice(0, remaining);
+        const stored = await storePhotos(chosen);
+        if (generation !== dataGeneration()) return;
+        const latestIds =
+          stateRef.current?.diaries.find((entry) => entry.date === date)
+            ?.photoIds ?? [];
+        updateDiary(date, {
+          photoIds: [...latestIds, ...stored.map((photo) => photo.id)],
+        });
+        showToast(`已放进 ${stored.length} 张照片`);
+      } catch (error) {
+        showToast(error instanceof Error ? error.message : '照片添加失败');
       }
-      const chosen = Array.from(files).slice(0, remaining);
-      const stored = await Promise.all(chosen.map(storePhoto));
-      updateDiary(date, {
-        photoIds: [...currentIds, ...stored.map((photo) => photo.id)],
-      });
-      showToast(`已放进 ${stored.length} 张照片`);
-    } catch (error) {
-      showToast(error instanceof Error ? error.message : '照片添加失败');
-    }
+    };
+    await queuePhotoChange(append);
   }
 
   function removeDiaryPhoto(date: string, photoId: string) {
@@ -138,14 +169,15 @@ export function useJournalController({
       description: '照片会从这一页日记和本机存储中删除。',
       confirmLabel: '移除照片',
       destructive: true,
-      action: async () => {
-        await deletePhotos([photoId]);
-        const ids =
-          stateRef.current?.diaries.find((entry) => entry.date === date)
-            ?.photoIds ?? [];
-        updateDiary(date, { photoIds: ids.filter((id) => id !== photoId) });
-        showToast('照片已移除');
-      },
+      action: () =>
+        queuePhotoChange(async () => {
+          await deletePhotos([photoId]);
+          const ids =
+            stateRef.current?.diaries.find((entry) => entry.date === date)
+              ?.photoIds ?? [];
+          updateDiary(date, { photoIds: ids.filter((id) => id !== photoId) });
+          showToast('照片已移除');
+        }),
     });
   }
 
@@ -155,19 +187,23 @@ export function useJournalController({
       description: '这一页的文字、照片和收进来的小事都会删除，之后无法恢复。',
       confirmLabel: '删除这一页',
       destructive: true,
-      action: async () => {
-        await deletePhotos(entry.photoIds);
-        setState(
-          (current) =>
-            current && {
-              ...current,
-              diaries: current.diaries.filter(
-                (item) => item.date !== entry.date,
-              ),
-            },
-        );
-        showToast('这一页日记已删除');
-      },
+      action: () =>
+        queuePhotoChange(async () => {
+          const latest = stateRef.current?.diaries.find(
+            (item) => item.date === entry.date,
+          );
+          await deletePhotos(latest?.photoIds ?? []);
+          setState(
+            (current) =>
+              current && {
+                ...current,
+                diaries: current.diaries.filter(
+                  (item) => item.date !== entry.date,
+                ),
+              },
+          );
+          showToast('这一页日记已删除');
+        }),
     });
   }
 

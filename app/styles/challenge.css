@@ -6,17 +6,6 @@
   --challenge-track: color-mix(in srgb, var(--card-accent), white 86%);
   min-height: 0;
 }
-.challenge-card .goal-top {
-  padding-right: 0;
-  padding-top: 9px;
-}
-.challenge-card .goal-top h3 {
-  overflow-wrap: anywhere;
-}
-.challenge-card .goal-top p {
-  margin-right: 0;
-  overflow-wrap: anywhere;
-}
 .challenge-date-range {
   margin: 12px 0 0;
   color: #817685;
@@ -252,13 +241,6 @@
 @media (max-width: 380px) {
   .challenge-card {
     padding-inline: 14px;
-  }
-  .challenge-card .goal-top {
-    gap: 10px;
-    grid-template-columns: 60px minmax(0, 1fr);
-  }
-  .challenge-card .goal-top.no-decoration {
-    grid-template-columns: minmax(0, 1fr);
   }
   .challenge-outcomes [data-slot='button'] {
     gap: 4px;

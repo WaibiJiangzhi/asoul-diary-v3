@@ -1,10 +1,77 @@
 import { createDefaultState, createId, normalizeState } from './defaults';
 import type { AppState, DiaryBackup, StoredPhoto } from './types';
+import { validateBackup } from './backup-validation';
 
 const DB_NAME = 'asoul-diary-v3';
 const DB_VERSION = 1;
 const STATE_KEY = 'main';
+const REVISION_KEY = 'revision';
 const DB_OPEN_TIMEOUT_MS = 4000;
+let expectedRevision: string | null | undefined;
+let replacementGeneration = 0;
+let writes: Promise<unknown> = Promise.resolve();
+const pendingPhotoDeletes = new Set<string>();
+
+export class StorageConflictError extends Error {
+  constructor() {
+    super('另一个页面已更新记录。本页修改尚未保存，请先导出备份，再重新打开。');
+    this.name = 'StorageConflictError';
+  }
+}
+
+export function dataGeneration() {
+  return replacementGeneration;
+}
+
+function queueWrite<T>(operation: () => Promise<T>): Promise<T> {
+  const next = writes.then(operation, operation);
+  writes = next.catch(() => {});
+  return next;
+}
+
+/** Check and write in one transaction so another page cannot overwrite newer data. */
+async function writeTransaction(
+  apply: (transaction: IDBTransaction) => void,
+  { photos = false, changesState = false, replace = false } = {},
+) {
+  const database = await openDatabase();
+  const transaction = database.transaction(
+    photos ? ['state', 'photos'] : ['state'],
+    'readwrite',
+  );
+  const completed = transactionDone(transaction);
+  let failure: unknown;
+  const nextRevision = createId('revision');
+  const store = transaction.objectStore('state');
+  const request = store.get(REVISION_KEY);
+  request.onsuccess = () => {
+    try {
+      if (
+        !(replace && expectedRevision === undefined) &&
+        (expectedRevision === undefined ||
+          (request.result ?? null) !== expectedRevision)
+      )
+        throw new StorageConflictError();
+      apply(transaction);
+      if (changesState) store.put(nextRevision, REVISION_KEY);
+    } catch (error) {
+      failure = error;
+      transaction.abort();
+    }
+  };
+  try {
+    await completed;
+    if (changesState) expectedRevision = nextRevision;
+    if (replace) {
+      replacementGeneration++;
+      pendingPhotoDeletes.clear();
+    }
+  } catch (error) {
+    throw failure ?? error;
+  } finally {
+    database.close();
+  }
+}
 
 function openDatabase(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
@@ -68,21 +135,38 @@ function transactionDone(transaction: IDBTransaction): Promise<void> {
 export async function loadState(): Promise<AppState> {
   const database = await openDatabase();
   const transaction = database.transaction('state', 'readonly');
-  const stored = await requestResult(
-    transaction.objectStore('state').get(STATE_KEY),
-  );
-  database.close();
+  const store = transaction.objectStore('state');
+  const [stored, revision] = await Promise.all([
+    requestResult(store.get(STATE_KEY)),
+    requestResult(store.get(REVISION_KEY)),
+  ]).finally(() => database.close());
+  expectedRevision = (revision as string | undefined) ?? null;
   if (!stored || (stored as AppState).version !== 4)
     return createDefaultState();
   return normalizeState(stored as AppState);
 }
 
-export async function saveState(state: AppState): Promise<void> {
-  const database = await openDatabase();
-  const transaction = database.transaction('state', 'readwrite');
-  transaction.objectStore('state').put(state, STATE_KEY);
-  await transactionDone(transaction);
-  database.close();
+export function saveState(state: AppState): Promise<void> {
+  const generation = replacementGeneration;
+  return queueWrite(async () => {
+    if (generation !== replacementGeneration)
+      throw new Error('记录已替换，旧保存已取消');
+    const referenced = new Set(
+      state.diaries.flatMap((entry) => entry.photoIds),
+    );
+    const removed = [...pendingPhotoDeletes].filter(
+      (id) => !referenced.has(id),
+    );
+    await writeTransaction(
+      (transaction) => {
+        transaction.objectStore('state').put(state, STATE_KEY);
+        if (removed.length)
+          removed.forEach((id) => transaction.objectStore('photos').delete(id));
+      },
+      { changesState: true, photos: removed.length > 0 },
+    );
+    removed.forEach((id) => pendingPhotoDeletes.delete(id));
+  });
 }
 
 async function compressImage(file: File): Promise<Blob> {
@@ -111,19 +195,28 @@ async function compressImage(file: File): Promise<Blob> {
   }
 }
 
-export async function storePhoto(file: File): Promise<StoredPhoto> {
-  const photo: StoredPhoto = {
-    id: createId('photo'),
-    blob: await compressImage(file),
-    name: file.name,
-    createdAt: new Date().toISOString(),
-  };
-  const database = await openDatabase();
-  const transaction = database.transaction('photos', 'readwrite');
-  transaction.objectStore('photos').put(photo);
-  await transactionDone(transaction);
-  database.close();
-  return photo;
+export async function storePhotos(files: File[]): Promise<StoredPhoto[]> {
+  const generation = replacementGeneration;
+  const photos = await Promise.all(
+    files.map(async (file) => ({
+      id: createId('photo'),
+      blob: await compressImage(file),
+      name: file.name,
+      createdAt: new Date().toISOString(),
+    })),
+  );
+  await queueWrite(async () => {
+    if (generation !== replacementGeneration)
+      throw new Error('记录已替换，请重新添加照片');
+    await writeTransaction(
+      (transaction) => {
+        const store = transaction.objectStore('photos');
+        photos.forEach((photo) => store.put(photo));
+      },
+      { photos: true },
+    );
+  });
+  return photos;
 }
 
 export async function getPhotos(ids: string[]): Promise<StoredPhoto[]> {
@@ -140,12 +233,12 @@ export async function getPhotos(ids: string[]): Promise<StoredPhoto[]> {
 
 export async function deletePhotos(ids: string[]): Promise<void> {
   if (!ids.length) return;
-  const database = await openDatabase();
-  const transaction = database.transaction('photos', 'readwrite');
-  const store = transaction.objectStore('photos');
-  ids.forEach((id) => store.delete(id));
-  await transactionDone(transaction);
-  database.close();
+  await queueWrite(async () => {
+    await writeTransaction(() => {});
+    // Remove blobs in the same commit that removes their diary references.
+    // A failed autosave must leave the previously saved photos intact.
+    ids.forEach((id) => pendingPhotoDeletes.add(id));
+  });
 }
 
 function blobToDataUrl(blob: Blob): Promise<string> {
@@ -161,9 +254,12 @@ function blobToDataUrl(blob: Blob): Promise<string> {
 }
 
 function dataUrlToBlob(dataUrl: string) {
-  const [header, body] = dataUrl.split(',');
-  const mime =
-    /data:(.*?);base64/.exec(header)?.[1] ?? 'application/octet-stream';
+  const match = /^data:(image\/[\w.+-]+);base64,([A-Za-z0-9+/]*={0,2})$/.exec(
+    dataUrl,
+  );
+  if (!match || !match[2])
+    throw new Error('备份中的图片数据无效，原有记录未替换');
+  const [, mime, body] = match;
   const bytes = Uint8Array.from(atob(body), (character) =>
     character.charCodeAt(0),
   );
@@ -193,38 +289,50 @@ export async function createBackup(state: AppState): Promise<DiaryBackup> {
 }
 
 export async function restoreBackup(backup: DiaryBackup): Promise<AppState> {
-  if (backup.product !== 'asoul-diary-v3' || backup.state?.version !== 4) {
-    throw new Error('这不是 Asoul 一个魂生活日记 v3 备份');
-  }
+  validateBackup(backup);
   const restored = normalizeState(backup.state);
-  const database = await openDatabase();
-  const transaction = database.transaction(['state', 'photos'], 'readwrite');
-  const stateStore = transaction.objectStore('state');
-  const photoStore = transaction.objectStore('photos');
-  stateStore.clear();
-  photoStore.clear();
-  stateStore.put(restored, STATE_KEY);
-  for (const photo of backup.photos ?? []) {
-    photoStore.put({
-      id: photo.id,
-      blob: dataUrlToBlob(photo.dataUrl),
-      name: photo.name,
-      createdAt: photo.createdAt,
-    } satisfies StoredPhoto);
-  }
-  await transactionDone(transaction);
-  database.close();
+  // Decode before opening the replacing transaction. Any later synchronous
+  // failure is explicitly aborted by writeTransaction.
+  const photos = (backup.photos ?? []).map((photo) => ({
+    id: photo.id,
+    blob: dataUrlToBlob(photo.dataUrl),
+    name: photo.name,
+    createdAt: photo.createdAt,
+  }));
+  const ids = new Set(photos.map((photo) => photo.id));
+  if (
+    ids.size !== photos.length ||
+    photos.some((photo) => !photo.id) ||
+    restored.diaries.some((entry) => entry.photoIds.some((id) => !ids.has(id)))
+  )
+    throw new Error('备份中的照片缺失或重复，原有记录未替换');
+  await queueWrite(() =>
+    writeTransaction(
+      (transaction) => {
+        const stateStore = transaction.objectStore('state');
+        const photoStore = transaction.objectStore('photos');
+        stateStore.clear();
+        photoStore.clear();
+        stateStore.put(restored, STATE_KEY);
+        photos.forEach((photo) => photoStore.put(photo));
+      },
+      { photos: true, changesState: true, replace: true },
+    ),
+  );
   return restored;
 }
 
 export async function clearAllData(): Promise<AppState> {
   const fresh = createDefaultState();
-  const database = await openDatabase();
-  const transaction = database.transaction(['state', 'photos'], 'readwrite');
-  transaction.objectStore('state').clear();
-  transaction.objectStore('photos').clear();
-  transaction.objectStore('state').put(fresh, STATE_KEY);
-  await transactionDone(transaction);
-  database.close();
+  await queueWrite(() =>
+    writeTransaction(
+      (transaction) => {
+        transaction.objectStore('state').clear();
+        transaction.objectStore('photos').clear();
+        transaction.objectStore('state').put(fresh, STATE_KEY);
+      },
+      { photos: true, changesState: true, replace: true },
+    ),
+  );
   return fresh;
 }

@@ -71,6 +71,9 @@
 
 .countdown-copy {
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 .countdown-copy small,
 .countdown-copy strong {
@@ -83,19 +86,21 @@
 }
 .countdown-copy strong {
   overflow: hidden;
-  margin-top: 3px;
+  margin: 0;
   font-family: var(--serif);
   font-size: 15px;
   text-overflow: ellipsis;
   white-space: nowrap;
+  line-height: 1.35;
 }
 .countdown-copy p {
   overflow: hidden;
-  margin: 4px 0 0;
+  margin: 0;
   color: #8d8490;
   font-size: 10px;
   text-overflow: ellipsis;
   white-space: nowrap;
+  line-height: 1.5;
 }
 .countdown-number {
   color: var(--card-accent);
@@ -150,31 +155,37 @@
 .goal-top {
   display: grid;
   grid-template-columns: 52px minmax(0, 1fr);
-  align-items: start;
+  align-items: center;
   gap: 11px;
-  padding-right: 42px;
+  padding: 9px 0 0;
 }
 .goal-copy {
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 .goal-top small {
+  display: block;
   color: var(--card-accent);
   font-size: 10px;
   font-weight: 900;
+  line-height: 1.4;
 }
 .goal-top h3 {
-  margin: 3px 0 0;
+  margin: 0;
   font-family: var(--serif);
   font-size: 18px;
   font-weight: 700;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
 }
 .goal-top p {
-  margin: 4px 0 0;
-  margin-right: -34px;
-  padding-right: 4px;
+  margin: 0;
   color: #89818b;
   font-size: 11px;
   line-height: 1.5;
+  overflow-wrap: anywhere;
 }
 .goal-number {
   display: flex;
@@ -1254,6 +1265,8 @@
 }
 .countdown-main .countdown-emoji,
 .goal-top .goal-emoji {
+  align-self: center;
+  line-height: 1;
   width: 70px;
   height: 70px;
   border-radius: 20px;
@@ -1274,7 +1287,7 @@
   padding: 24px 19px 16px;
 }
 .goal-top {
-  grid-template-columns: 72px minmax(0, 1fr);
+  grid-template-columns: 70px minmax(0, 1fr);
   align-items: center;
   gap: 14px;
 }
@@ -1319,6 +1332,10 @@
   .goal-top .goal-emoji {
     width: 60px;
     height: 60px;
+  }
+  .goal-top {
+    grid-template-columns: 60px minmax(0, 1fr);
+    gap: 10px;
   }
   .countdown-main .countdown-copy strong,
   .goal-top h3 {

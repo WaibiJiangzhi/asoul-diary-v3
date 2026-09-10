@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync } from 'node:fs';
+import { readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { resolve } from 'node:path';
 
@@ -21,9 +21,16 @@ export function stampServiceWorker() {
   }
 
   const version = releaseId();
+  const assets = readdirSync(resolve('dist', 'client'), { recursive: true })
+    .map((file) => String(file).replaceAll('\\', '/'))
+    .filter((file) => /\.(?:js|css)$/.test(file) && file !== 'sw.js')
+    .map((file) => `/${file}`)
+    .sort();
   writeFileSync(
     serviceWorkerPath,
-    source.replaceAll(PLACEHOLDER, version),
+    source
+      .replaceAll(PLACEHOLDER, version)
+      .replace('/* __ASOUL_BUILD_ASSETS__ */ []', JSON.stringify(assets)),
     'utf8',
   );
   process.stdout.write(`Stamped service worker release ${version}.\n`);

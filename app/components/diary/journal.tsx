@@ -29,17 +29,17 @@ import {
 } from '@/components/ui/drawer';
 import { dateKey, formatFullDate, fromDateKey, moveDate } from '@/lib/date';
 import { getPhotos } from '@/lib/db';
+import { progressEventDate } from '@/lib/progress';
 import {
-  challengeDays,
-  progressEventLabel,
-  recordStates,
-} from '@/lib/challenge';
-import { progressEventDate, progressValueOnDate } from '@/lib/progress';
+  growthSnapshot,
+  growthSourceId,
+  refreshDiarySnapshots,
+  taskSnapshot,
+} from '@/lib/journal-snapshots';
 import type { AppState, DiaryEntry } from '@/lib/types';
 import type {
   CardColor,
   Countdown,
-  DiaryGrowthSnapshot,
   GrowthMemory,
   ProgressGoal,
 } from '@/lib/types';
@@ -191,13 +191,7 @@ export function JournalView({
     const next = included
       ? [
           ...taskSnapshots.filter((item) => item.sourceTaskId !== task.id),
-          {
-            id: `snapshot-${task.id}`,
-            sourceTaskId: task.id,
-            emoji: task.emoji,
-            title: task.title,
-            done: task.done,
-          },
+          taskSnapshot(task),
         ]
       : taskSnapshots.filter((item) => item.sourceTaskId !== task.id);
     onUpdate(selectedDate, { taskSnapshots: next });
@@ -207,63 +201,8 @@ export function JournalView({
     item: Countdown | ProgressGoal | GrowthMemory,
     included: boolean,
   ) => {
-    const sourceId =
-      item.kind === 'countdown' && 'sourceCountdownId' in item
-        ? item.sourceCountdownId
-        : item.kind === 'progress' && 'sourceGoalId' in item
-          ? item.sourceGoalId
-          : item.id;
-    const id = `growth-snapshot-${sourceId}`;
-    let snapshot: DiaryGrowthSnapshot;
-    if (item.kind === 'countdown') {
-      const selectedTime = fromDateKey(selectedDate).getTime();
-      const targetTime = fromDateKey(item.targetDate).getTime();
-      const sameDayNotes = item.notes.filter(
-        (note) => dateKey(new Date(note.createdAt)) === selectedDate,
-      );
-      snapshot = {
-        id,
-        kind: 'countdown',
-        sourceId,
-        emoji: item.emoji,
-        title: item.title,
-        remainingDays: Math.ceil((targetTime - selectedTime) / 86_400_000),
-        note: sameDayNotes.at(-1)?.text ?? '',
-        capturedAt: new Date().toISOString(),
-      };
-    } else {
-      const sameDayEvents = item.events.filter(
-        (event) => progressEventDate(event) === selectedDate,
-      );
-      const dayOutcome = sameDayEvents.find((event) => event.outcome);
-      const dayState = item.challenge
-        ? recordStates(item).find((status) => status.id === dayOutcome?.outcome)
-        : undefined;
-      snapshot = {
-        id,
-        kind: 'progress',
-        sourceId,
-        emoji: dayState?.emoji || item.emoji,
-        title: item.title,
-        delta: Number(
-          sameDayEvents.reduce((sum, event) => sum + event.delta, 0).toFixed(4),
-        ),
-        current: item.challenge
-          ? challengeDays(item).filter((event) => event.date! <= selectedDate)
-              .length
-          : progressValueOnDate(item, selectedDate),
-        total: item.total,
-        challengeResult: item.challenge
-          ? dayOutcome
-            ? progressEventLabel(item, dayOutcome)
-            : '未记录结果'
-          : undefined,
-        unit: item.unit,
-        note:
-          [...sameDayEvents].reverse().find((event) => event.note)?.note ?? '',
-        capturedAt: new Date().toISOString(),
-      };
-    }
+    const sourceId = growthSourceId(item);
+    const snapshot = growthSnapshot(item, selectedDate);
     const next = included
       ? [
           ...growthSnapshots.filter((entry) => entry.sourceId !== sourceId),
@@ -593,7 +532,21 @@ export function JournalView({
                   );
                 })}
             </div>
-            <Button onClick={() => setTaskPickerOpen(false)}>选好了</Button>
+            <Button
+              onClick={() => {
+                onUpdate(
+                  selectedDate,
+                  refreshDiarySnapshots(
+                    { date: selectedDate, taskSnapshots, growthSnapshots },
+                    dayTasks,
+                    [...countdownSources, ...progressSources],
+                  ),
+                );
+                setTaskPickerOpen(false);
+              }}
+            >
+              选好了
+            </Button>
           </div>
         </DrawerContent>
       </Drawer>

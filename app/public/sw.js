@@ -6,10 +6,14 @@ const APP_SHELL = [
   '/icon-192.png?v=4',
   '/icon-512.png?v=4',
 ];
+// Filled from the built JS/CSS files; personal data and photos are never cached here.
+const BUILD_ASSETS = /* __ASOUL_BUILD_ASSETS__ */ [];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(SHELL_CACHE).then((cache) => cache.addAll(APP_SHELL)),
+    caches
+      .open(SHELL_CACHE)
+      .then((cache) => cache.addAll([...APP_SHELL, ...BUILD_ASSETS])),
   );
 });
 
@@ -44,9 +48,17 @@ self.addEventListener('fetch', (event) => {
   if (request.mode === 'navigate') {
     event.respondWith(
       fetch(request)
-        .then((response) => {
-          const copy = response.clone();
-          void caches.open(SHELL_CACHE).then((cache) => cache.put('/', copy));
+        .then(async (response) => {
+          if (!response.ok) return (await caches.match('/')) ?? response;
+          if (url.pathname === '/' && !response.redirected) {
+            const copy = response.clone();
+            event.waitUntil(
+              caches
+                .open(SHELL_CACHE)
+                .then((cache) => cache.put('/', copy))
+                .catch(() => {}),
+            );
+          }
           return response;
         })
         .catch(() => caches.match('/')),
@@ -90,9 +102,12 @@ self.addEventListener('fetch', (event) => {
       return fetch(request).then((response) => {
         if (response.ok) {
           const copy = response.clone();
-          void caches
-            .open(SHELL_CACHE)
-            .then((cache) => cache.put(request, copy));
+          event.waitUntil(
+            caches
+              .open(SHELL_CACHE)
+              .then((cache) => cache.put(request, copy))
+              .catch(() => {}),
+          );
         }
         return response;
       });

@@ -1,9 +1,4 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { Dispatch, MutableRefObject, SetStateAction } from 'react';
-
-import { saveState } from '@/lib/db';
-import type { AppState } from '@/lib/types';
-import type { SaveStatus } from '@/hooks/use-diary-state';
 import type { ShowToast } from '@/hooks/use-toast';
 
 interface BeforeInstallPromptEvent extends Event {
@@ -12,24 +7,18 @@ interface BeforeInstallPromptEvent extends Event {
 }
 
 interface AppUpdateOptions {
-  stateRef: MutableRefObject<AppState | null>;
-  storageAvailable: MutableRefObject<boolean>;
-  setSaveStatus: Dispatch<SetStateAction<SaveStatus>>;
+  flushSave: () => Promise<boolean>;
   showToast: ShowToast;
 }
 
-export function useAppUpdate({
-  stateRef,
-  storageAvailable,
-  setSaveStatus,
-  showToast,
-}: AppUpdateOptions) {
+export function useAppUpdate({ flushSave, showToast }: AppUpdateOptions) {
   const [installPrompt, setInstallPrompt] =
     useState<BeforeInstallPromptEvent | null>(null);
   const [waitingServiceWorker, setWaitingServiceWorker] =
     useState<ServiceWorker | null>(null);
   const [updateNoticeVisible, setUpdateNoticeVisible] = useState(false);
   const updateNoticeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const reloadRequested = useRef(false);
 
   useEffect(() => {
     const handleInstall = (event: Event) => {
@@ -37,7 +26,7 @@ export function useAppUpdate({
       setInstallPrompt(event as BeforeInstallPromptEvent);
     };
     window.addEventListener('beforeinstallprompt', handleInstall);
-    void navigator.storage?.persist?.();
+    void navigator.storage?.persist?.().catch(() => {});
     return () =>
       window.removeEventListener('beforeinstallprompt', handleInstall);
   }, []);
@@ -86,10 +75,17 @@ export function useAppUpdate({
     };
 
     const handleControllerChange = () => {
-      if (hadController) window.location.reload();
+      setWaitingServiceWorker(null);
+      if (hadController && reloadRequested.current) {
+        void flushSave().then((saved) => {
+          if (saved) window.location.reload();
+          else showToast('记录尚未保存，已暂停刷新。请先导出备份。');
+        });
+      }
     };
     const checkForUpdate = () => {
-      if (document.visibilityState === 'visible') void registration?.update();
+      if (document.visibilityState === 'visible')
+        void registration?.update().catch(() => {});
     };
     navigator.serviceWorker.addEventListener(
       'controllerchange',
@@ -104,7 +100,7 @@ export function useAppUpdate({
         registration = nextRegistration;
         if (registration.waiting) announceUpdate(registration.waiting);
         registration.addEventListener('updatefound', watchInstallingWorker);
-        void registration.update();
+        void registration.update().catch(() => {});
         updateCheckTimer = setInterval(checkForUpdate, 60 * 60 * 1000);
       })
       .catch(() => {
@@ -125,24 +121,20 @@ export function useAppUpdate({
       if (updateCheckTimer) clearInterval(updateCheckTimer);
       if (updateNoticeTimer.current) clearTimeout(updateNoticeTimer.current);
     };
-  }, []);
+  }, [flushSave, showToast]);
 
   const applyReadyUpdate = useCallback(async () => {
     const worker = waitingServiceWorker;
     if (!worker) return;
 
-    setUpdateNoticeVisible(false);
-    if (stateRef.current && storageAvailable.current) {
-      try {
-        await saveState(stateRef.current);
-        setSaveStatus('saved');
-      } catch {
-        storageAvailable.current = false;
-        setSaveStatus('unavailable');
-      }
+    if (!(await flushSave())) {
+      showToast('记录尚未保存，已暂停更新。请先导出备份，再重试。');
+      return;
     }
+    reloadRequested.current = true;
+    setUpdateNoticeVisible(false);
     worker.postMessage({ type: 'SKIP_WAITING' });
-  }, [setSaveStatus, stateRef, storageAvailable, waitingServiceWorker]);
+  }, [flushSave, showToast, waitingServiceWorker]);
 
   const installApp = useCallback(async () => {
     if (installPrompt) {

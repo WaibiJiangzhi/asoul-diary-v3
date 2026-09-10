@@ -16,7 +16,7 @@ import { dateKey, moveDate } from '@/lib/date';
 import { adjustProgressEntry } from '@/lib/progress';
 import {
   canRecordChallenge,
-  challengeComplete,
+  challengeMilestone,
   clearChallengeDay,
   recordStates,
   isDateKey,
@@ -393,7 +393,7 @@ export function useGrowthController({
     const nextDay = JSON.stringify(
       next.events.filter((event) => event.date === date),
     );
-    const celebrating = !challengeComplete(previous) && challengeComplete(next);
+    const milestone = challengeMilestone(previous, next);
     setState(
       (current) =>
         current && {
@@ -404,12 +404,12 @@ export function useGrowthController({
         },
     );
     haptic();
-    if (outcome !== null) softChime(celebrating ? 'celebrate' : 'check');
+    if (outcome !== null) softChime(milestone ? 'celebrate' : 'check');
     showToast(
       outcome === null
         ? '已取消这天的状态，文字足迹仍保留'
-        : celebrating
-          ? next.challenge?.targetDays
+        : milestone
+          ? milestone === 'target'
             ? '积累到了期待的天数，这段成长值得庆祝 ✨'
             : '每一天都留下记录了，这段成长值得庆祝 ✨'
           : original

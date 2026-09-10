@@ -46,12 +46,12 @@ export default function DiaryApp() {
     state,
     setState,
     stateRef,
-    storageAvailable,
     saveStatus,
-    setSaveStatus,
     todayDate,
     setTodayDate,
     isReady,
+    flushSave,
+    replaceData,
   } = useDiaryState(showToast);
   const [activeTab, setActiveTab] = useState<AppTab>('today');
   const [visitedTabs, setVisitedTabs] = useState<Set<AppTab>>(
@@ -83,9 +83,7 @@ export default function DiaryApp() {
     applyReadyUpdate,
     installApp,
   } = useAppUpdate({
-    stateRef,
-    storageAvailable,
-    setSaveStatus,
+    flushSave,
     showToast,
   });
   useDiaryWebMcp({ isReady, stateRef, setState });
@@ -116,7 +114,7 @@ export default function DiaryApp() {
   });
   const data = useDataController({
     state,
-    setState,
+    replaceData,
     showToast,
     askConfirmation,
     onClear: () => setSettingsOpen(false),

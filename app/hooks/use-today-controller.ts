@@ -85,12 +85,6 @@ export function useTodayController({
               ? { ...task, done, updatedAt: new Date().toISOString() }
               : task,
           ),
-          diaries: current.diaries.map((entry) => ({
-            ...entry,
-            taskSnapshots: entry.taskSnapshots.map((snapshot) =>
-              snapshot.sourceTaskId === id ? { ...snapshot, done } : snapshot,
-            ),
-          })),
         },
     );
     haptic();
@@ -110,14 +104,6 @@ export function useTodayController({
                     }
                   : task,
               ),
-              diaries: current.diaries.map((entry) => ({
-                ...entry,
-                taskSnapshots: entry.taskSnapshots.map((snapshot) =>
-                  snapshot.sourceTaskId === id
-                    ? { ...snapshot, done: false }
-                    : snapshot,
-                ),
-              })),
             },
         );
       });
@@ -188,19 +174,6 @@ export function useTodayController({
           dailyTasks: current.dailyTasks.map((task) =>
             task.id === edited.id ? edited : task,
           ),
-          diaries: current.diaries.map((entry) => ({
-            ...entry,
-            taskSnapshots: entry.taskSnapshots.map((snapshot) =>
-              snapshot.sourceTaskId === edited.id
-                ? {
-                    ...snapshot,
-                    emoji: edited.emoji,
-                    title: edited.title,
-                    done: edited.done,
-                  }
-                : snapshot,
-            ),
-          })),
         },
     );
     setTaskEditing(null);
