@@ -13,6 +13,16 @@ import {
 } from '@/components/diary/constants';
 import { ACCENT_COLORS, createId } from '@/lib/defaults';
 import { dateKey, moveDate } from '@/lib/date';
+import { adjustProgressEntry } from '@/lib/progress';
+import {
+  canRecordChallenge,
+  recordStates,
+  isDateKey,
+  progressEventLabel,
+  rebuildChallenge,
+  recordChallengeDay,
+  type ChallengeOutcome,
+} from '@/lib/challenge';
 import type {
   AppState,
   Countdown,
@@ -29,7 +39,7 @@ interface GrowthControllerOptions {
   setState: Dispatch<SetStateAction<AppState | null>>;
   showToast: ShowToast;
   haptic: () => void;
-  softChime: (kind: 'check' | 'progress') => void;
+  softChime: (kind: 'check' | 'progress' | 'celebrate') => void;
   askConfirmation: (confirmation: Confirmation) => void;
 }
 
@@ -48,8 +58,13 @@ export function useGrowthController({
   );
 
   function openNewGrowth(kind: GrowthDraft['kind']) {
+    const fresh = createEmptyGrowthDraft();
+    const color = ACCENT_COLORS[stateRef.current?.settings.accent ?? 'jiaran'];
     setGrowthDraft({
-      ...createEmptyGrowthDraft(),
+      ...fresh,
+      states: fresh.states.map((status, index) =>
+        index === 0 ? { ...status, color } : status,
+      ),
       kind,
       color: ACCENT_COLORS[stateRef.current?.settings.accent ?? 'jiaran'],
     });
@@ -60,6 +75,7 @@ export function useGrowthController({
     setGrowthDraft(
       item.kind === 'countdown'
         ? {
+            ...createEmptyGrowthDraft(),
             id: item.id,
             kind: 'countdown',
             emoji: item.emoji,
@@ -73,6 +89,7 @@ export function useGrowthController({
             color: item.color,
           }
         : {
+            ...createEmptyGrowthDraft(),
             id: item.id,
             kind: 'progress',
             emoji: item.emoji,
@@ -84,6 +101,17 @@ export function useGrowthController({
             step: String(item.step),
             note: item.note,
             color: item.color,
+            mode: item.challenge ? 'challenge' : 'counter',
+            expectedDateEnabled: !!item.expectedDate,
+            expectedDate: item.expectedDate ?? moveDate(dateKey(), 30),
+            startDate: item.challenge?.startDate ?? dateKey(),
+            states: recordStates(item).map((status) => ({ ...status })),
+            targetStateId:
+              item.challenge?.targetStateId ?? recordStates(item)[0].id,
+            targetEnabled: item.challenge?.targetDays !== undefined,
+            targetDays: String(
+              item.challenge?.targetDays ?? Math.min(20, item.total),
+            ),
           },
     );
     setGrowthOpen(true);
@@ -121,23 +149,135 @@ export function useGrowthController({
           },
       );
     } else {
+      const isChallenge = growthDraft.mode === 'challenge';
+      if (
+        !isChallenge &&
+        growthDraft.expectedDateEnabled &&
+        !isDateKey(growthDraft.expectedDate)
+      ) {
+        showToast('请选择一个期望完成日期');
+        return;
+      }
       const total = Math.max(0.01, Number(growthDraft.total) || 1);
       const currentValue = Math.max(0, Number(growthDraft.current) || 0);
       const previous = state?.progressGoals.find(
         (entry) => entry.id === growthDraft.id,
       );
+      if (
+        isChallenge &&
+        (!Number.isInteger(total) ||
+          total < 1 ||
+          total > 3650 ||
+          !isDateKey(growthDraft.startDate))
+      ) {
+        showToast('请填写有效的开始日期和 1–3650 天的记录时长');
+        return;
+      }
+      const targetDays = growthDraft.targetEnabled
+        ? Number(growthDraft.targetDays)
+        : undefined;
+      if (
+        isChallenge &&
+        targetDays !== undefined &&
+        (!Number.isInteger(targetDays) || targetDays < 1 || targetDays > total)
+      ) {
+        showToast('期待天数需要在 1 天到记录总天数之间');
+        return;
+      }
+      if (
+        isChallenge &&
+        previous?.events.some(
+          (entry) =>
+            entry.outcome &&
+            entry.date &&
+            (entry.date < growthDraft.startDate ||
+              entry.date > moveDate(growthDraft.startDate, total - 1)),
+        )
+      ) {
+        showToast('调整后的日期范围需要包含已记录的日子');
+        return;
+      }
+      if (
+        isChallenge &&
+        (growthDraft.states.length < 1 ||
+          growthDraft.states.length > 4 ||
+          growthDraft.states.some((status) => !status.name.trim()) ||
+          new Set(growthDraft.states.map((status) => status.name.trim()))
+            .size !== growthDraft.states.length)
+      ) {
+        showToast('请设置 1–4 种名称不同的状态');
+        return;
+      }
+      if (
+        isChallenge &&
+        previous?.events.some(
+          (entry) =>
+            entry.outcome &&
+            !growthDraft.states.some((status) => status.id === entry.outcome),
+        )
+      ) {
+        showToast('已有记录的状态需要保留，可以修改名称和表情');
+        return;
+      }
+      if (
+        isChallenge &&
+        growthDraft.targetEnabled &&
+        !growthDraft.states.some(
+          (status) => status.id === growthDraft.targetStateId,
+        )
+      ) {
+        showToast('请选择期待积累的状态');
+        return;
+      }
+      const events = [...(previous?.events ?? [])];
+      if (
+        isChallenge &&
+        previous &&
+        previous.note !== growthDraft.note.trim()
+      ) {
+        events.push({
+          id: createId('event'),
+          delta: 0,
+          valueAfter: previous.current,
+          note: `约定调整：${previous.note || '未填写'} → ${growthDraft.note.trim() || '未填写'}`,
+          createdAt: now,
+        });
+      }
       const item: ProgressGoal = {
         id: growthDraft.id ?? createId('goal'),
         kind: 'progress',
         emoji: growthDraft.emoji.trim(),
         title: growthDraft.title.trim(),
-        current: currentValue,
+        current: isChallenge ? (previous?.current ?? 0) : currentValue,
         total,
-        unit: growthDraft.unit.trim() || '次',
-        step: Math.max(0.01, Number(growthDraft.step) || 1),
+        unit: isChallenge ? '天' : growthDraft.unit.trim() || '次',
+        step: isChallenge ? 1 : Math.max(0.01, Number(growthDraft.step) || 1),
         note: growthDraft.note.trim(),
         color: growthDraft.color,
-        events: previous?.events ?? [],
+        events,
+        expectedDate:
+          !isChallenge && growthDraft.expectedDateEnabled
+            ? growthDraft.expectedDate
+            : undefined,
+        challenge: isChallenge
+          ? {
+              startDate: growthDraft.startDate,
+              states: growthDraft.states.map((status) => ({
+                ...status,
+                name: status.name.trim(),
+              })),
+              targetStateId: growthDraft.targetEnabled
+                ? growthDraft.targetStateId
+                : undefined,
+              targetCelebrated:
+                previous?.challenge?.targetStateId ===
+                  growthDraft.targetStateId &&
+                previous.challenge.targetDays === targetDays
+                  ? previous.challenge.targetCelebrated
+                  : false,
+              targetDays,
+            }
+          : undefined,
         createdAt: previous?.createdAt ?? now,
         updatedAt: now,
       };
@@ -157,12 +297,30 @@ export function useGrowthController({
     showToast(growthDraft.id ? '成长记录已修改' : '新的成长记录已开始 ✨');
   }
 
-  function adjustProgress(goalId: string, requestedDelta: number, note = '') {
-    if (!Number.isFinite(requestedDelta) || requestedDelta === 0) return;
+  function adjustProgress(
+    goalId: string,
+    requestedDelta: number,
+    note = '',
+    date = dateKey(),
+  ) {
+    if (
+      !Number.isFinite(requestedDelta) ||
+      (requestedDelta === 0 && !note.trim())
+    )
+      return;
     const previous = stateRef.current?.progressGoals.find(
       (goal) => goal.id === goalId,
     );
     if (!previous) return;
+    if (previous.challenge && requestedDelta !== 0) return;
+    if (
+      !isDateKey(date) ||
+      date > dateKey() ||
+      (previous.challenge && !canRecordChallenge(previous, date))
+    ) {
+      showToast('请选择可记录的日期');
+      return;
+    }
     const projected = Math.max(
       0,
       Number((previous.current + requestedDelta).toFixed(4)),
@@ -175,39 +333,101 @@ export function useGrowthController({
         ...current,
         progressGoals: current.progressGoals.map((goal) => {
           if (goal.id !== goalId) return goal;
-          const value = Math.max(
-            0,
-            Number((goal.current + requestedDelta).toFixed(4)),
+          return adjustProgressEntry(
+            goal,
+            requestedDelta,
+            note,
+            date,
+            createId('event'),
+            new Date().toISOString(),
           );
-          const delta = Number((value - goal.current).toFixed(4));
-          if (!delta) return goal;
-          const now = new Date().toISOString();
-          return {
-            ...goal,
-            current: value,
-            updatedAt: now,
-            events: [
-              ...goal.events,
-              {
-                id: createId('event'),
-                delta,
-                valueAfter: value,
-                note: note.trim(),
-                createdAt: now,
-              },
-            ],
-          };
         }),
       };
     });
     haptic();
     if (requestedDelta > 0) softChime('progress');
     showToast(
-      actuallyCompleted
-        ? '到达目标了！这段成长值得收藏 🎉'
-        : note.trim()
-          ? '这一步和一句话都记下了'
-          : '已记下这一步成长',
+      requestedDelta === 0
+        ? '这句话已留下，进度保持不变'
+        : actuallyCompleted
+          ? '到达目标了！这段成长值得收藏 🎉'
+          : note.trim()
+            ? '这一步和一句话都记下了'
+            : '已记下这一步成长',
+    );
+  }
+
+  function recordChallenge(
+    goalId: string,
+    date: string,
+    outcome: ChallengeOutcome,
+    note = '',
+  ) {
+    const previous = stateRef.current?.progressGoals.find(
+      (goal) => goal.id === goalId,
+    );
+    if (
+      !previous ||
+      !canRecordChallenge(previous, date) ||
+      !recordStates(previous).some((status) => status.id === outcome)
+    ) {
+      showToast('请选择开始日期之后、今天及以前的日期');
+      return;
+    }
+    const original = previous.events.find(
+      (entry) => entry.date === date && entry.outcome,
+    );
+    const now = new Date().toISOString();
+    const id = createId('event');
+    const next = recordChallengeDay(previous, date, outcome, note, id, now);
+    const celebrating =
+      !previous.challenge?.targetCelebrated &&
+      !!next.challenge?.targetCelebrated;
+    setState(
+      (current) =>
+        current && {
+          ...current,
+          progressGoals: current.progressGoals.map((goal) =>
+            goal.id === goalId
+              ? recordChallengeDay(goal, date, outcome, note, id, now)
+              : goal,
+          ),
+        },
+    );
+    haptic();
+    if (celebrating) softChime('celebrate');
+    else if (!original) softChime('progress');
+    showToast(
+      celebrating
+        ? '积累到了期待的天数，这段成长值得庆祝 ✨'
+        : original
+          ? '这一天的记录已修改'
+          : '这一天也好好记下了 ✨',
+      () => {
+        setState(
+          (current) =>
+            current && {
+              ...current,
+              progressGoals: current.progressGoals.map((goal) => {
+                if (goal.id !== goalId) return goal;
+                const latest = goal.events.find(
+                  (entry) => entry.date === date && entry.outcome,
+                );
+                if (latest?.createdAt !== now) return goal;
+                return rebuildChallenge({
+                  ...goal,
+                  updatedAt: new Date().toISOString(),
+                  events: [
+                    ...goal.events.filter(
+                      (entry) => !(entry.date === date && entry.outcome),
+                    ),
+                    ...(original ? [original] : []),
+                  ],
+                });
+              }),
+            },
+        );
+      },
     );
   }
 
@@ -306,7 +526,11 @@ export function useGrowthController({
     );
     askConfirmation({
       title: '删除这条成长足迹？',
-      description: `${event.delta >= 0 ? '+' : ''}${event.delta} ${goal.unit} 会从记录中移除，当前进度将从 ${goal.current} ${goal.unit} 调整为 ${nextValue} ${goal.unit}。`,
+      description: goal.challenge
+        ? `“${progressEventLabel(goal, event)}”会被移除${event.outcome ? '，这一天恢复为未记录' : '，每日记录保持不变'}。`
+        : event.delta === 0
+          ? '这条文字足迹会被移除，当前进度保持不变。'
+          : `${event.delta >= 0 ? '+' : ''}${event.delta} ${goal.unit} 会从记录中移除，当前进度将从 ${goal.current} ${goal.unit} 调整为 ${nextValue} ${goal.unit}。`,
       confirmLabel: '删除足迹',
       destructive: true,
       action: () => {
@@ -316,6 +540,12 @@ export function useGrowthController({
             ...current,
             progressGoals: current.progressGoals.map((item) => {
               if (item.id !== goal.id) return item;
+              if (item.challenge)
+                return rebuildChallenge({
+                  ...item,
+                  events: item.events.filter((entry) => entry.id !== event.id),
+                  updatedAt: new Date().toISOString(),
+                });
               const baseline = Number(
                 (
                   item.current -
@@ -415,6 +645,8 @@ export function useGrowthController({
             startedAt: item.createdAt,
             endedAt: new Date().toISOString(),
             events: item.events,
+            challenge: item.challenge,
+            expectedDate: item.expectedDate,
           }
         : {
             id: createId('memory'),
@@ -486,10 +718,19 @@ export function useGrowthController({
         current: 0,
         total: memory.total,
         unit: memory.unit,
-        step: Math.max(0.01, Math.abs(memory.events.at(-1)?.delta ?? 1)),
+        step: memory.challenge
+          ? 1
+          : Math.max(0.01, Math.abs(memory.events.at(-1)?.delta ?? 1)),
         note: memory.note,
         color: memory.color,
         events: [],
+        challenge: memory.challenge
+          ? {
+              ...memory.challenge,
+              startDate: dateKey(),
+              targetCelebrated: false,
+            }
+          : undefined,
         createdAt: now,
         updatedAt: now,
       };
@@ -528,10 +769,14 @@ export function useGrowthController({
         current: memory.current,
         total: memory.total,
         unit: memory.unit,
-        step: Math.max(0.01, Math.abs(memory.events.at(-1)?.delta ?? 1)),
+        step: memory.challenge
+          ? 1
+          : Math.max(0.01, Math.abs(memory.events.at(-1)?.delta ?? 1)),
         note: memory.note,
         color: memory.color,
         events: memory.events,
+        challenge: memory.challenge,
+        expectedDate: memory.expectedDate,
         createdAt: memory.startedAt,
         updatedAt: new Date().toISOString(),
       };
@@ -574,6 +819,7 @@ export function useGrowthController({
     openEditGrowth,
     saveGrowth,
     adjustProgress,
+    recordChallenge,
     addCountdownNote,
     deleteCountdownNote,
     moveGrowth,

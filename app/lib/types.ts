@@ -57,6 +57,24 @@ export interface ProgressEvent {
   valueAfter: number;
   note?: string;
   createdAt: string;
+  date?: string;
+  outcome?: string;
+  rule?: string;
+}
+
+export interface RecordStatus {
+  id: string;
+  name: string;
+  color: CardColor;
+  emoji: string;
+}
+
+export interface ChallengeConfig {
+  startDate: string;
+  states: RecordStatus[];
+  targetStateId?: string;
+  targetDays?: number;
+  targetCelebrated?: boolean;
 }
 
 export interface ProgressGoal {
@@ -71,6 +89,8 @@ export interface ProgressGoal {
   note: string;
   color: CardColor;
   events: ProgressEvent[];
+  challenge?: ChallengeConfig;
+  expectedDate?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -90,6 +110,8 @@ export interface ProgressMemory {
   startedAt: string;
   endedAt: string;
   events: ProgressEvent[];
+  challenge?: ChallengeConfig;
+  expectedDate?: string;
 }
 
 export interface CountdownMemory {
@@ -135,6 +157,7 @@ export type DiaryGrowthSnapshot =
       emoji: string;
       title: string;
       delta: number;
+      challengeResult?: string;
       current: number;
       total: number;
       unit: string;
@@ -165,6 +188,7 @@ export interface AppSettings {
   wallpaperCatalogVersion: 3;
   haptics: boolean;
   sounds: boolean;
+  journalLines: boolean;
 }
 
 export interface AppState {

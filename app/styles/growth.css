@@ -400,50 +400,6 @@
   font-size: 10px;
   line-height: 1.5;
 }
-.sticker-grid {
-  display: grid;
-  max-height: 268px;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 7px;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-}
-.sticker-grid button {
-  display: grid;
-  min-width: 0;
-  justify-items: center;
-  gap: 4px;
-  padding: 5px 3px 6px;
-  border: 1px solid transparent;
-  border-radius: 14px;
-  background: white;
-  color: #6f6872;
-}
-.sticker-grid button.active {
-  border-color: var(--theme-accent);
-  background: var(--theme-soft);
-  box-shadow: 0 0 0 2px var(--theme-glow);
-}
-.sticker-grid button > span {
-  display: block;
-  width: 100%;
-  aspect-ratio: 1;
-  overflow: hidden;
-  border-radius: 10px;
-}
-.sticker-grid img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-.sticker-grid small {
-  overflow: hidden;
-  width: 100%;
-  font-size: 8px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 .color-picker {
   display: grid;
   gap: 9px;
@@ -851,11 +807,7 @@
   }
 }
 
-@media (max-width: 380px) {
-  .sticker-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
+
 
 .decoration-picker {
   display: block;

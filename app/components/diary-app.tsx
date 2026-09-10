@@ -165,6 +165,7 @@ export default function DiaryApp() {
             state={state}
             onAdd={growth.openNewGrowth}
             onAdjust={growth.adjustProgress}
+            onRecordChallenge={growth.recordChallenge}
             onDeleteEvent={growth.deleteProgressEvent}
             onEdit={growth.openEditGrowth}
             onDelete={growth.deleteGrowth}

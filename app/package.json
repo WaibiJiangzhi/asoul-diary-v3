@@ -16,6 +16,8 @@
     "check": "npm run typecheck && npm run lint && npm run build",
     "format": "oxfmt",
     "fixture:two-years": "node scripts/generate-two-year-fixture.mjs",
+    "stickers:import": "node scripts/import-stickers.mjs",
+    "test:records": "node scripts/challenge.test.mjs && node scripts/stickers.test.mjs",
     "wallpapers:optimize": "node scripts/optimize-wallpapers.mjs"
   },
   "dependencies": {

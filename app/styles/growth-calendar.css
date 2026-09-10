@@ -1,0 +1,151 @@
+.progress-date-picker {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr) 36px;
+  align-items: center;
+  border-top: 1px solid color-mix(in srgb, var(--card-accent), white 78%);
+  margin-top: 12px;
+  padding-top: 3px;
+}
+.progress-date-picker [data-slot='button'] {
+  min-height: 44px;
+  color: #716477;
+}
+.progress-date-picker .progress-date-open {
+  width: 100%;
+  min-width: 0;
+  gap: 7px;
+  font-size: 12px;
+  padding-inline: 2px;
+}
+.progress-date-open small {
+  font-size: 10px;
+  font-weight: 400;
+}
+.progress-expected-date {
+  margin: 5px 0 0;
+  font-size: 11px;
+  color: #827787;
+  text-align: center;
+}
+.growth-calendar [data-slot='calendar'] {
+  width: 100%;
+  padding: 0;
+  --cell-size: 2.5rem;
+}
+.growth-calendar [data-slot='calendar'] button {
+  min-width: 0;
+}
+.growth-calendar .rdp-day button {
+  min-height: 40px;
+  position: relative;
+}
+.growth-calendar .growth-day-done button::after,
+.growth-calendar .growth-day-missed button::after,
+.growth-calendar .growth-day-noted button::after {
+  content: '';
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  position: absolute;
+  bottom: 4px;
+  background: var(--card-accent);
+}
+.growth-calendar .growth-day-missed button::after {
+  background: #82738c;
+}
+.growth-calendar .growth-day-noted button::after {
+  background: transparent;
+  border: 1px solid #82738c;
+}
+.growth-calendar .rdp-selected button::after {
+  outline: 1px solid white;
+}
+.growth-calendar-legend {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px 14px;
+  font-size: 11px;
+  color: #827787;
+}
+.growth-calendar-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.growth-calendar-legend i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--card-accent);
+}
+.growth-calendar-legend .is-missed {
+  background: #82738c;
+}
+.growth-calendar-legend .is-noted {
+  background: transparent;
+  border: 1px solid #82738c;
+}
+.growth-day-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 16px;
+}
+.growth-day-heading > div {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+.growth-day-heading strong {
+  font-size: 14px;
+}
+.growth-day-heading small {
+  font-size: 11px;
+  color: #827787;
+  overflow-wrap: anywhere;
+}
+.growth-day-heading > button {
+  flex: none;
+  min-height: 44px;
+  font-size: 12px;
+}
+.growth-history-filter {
+  display: flex;
+  border: 0;
+  padding: 0;
+  min-width: 0;
+  gap: 6px;
+  margin-top: 10px;
+}
+.growth-history-filter button {
+  flex: 1;
+  min-width: 0;
+  min-height: 44px;
+  font-size: 11px;
+  padding-inline: 3px;
+}
+.growth-history-filter [aria-pressed='true'] {
+  background: color-mix(in srgb, var(--card-accent), white 85%);
+  color: #63576b;
+}
+.growth-calendar .progress-history-list {
+  margin-top: 10px;
+}
+.growth-calendar .progress-history-list li {
+  grid-template-columns: minmax(0, 1fr) auto 32px;
+}
+.growth-calendar .history-value {
+  max-width: 105px;
+  overflow-wrap: anywhere;
+}
+.has-wallpaper .progress-expected-date {
+  color: #625866;
+}
+.growth-calendar .history-value .outcome-done {
+  color: color-mix(in srgb, var(--card-accent), #63576b 60%);
+}
+.growth-calendar .history-value .outcome-missed {
+  color: #82738c;
+}

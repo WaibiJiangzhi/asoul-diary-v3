@@ -4,7 +4,12 @@
 @import '../styles/shell.css';
 @import '../styles/today.css';
 @import '../styles/growth.css';
+@import '../styles/challenge.css';
+@import '../styles/growth-calendar.css';
+@import '../styles/stickers.css';
+@import '../styles/record-ring.css';
 @import '../styles/journal.css';
+@import '../styles/journal-editor.css';
 
 @custom-variant dark (&:is(.dark *));
 

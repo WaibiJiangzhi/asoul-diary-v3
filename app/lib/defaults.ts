@@ -1,4 +1,5 @@
 import type { AccentTheme, AppState, CardColor } from './types';
+import { isDateKey, normalizeChallenge } from './challenge';
 
 export const ACCENT_THEMES: {
   id: AccentTheme;
@@ -101,6 +102,7 @@ export function createDefaultState(): AppState {
       wallpaperCatalogVersion: 3,
       haptics: true,
       sounds: true,
+      journalLines: false,
     },
   };
 }
@@ -117,15 +119,37 @@ export function normalizeState(candidate: AppState): AppState {
       notes: item.notes ?? [],
       color: item.color ?? '#E799B0',
     })),
-    progressGoals: (candidate.progressGoals ?? []).map((goal) => ({
-      ...goal,
-      color: goal.color ?? '#E799B0',
-      events: (goal.events ?? []).map((event) => ({
-        ...event,
-        note: event.note ?? '',
-      })),
-    })),
-    memories: candidate.memories ?? [],
+    progressGoals: (candidate.progressGoals ?? []).map((goal) =>
+      normalizeChallenge({
+        ...goal,
+        ...(goal.expectedDate
+          ? {
+              expectedDate: isDateKey(goal.expectedDate)
+                ? goal.expectedDate
+                : undefined,
+            }
+          : {}),
+        color: goal.color ?? '#E799B0',
+        events: (goal.events ?? []).map((event) => ({
+          ...event,
+          note: event.note ?? '',
+        })),
+      }),
+    ),
+    memories: (candidate.memories ?? []).map((memory) =>
+      memory.kind === 'progress'
+        ? normalizeChallenge({
+            ...memory,
+            ...(memory.expectedDate
+              ? {
+                  expectedDate: isDateKey(memory.expectedDate)
+                    ? memory.expectedDate
+                    : undefined,
+                }
+              : {}),
+          })
+        : memory,
+    ),
     diaries: (candidate.diaries ?? []).map((entry) => ({
       ...entry,
       taskSnapshots: entry.taskSnapshots ?? [],

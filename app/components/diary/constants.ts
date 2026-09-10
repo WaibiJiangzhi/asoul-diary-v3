@@ -1,5 +1,6 @@
 import { dateKey, moveDate } from '@/lib/date';
-import type { CardColor, Mood, ProgressGoal } from '@/lib/types';
+import type { CardColor, Mood, ProgressGoal, RecordStatus } from '@/lib/types';
+import { DEFAULT_RECORD_STATES } from '@/lib/challenge';
 
 export type GrowthDraft = {
   id?: string;
@@ -13,6 +14,14 @@ export type GrowthDraft = {
   step: string;
   note: string;
   color: ProgressGoal['color'];
+  mode: 'counter' | 'challenge';
+  expectedDateEnabled: boolean;
+  expectedDate: string;
+  startDate: string;
+  states: RecordStatus[];
+  targetStateId: string;
+  targetEnabled: boolean;
+  targetDays: string;
 };
 
 export const MOOD_OPTIONS: {
@@ -26,34 +35,6 @@ export const MOOD_OPTIONS: {
   { value: 'annoyed', emoji: '😣', label: '有点烦' },
   { value: 'sad', emoji: '🥹', label: '难受' },
 ];
-
-const stickerNames = [
-  '黯然离场',
-  '邦邦两拳',
-  '扶我下',
-  '敬友谊',
-  '就你是吧',
-  '看我表现',
-  '拿来吧你',
-  '你干嘛',
-  '你管我',
-  '你说我在听',
-  '你在干嘛',
-  '捏捏',
-  '起来 high',
-  '求饶',
-  '糖糖回家',
-  '听不见',
-  '哇哈哈哈',
-  '有点秃然',
-  '再说一遍',
-  '走开走开',
-] as const;
-
-export const JIARAN_STICKERS = stickerNames.map((name, index) => ({
-  name,
-  src: `/stickers/jiaran-2026/jiaran-${String(index + 1).padStart(2, '0')}.gif`,
-}));
 
 export const DAILY_EMOJIS = [
   '🌱',
@@ -90,7 +71,7 @@ export const CARD_COLORS: { value: CardColor; label: string }[] = [
 export function createEmptyGrowthDraft(): GrowthDraft {
   return {
     kind: 'progress',
-    emoji: '',
+    emoji: pickDailyEmoji(),
     title: '',
     targetDate: moveDate(dateKey(), 30),
     current: '0',
@@ -99,5 +80,13 @@ export function createEmptyGrowthDraft(): GrowthDraft {
     step: '1',
     note: '',
     color: '#E799B0',
+    mode: 'counter',
+    expectedDateEnabled: false,
+    expectedDate: moveDate(dateKey(), 30),
+    startDate: dateKey(),
+    states: DEFAULT_RECORD_STATES.map((state) => ({ ...state })),
+    targetStateId: 'done',
+    targetEnabled: false,
+    targetDays: '20',
   };
 }

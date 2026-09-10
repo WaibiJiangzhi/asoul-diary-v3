@@ -1,0 +1,195 @@
+.decoration-select {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 60px;
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid var(--theme-border);
+  border-radius: 16px;
+  background: var(--theme-surface, #fff8fb);
+  color: var(--theme-accent-deep);
+  text-align: left;
+  cursor: pointer;
+}
+.decoration-select > span:not(.decoration-select-image) {
+  display: grid;
+  gap: 4px;
+  font-size: 13px;
+}
+.decoration-select small {
+  font-size: 11px;
+  color: #8a7f8d;
+}
+.decoration-select.is-compact {
+  width: 54px;
+  height: 54px;
+  min-height: 44px;
+  padding: 5px;
+  justify-content: center;
+}
+.decoration-select-image {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  flex: none;
+  font-size: 25px;
+}
+[data-decoration='sticker'] img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.task-emoji[data-decoration='sticker'],
+.quick-item-emoji[data-decoration='sticker'] {
+  display: inline-flex;
+  width: 34px;
+  height: 34px;
+  flex: none;
+}
+.manage-row > [data-decoration],
+.diary-task-snapshot [data-decoration],
+.snapshot-task-decoration {
+  display: inline-flex;
+  width: 28px;
+  height: 28px;
+  flex: none;
+}
+.sticker-drawer {
+  max-height: min(560px, 85dvh);
+}
+.sticker-panel {
+  display: flex;
+  flex-direction: column;
+  height: min(440px, 62dvh);
+  min-height: 220px;
+  background: #fff8fb;
+  color: #63576b;
+  overflow: hidden;
+}
+.sticker-panel-heading {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 10px 12px 5px;
+  flex: none;
+}
+.sticker-panel-heading > div {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+.sticker-panel-heading strong {
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sticker-panel-heading small {
+  font-size: 10px;
+  color: #8a7f8d;
+}
+.sticker-panel-heading button {
+  min-width: 40px;
+  min-height: 40px;
+}
+.sticker-panel-heading button[aria-pressed='true'] {
+  background: var(--theme-glow);
+}
+.sticker-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  align-content: start;
+  gap: 7px 4px;
+  padding: 8px 10px 12px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  flex: 1;
+  min-height: 0;
+}
+.sticker-grid > button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 0;
+  min-width: 0;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  cursor: pointer;
+}
+.sticker-grid > button:hover,
+.sticker-grid > button:focus-visible {
+  background: var(--theme-glow);
+}
+.sticker-option-image {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  max-width: 100%;
+  font-size: 30px;
+}
+.sticker-grid > button > span:last-child {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 10px;
+  color: #8a7f8d;
+}
+.sticker-pack-bar {
+  position: relative;
+  display: flex;
+  flex: none;
+  gap: 5px;
+  overflow-x: auto;
+  overscroll-behavior: contain;
+  padding: 8px 10px max(10px, env(safe-area-inset-bottom));
+  border-top: 1px solid var(--theme-border);
+  scrollbar-width: none;
+}
+.sticker-pack-bar > button {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  flex: 0 0 46px;
+  border: 0;
+  border-radius: 11px;
+  background: transparent;
+  cursor: pointer;
+  color: #827787;
+}
+.sticker-pack-bar > button[aria-pressed='true'] {
+  background: var(--theme-glow);
+  box-shadow: inset 0 0 0 1px var(--theme-border);
+}
+.sticker-pack-bar img {
+  object-fit: contain;
+  width: 38px;
+  height: 38px;
+}
+.sticker-custom-emoji {
+  display: flex;
+  gap: 6px;
+  padding: 4px 12px;
+}
+.sticker-custom-emoji input {
+  min-width: 0;
+  font-size: 16px;
+}
+.sticker-empty {
+  grid-column: 1/-1;
+  text-align: center;
+  font-size: 12px;
+  padding: 20px;
+}
+@media (max-width: 350px) {
+  .sticker-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}

@@ -34,6 +34,8 @@ import { Input } from '@/components/ui/input';
 import { dateKey, formatShortDate, moveDate } from '@/lib/date';
 import type { AppState, CommonItem, DailyTask } from '@/lib/types';
 import { pickDailyEmoji } from './constants';
+import { Decoration } from './decoration';
+import { DecorationPicker } from './sticker-picker';
 import { SortableList, type SortableHandle } from './sortable-list';
 
 export function TodayView({
@@ -110,9 +112,7 @@ export function TodayView({
           onClick={() => requestToggle(task)}
           aria-label={`${task.done ? '取消完成' : '完成'}${task.title}`}
         >
-          <span className="task-emoji" aria-hidden="true">
-            {task.emoji}
-          </span>
+          <Decoration value={task.emoji} className="task-emoji" />
           <span className="task-title">{task.title}</span>
         </button>
         <Checkbox
@@ -363,7 +363,10 @@ export function TodayDrawer({
                       });
                     }}
                   >
-                    <span className="quick-item-emoji">{item.emoji}</span>
+                    <Decoration
+                      value={item.emoji}
+                      className="quick-item-emoji"
+                    />
                     <strong>{item.title}</strong>
                     <i>{selectedCommonIds.has(item.id) && <Check />}</i>
                   </button>
@@ -397,12 +400,11 @@ export function TodayDrawer({
               </p>
               <form className="stack-form" onSubmit={submitTask}>
                 <div className="emoji-title-fields">
-                  <Input
-                    aria-label="表情"
+                  <DecorationPicker
+                    compact
+                    allowClear={false}
                     value={emoji}
-                    onChange={(event) =>
-                      setEmoji(event.target.value.slice(0, 4))
-                    }
+                    onChange={setEmoji}
                   />
                   <Input
                     value={title}
@@ -431,12 +433,11 @@ export function TodayDrawer({
             <>
               <form className="stack-form" onSubmit={submitCommon}>
                 <div className="emoji-title-fields">
-                  <Input
-                    aria-label="表情"
+                  <DecorationPicker
+                    compact
+                    allowClear={false}
                     value={emoji}
-                    onChange={(event) =>
-                      setEmoji(event.target.value.slice(0, 4))
-                    }
+                    onChange={setEmoji}
                   />
                   <Input
                     value={title}
@@ -466,7 +467,7 @@ export function TodayDrawer({
                     <div
                       className={`manage-row ${isDragging ? 'is-dragging' : ''}`}
                     >
-                      <span>{item.emoji}</span>
+                      <Decoration value={item.emoji} />
                       <strong>{item.title}</strong>
                       <SortHandle
                         handle={handle}
@@ -575,12 +576,11 @@ export function TaskEditDrawer({
               </DrawerDescription>
             </DrawerHeader>
             <div className="emoji-title-fields">
-              <Input
-                aria-label="表情"
+              <DecorationPicker
+                compact
+                allowClear={false}
                 value={task.emoji}
-                onChange={(event) =>
-                  onChange({ ...task, emoji: event.target.value.slice(0, 4) })
-                }
+                onChange={(emoji) => onChange({ ...task, emoji })}
               />
               <Input
                 value={task.title}

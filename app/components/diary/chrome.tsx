@@ -167,6 +167,19 @@ export function SettingsDrawer({
 
           <section className="settings-section">
             <h3>日记背景</h3>
+            <label className="toggle-row">
+              <span>
+                <strong>显示日记横线</strong>
+                <small>让淡淡的横线陪着正文</small>
+              </span>
+              <input
+                type="checkbox"
+                checked={state.settings.journalLines}
+                onChange={(event) =>
+                  setSettings({ journalLines: event.target.checked })
+                }
+              />
+            </label>
             <button
               type="button"
               className={`paper-theme-card ${state.settings.theme === 'paper' ? 'active' : ''}`}
@@ -179,7 +192,7 @@ export function SettingsDrawer({
               </span>
               <div>
                 <strong>温馨日记纸</strong>
-                <small>横线、纸张和装订孔陪着你写</small>
+                  <small>温馨纸张和装订孔陪着你写</small>
               </div>
               {state.settings.theme === 'paper' && <Check />}
             </button>

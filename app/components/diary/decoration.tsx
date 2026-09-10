@@ -1,7 +1,8 @@
 import Image from 'next/image';
+import { getSticker } from '@/lib/stickers';
 
 export function isSticker(value: string) {
-  return value.startsWith('/stickers/');
+  return !!getSticker(value) || value.startsWith('/stickers/');
 }
 
 export function Decoration({
@@ -18,7 +19,13 @@ export function Decoration({
   if (isSticker(value)) {
     return (
       <span className={className} data-decoration="sticker">
-        <Image src={value} alt={alt} width={96} height={96} unoptimized />
+        <Image
+          src={getSticker(value)?.src ?? value}
+          alt={getSticker(value)?.name ?? alt}
+          width={96}
+          height={96}
+          unoptimized
+        />
       </span>
     );
   }

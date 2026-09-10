@@ -9,7 +9,7 @@ export function useAppFeedback(stateRef: MutableRefObject<AppState | null>) {
   }, [stateRef]);
 
   const softChime = useCallback(
-    (kind: 'check' | 'progress') => {
+    (kind: 'check' | 'progress' | 'celebrate') => {
       if (!stateRef.current?.settings.sounds) return;
       try {
         const audio = new AudioContext();
@@ -21,19 +21,29 @@ export function useAppFeedback(stateRef: MutableRefObject<AppState | null>) {
         );
         gain.gain.exponentialRampToValueAtTime(
           0.0001,
-          audio.currentTime + 0.24,
+          audio.currentTime + (kind === 'celebrate' ? 0.52 : 0.24),
         );
         gain.connect(audio.destination);
-        const notes = kind === 'check' ? [659, 880] : [523, 659];
+        const notes =
+          kind === 'celebrate'
+            ? [523, 659, 784, 1047]
+            : kind === 'check'
+              ? [659, 880]
+              : [523, 659];
         notes.forEach((frequency, index) => {
           const oscillator = audio.createOscillator();
           oscillator.type = 'sine';
           oscillator.frequency.value = frequency;
           oscillator.connect(gain);
           oscillator.start(audio.currentTime + index * 0.055);
-          oscillator.stop(audio.currentTime + 0.22);
+          oscillator.stop(
+            audio.currentTime + (kind === 'celebrate' ? 0.5 : 0.22),
+          );
         });
-        window.setTimeout(() => void audio.close(), 320);
+        window.setTimeout(
+          () => void audio.close(),
+          kind === 'celebrate' ? 620 : 320,
+        );
       } catch {
         // Audio feedback is optional.
       }

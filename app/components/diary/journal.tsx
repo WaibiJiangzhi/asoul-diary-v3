@@ -29,6 +29,8 @@ import {
 } from '@/components/ui/drawer';
 import { dateKey, formatFullDate, fromDateKey, moveDate } from '@/lib/date';
 import { getPhotos } from '@/lib/db';
+import { challengeDays, progressEventLabel } from '@/lib/challenge';
+import { progressEventDate, progressValueOnDate } from '@/lib/progress';
 import type { AppState, DiaryEntry } from '@/lib/types';
 import type {
   CardColor,
@@ -39,6 +41,7 @@ import type {
 } from '@/lib/types';
 import { CARD_COLORS } from './constants';
 import { Decoration } from './decoration';
+import { JournalEditor } from './journal-editor';
 
 export function JournalView({
   state,
@@ -102,8 +105,13 @@ export function JournalView({
       ] as (Countdown | GrowthMemory)[],
       progressSources: [
         ...state.progressGoals,
-        ...archivedOnSelectedDate.filter(
-          (memory) => memory.kind === 'progress',
+        ...state.memories.filter(
+          (memory) =>
+            memory.kind === 'progress' &&
+            (dateKey(new Date(memory.endedAt)) === selectedDate ||
+              memory.events.some(
+                (event) => progressEventDate(event) === selectedDate,
+              )),
         ),
       ] as (ProgressGoal | GrowthMemory)[],
     };
@@ -199,8 +207,9 @@ export function JournalView({
       };
     } else {
       const sameDayEvents = item.events.filter(
-        (event) => dateKey(new Date(event.createdAt)) === selectedDate,
+        (event) => progressEventDate(event) === selectedDate,
       );
+      const dayOutcome = sameDayEvents.find((event) => event.outcome);
       snapshot = {
         id,
         kind: 'progress',
@@ -210,8 +219,16 @@ export function JournalView({
         delta: Number(
           sameDayEvents.reduce((sum, event) => sum + event.delta, 0).toFixed(4),
         ),
-        current: sameDayEvents.at(-1)?.valueAfter ?? item.current,
+        current: item.challenge
+          ? challengeDays(item).filter((event) => event.date! <= selectedDate)
+              .length
+          : progressValueOnDate(item, selectedDate),
         total: item.total,
+        challengeResult: item.challenge
+          ? dayOutcome
+            ? progressEventLabel(item, dayOutcome)
+            : '未记录结果'
+          : undefined,
         unit: item.unit,
         note:
           [...sameDayEvents].reverse().find((event) => event.note)?.note ?? '',
@@ -359,7 +376,10 @@ export function JournalView({
           <ul>
             {taskSnapshots.map((item) => (
               <li key={item.id}>
-                <span>{item.emoji}</span>
+                <Decoration
+                  value={item.emoji}
+                  className="snapshot-task-decoration"
+                />
                 <strong>{item.title}</strong>
                 <i>{item.done ? '已完成' : '未完成'}</i>
               </li>
@@ -377,28 +397,30 @@ export function JournalView({
                       ? item.remainingDays >= 0
                         ? `还有 ${item.remainingDays} 天`
                         : `已经过去 ${Math.abs(item.remainingDays)} 天`
-                      : `今天 ${item.delta >= 0 ? '+' : ''}${item.delta} ${item.unit} · ${item.current}/${item.total}`}
+                      : (item.challengeResult ??
+                        `今天 ${item.delta >= 0 ? '+' : ''}${item.delta} ${item.unit} · ${item.current}/${item.total}`)}
                     {item.note ? ` · ${item.note}` : ''}
                   </small>
                 </span>
-                <i>{item.kind === 'countdown' ? '倒计时' : '进度'}</i>
+                <i>
+                  {item.kind === 'countdown'
+                    ? '倒计时'
+                    : item.challengeResult
+                      ? '挑战'
+                      : '进度'}
+                </i>
               </li>
             ))}
           </ul>
         )}
       </section>
 
-      <section className="journal-paper">
-        <textarea
-          value={entry?.body ?? ''}
-          onChange={(event) =>
-            onUpdate(selectedDate, { body: event.target.value })
-          }
-          maxLength={12000}
-          aria-label="日记正文"
-        />
-        <span className="journal-word-count">{entry?.body.length ?? 0} 字</span>
-      </section>
+      <JournalEditor
+        key={selectedDate}
+        value={entry?.body ?? ''}
+        onChange={(body) => onUpdate(selectedDate, { body })}
+        ruled={state.settings.journalLines}
+      />
 
       <Drawer open={taskPickerOpen} onOpenChange={setTaskPickerOpen}>
         <DrawerContent className="sheet-drawer">
@@ -440,7 +462,10 @@ export function JournalView({
                   );
                   return (
                     <label key={task.id}>
-                      <span>{task.emoji}</span>
+                      <Decoration
+                        value={task.emoji}
+                        className="snapshot-task-decoration"
+                      />
                       <strong>{task.title}</strong>
                       <Checkbox
                         checked={included}

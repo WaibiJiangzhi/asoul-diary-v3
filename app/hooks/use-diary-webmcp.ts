@@ -173,6 +173,10 @@ export function useDiaryWebMcp({
                 throw new Error('需要有效的 goalId 和非零 delta');
               }
               const changedAt = new Date().toISOString();
+              if (goal.challenge)
+                throw new Error(
+                  '挑战卡请在页面中按日期记录结果，不能直接增减进度',
+                );
               setState(
                 (current) =>
                   current && {

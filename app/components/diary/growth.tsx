@@ -38,8 +38,14 @@ import type {
   ProgressEvent,
   ProgressGoal,
 } from '@/lib/types';
-import { CARD_COLORS, JIARAN_STICKERS, type GrowthDraft } from './constants';
-import { Decoration, isSticker } from './decoration';
+import { CARD_COLORS, type GrowthDraft } from './constants';
+import { Decoration } from './decoration';
+import { DecorationPicker } from './sticker-picker';
+import { RecordStateFields } from './record-state-fields';
+import { ChallengeCard, ChallengeChart } from './challenge';
+import { ProgressDatePicker, ProgressHistoryDrawer } from './growth-calendar';
+import { progressEventDate, progressRecordDate } from '@/lib/progress';
+import { progressEventLabel, type ChallengeOutcome } from '@/lib/challenge';
 
 function syncCarouselIndex(
   event: UIEvent<HTMLDivElement>,
@@ -65,6 +71,7 @@ export function GrowthView({
   state,
   onAdd,
   onAdjust,
+  onRecordChallenge,
   onDeleteEvent,
   onEdit,
   onDelete,
@@ -77,7 +84,13 @@ export function GrowthView({
 }: {
   state: AppState;
   onAdd: (kind: GrowthDraft['kind']) => void;
-  onAdjust: (id: string, delta: number, note?: string) => void;
+  onAdjust: (id: string, delta: number, note?: string, date?: string) => void;
+  onRecordChallenge: (
+    id: string,
+    date: string,
+    outcome: ChallengeOutcome,
+    note?: string,
+  ) => void;
   onDeleteEvent: (goal: ProgressGoal, event: ProgressEvent) => void;
   onEdit: (item: Countdown | ProgressGoal) => void;
   onDelete: (item: Countdown | ProgressGoal) => void;
@@ -103,6 +116,11 @@ export function GrowthView({
   const [progressHistoryId, setProgressHistoryId] = useState<string | null>(
     null,
   );
+  const [progressDates, setProgressDates] = useState<Record<string, string>>(
+    {},
+  );
+  const changeProgressDate = (id: string, date: string) =>
+    setProgressDates((current) => ({ ...current, [id]: date }));
   const countdownHistory = state.countdowns.find(
     (item) => item.id === countdownHistoryId,
   );
@@ -267,18 +285,36 @@ export function GrowthView({
             className="goal-list growth-carousel"
             onScroll={(event) => syncCarouselIndex(event, setProgressIndex)}
           >
-            {state.progressGoals.map((goal, index) => (
-              <ProgressCard
-                key={`${goal.id}:${goal.step}`}
-                goal={goal}
-                active={index === visibleProgressIndex}
-                onAdjust={onAdjust}
-                onEdit={onEdit}
-                onDelete={onDelete}
-                onArchive={onArchive}
-                onOpenHistory={setProgressHistoryId}
-              />
-            ))}
+            {state.progressGoals.map((goal, index) =>
+              goal.challenge ? (
+                <ChallengeCard
+                  key={goal.id}
+                  goal={goal}
+                  active={index === visibleProgressIndex}
+                  onRecord={onRecordChallenge}
+                  onAdjust={onAdjust}
+                  onEdit={onEdit}
+                  onDelete={onDelete}
+                  onArchive={onArchive}
+                  date={progressRecordDate(goal, progressDates[goal.id])}
+                  onDateChange={(date) => changeProgressDate(goal.id, date)}
+                  onOpenHistory={setProgressHistoryId}
+                />
+              ) : (
+                <ProgressCard
+                  key={`${goal.id}:${goal.step}`}
+                  goal={goal}
+                  active={index === visibleProgressIndex}
+                  onAdjust={onAdjust}
+                  onEdit={onEdit}
+                  onDelete={onDelete}
+                  onArchive={onArchive}
+                  date={progressRecordDate(goal, progressDates[goal.id])}
+                  onDateChange={(date) => changeProgressDate(goal.id, date)}
+                  onOpenHistory={setProgressHistoryId}
+                />
+              ),
+            )}
           </div>
         ) : (
           <div className="gentle-empty roomy">
@@ -356,11 +392,19 @@ export function GrowthView({
         onOpenChange={(open) => !open && setCountdownHistoryId(null)}
         onDelete={onDeleteCountdownNote}
       />
-      <ProgressHistoryDrawer
-        goal={progressHistory ?? null}
-        onOpenChange={(open) => !open && setProgressHistoryId(null)}
-        onDelete={onDeleteEvent}
-      />
+      {progressHistory && (
+        <ProgressHistoryDrawer
+          key={progressHistory.id}
+          goal={progressHistory}
+          date={progressRecordDate(
+            progressHistory,
+            progressDates[progressHistory.id],
+          )}
+          onDateChange={(date) => changeProgressDate(progressHistory.id, date)}
+          onOpenChange={(open) => !open && setProgressHistoryId(null)}
+          onDelete={onDeleteEvent}
+        />
+      )}
     </div>
   );
 }
@@ -408,6 +452,8 @@ function MemoryRow({
 }
 
 function ProgressCard({
+  date,
+  onDateChange,
   goal,
   active,
   onAdjust,
@@ -418,11 +464,13 @@ function ProgressCard({
 }: {
   goal: ProgressGoal;
   active: boolean;
-  onAdjust: (id: string, delta: number, note?: string) => void;
+  onAdjust: (id: string, delta: number, note?: string, date?: string) => void;
   onEdit: (item: ProgressGoal) => void;
   onDelete: (item: ProgressGoal) => void;
   onArchive: (goal: ProgressGoal, natural: boolean) => void;
   onOpenHistory: (goalId: string) => void;
+  date: string;
+  onDateChange: (date: string) => void;
 }) {
   const [amount, setAmount] = useState(String(goal.step));
   const [note, setNote] = useState('');
@@ -431,12 +479,21 @@ function ProgressCard({
     Math.round((goal.current / goal.total) * 100),
   );
   const numericAmount = Number(amount);
-  const lastEvent = goal.events.at(-1);
+  const dayEvents = goal.events.filter(
+    (event) => progressEventDate(event) === date,
+  );
+  const dayAmount = Number(
+    dayEvents.reduce((sum, event) => sum + event.delta, 0).toFixed(4),
+  );
 
   function submitAdjustment(event: SyntheticEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!Number.isFinite(numericAmount) || numericAmount === 0) return;
-    onAdjust(goal.id, numericAmount, note);
+    if (
+      !Number.isFinite(numericAmount) ||
+      (numericAmount === 0 && !note.trim())
+    )
+      return;
+    onAdjust(goal.id, numericAmount, note, date);
     setNote('');
   }
 
@@ -453,7 +510,7 @@ function ProgressCard({
           alt="进度目标表情"
         />
         <div className="goal-copy">
-          <small>完成 {percentage}%</small>
+          <small>条形卡</small>
           <h3>{goal.title}</h3>
           {goal.note && <p>{goal.note}</p>}
         </div>
@@ -490,6 +547,17 @@ function ProgressCard({
         </b>
       </div>
 
+      {goal.expectedDate && (
+        <p className="progress-expected-date">
+          希望在 {formatShortDate(goal.expectedDate)} 完成
+        </p>
+      )}
+      <ProgressDatePicker
+        goal={goal}
+        date={date}
+        onDateChange={onDateChange}
+        onOpen={() => onOpenHistory(goal.id)}
+      />
       <form className="progress-adjust" onSubmit={submitAdjustment}>
         <label>
           <span>本次调整</span>
@@ -513,14 +581,17 @@ function ProgressCard({
         </label>
         <Button
           type="submit"
-          disabled={!Number.isFinite(numericAmount) || numericAmount === 0}
+          disabled={
+            !Number.isFinite(numericAmount) ||
+            (numericAmount === 0 && !note.trim())
+          }
         >
           确认记录
         </Button>
         <small className="progress-last-update">
-          {lastEvent
-            ? `最近 ${lastEvent.delta >= 0 ? '+' : ''}${lastEvent.delta} ${goal.unit} · ${formatMoment(lastEvent.createdAt)}`
-            : '还没有足迹；填写负数可以减少进度'}
+          {dayEvents.length
+            ? `这天 ${dayAmount > 0 ? '+' : ''}${dayAmount} ${goal.unit} · ${dayEvents.length} 条足迹`
+            : '填 0 可只留文字，负数可以减少进度'}
         </small>
       </form>
 
@@ -530,7 +601,7 @@ function ProgressCard({
         onClick={() => onOpenHistory(goal.id)}
       >
         <span>
-          <Footprints /> 成长足迹 · {goal.events.length} 条
+          <Footprints /> 当天足迹 · {dayEvents.length} 条
         </span>
         <ChevronRight />
       </Button>
@@ -566,7 +637,6 @@ export function GrowthDrawer({
 }) {
   const patch = (next: Partial<GrowthDraft>) =>
     onDraftChange({ ...draft, ...next });
-  const decorationMode = isSticker(draft.emoji) ? 'sticker' : 'emoji';
 
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
@@ -579,7 +649,11 @@ export function GrowthDrawer({
           <DrawerHeader>
             <DrawerTitle>
               {draft.id ? '编辑' : '新建'}
-              {draft.kind === 'progress' ? '进度目标' : '倒计时'}
+              {draft.kind === 'progress'
+                ? draft.mode === 'challenge'
+                  ? '圆环卡'
+                  : '条形卡'
+                : '倒计时'}
             </DrawerTitle>
             <DrawerDescription className="sr-only">
               填写成长记录
@@ -603,6 +677,34 @@ export function GrowthDrawer({
                 进度
               </button>
             </div>
+          )}
+
+          {draft.kind === 'progress' && !draft.id && (
+            <>
+              <div className="segmented" aria-label="进度类型">
+                <button
+                  type="button"
+                  className={draft.mode === 'counter' ? 'active' : ''}
+                  aria-pressed={draft.mode === 'counter'}
+                  onClick={() => patch({ mode: 'counter' })}
+                >
+                  条形卡
+                </button>
+                <button
+                  type="button"
+                  className={draft.mode === 'challenge' ? 'active' : ''}
+                  aria-pressed={draft.mode === 'challenge'}
+                  onClick={() => patch({ mode: 'challenge' })}
+                >
+                  圆环卡
+                </button>
+              </div>
+              <p className="challenge-setup-hint">
+                {draft.mode === 'counter'
+                  ? '积累一个数量，例如画 10 张画；一天可以记多次。'
+                  : '每天记录一种状态，例如作息；按日期或总览回看。'}
+              </p>
+            </>
           )}
 
           {draft.id && (
@@ -648,6 +750,89 @@ export function GrowthDrawer({
                 onChange={(event) => patch({ targetDate: event.target.value })}
               />
             </label>
+          ) : draft.mode === 'challenge' ? (
+            <>
+              <div className="challenge-setup-fields">
+                <label className="field-label">
+                  开始日期
+                  <Input
+                    type="date"
+                    required
+                    value={draft.startDate}
+                    onChange={(e) => patch({ startDate: e.target.value })}
+                  />
+                </label>
+                <label className="field-label">
+                  记录天数
+                  <Input
+                    type="number"
+                    min="1"
+                    max="3650"
+                    step="1"
+                    required
+                    value={draft.total}
+                    onChange={(e) => patch({ total: e.target.value })}
+                  />
+                </label>
+              </div>
+              <p className="challenge-setup-hint">
+                每一天都可以留下自己的状态。
+              </p>
+              <RecordStateFields draft={draft} onChange={patch} />
+              <label className="challenge-target-toggle">
+                <input
+                  type="checkbox"
+                  checked={draft.targetEnabled}
+                  onChange={(e) =>
+                    patch({
+                      targetEnabled: e.target.checked,
+                      targetDays: String(
+                        Math.min(
+                          Number(draft.targetDays) || 1,
+                          Number(draft.total) || 1,
+                        ),
+                      ),
+                    })
+                  }
+                />
+                <span>给自己定一个期待（可选）</span>
+              </label>
+              {draft.targetEnabled && (
+                <>
+                  <label className="field-label">
+                    期待积累的状态
+                    <select
+                      className="record-target-select"
+                      value={draft.targetStateId}
+                      onChange={(event) =>
+                        patch({ targetStateId: event.target.value })
+                      }
+                    >
+                      {draft.states.map((status) => (
+                        <option key={status.id} value={status.id}>
+                          {status.name || '未命名状态'}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="field-label">
+                    期待多少天
+                    <Input
+                      type="number"
+                      min="1"
+                      max={draft.total}
+                      step="1"
+                      required
+                      value={draft.targetDays}
+                      onChange={(e) => patch({ targetDays: e.target.value })}
+                    />
+                    <small className="challenge-setup-hint">
+                      总览会标出这份期待，没有达到也会保留每一天。
+                    </small>
+                  </label>
+                </>
+              )}
+            </>
           ) : (
             <div className="number-fields">
               <label className="field-label">
@@ -691,6 +876,34 @@ export function GrowthDrawer({
             </div>
           )}
 
+          {draft.kind === 'progress' && draft.mode === 'counter' && (
+            <>
+              <label className="challenge-target-toggle">
+                <input
+                  type="checkbox"
+                  checked={draft.expectedDateEnabled}
+                  onChange={(e) =>
+                    patch({ expectedDateEnabled: e.target.checked })
+                  }
+                />
+                <span>设一个期望完成日期（可选）</span>
+              </label>
+              {draft.expectedDateEnabled && (
+                <label className="field-label">
+                  期望完成日期
+                  <Input
+                    type="date"
+                    required
+                    value={draft.expectedDate}
+                    onChange={(e) => patch({ expectedDate: e.target.value })}
+                  />
+                  <small className="challenge-setup-hint">
+                    给期待一个日子，之后也可以继续积累。
+                  </small>
+                </label>
+              )}
+            </>
+          )}
           <fieldset className="color-picker">
             <legend>卡片主题色</legend>
             <div>
@@ -708,96 +921,26 @@ export function GrowthDrawer({
           </fieldset>
 
           <label className="field-label">
-            一句话（可选）
+            {draft.kind === 'progress' && draft.mode === 'challenge'
+              ? '这次的约定（可选）'
+              : '一句话（可选）'}
             <Input
               value={draft.note}
               onChange={(event) => patch({ note: event.target.value })}
               maxLength={80}
+              placeholder={
+                draft.mode === 'challenge' && draft.kind === 'progress'
+                  ? '例如：00:30 前睡，09:00 前起'
+                  : undefined
+              }
             />
           </label>
 
-          <details className="decoration-picker">
-            <summary>
-              <span>
-                <strong>卡片表情</strong>
-                <small>
-                  {decorationMode === 'sticker'
-                    ? '2026 嘉然动态表情'
-                    : draft.emoji
-                      ? 'Emoji'
-                      : '留空'}
-                </small>
-              </span>
-              <Decoration
-                value={draft.emoji}
-                className="decoration-preview"
-                alt="当前卡片表情"
-              />
-              <ChevronDown aria-hidden="true" />
-            </summary>
-            <div className="decoration-options">
-              <div className="segmented decoration-modes">
-                <button
-                  type="button"
-                  className={decorationMode === 'emoji' ? 'active' : ''}
-                  onClick={() =>
-                    patch({
-                      emoji: isSticker(draft.emoji) ? '' : draft.emoji,
-                    })
-                  }
-                >
-                  Emoji
-                </button>
-                <button
-                  type="button"
-                  className={decorationMode === 'sticker' ? 'active' : ''}
-                  onClick={() =>
-                    patch({
-                      emoji: isSticker(draft.emoji)
-                        ? draft.emoji
-                        : JIARAN_STICKERS[0].src,
-                    })
-                  }
-                >
-                  嘉然表情
-                </button>
-              </div>
-
-              {decorationMode === 'emoji' && (
-                <div className="emoji-choice">
-                  <Input
-                    aria-label="使用 Emoji，可留空"
-                    value={draft.emoji}
-                    onFocus={(event) => event.currentTarget.select()}
-                    onChange={(event) =>
-                      patch({ emoji: event.target.value.slice(0, 12) })
-                    }
-                  />
-                  <span>可留空，也可用手机 Emoji 键盘输入。</span>
-                </div>
-              )}
-
-              {decorationMode === 'sticker' && (
-                <div
-                  className="sticker-grid"
-                  aria-label="2026嘉然的画册动态表情包"
-                >
-                  {JIARAN_STICKERS.map((sticker) => (
-                    <button
-                      type="button"
-                      key={sticker.src}
-                      className={draft.emoji === sticker.src ? 'active' : ''}
-                      aria-label={`选择${sticker.name}`}
-                      onClick={() => patch({ emoji: sticker.src })}
-                    >
-                      <Decoration value={sticker.src} alt={sticker.name} />
-                      <small>{sticker.name}</small>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          </details>
+          <DecorationPicker
+            value={draft.emoji}
+            label="卡片表情"
+            onChange={(emoji) => patch({ emoji })}
+          />
 
           <Button type="submit" size="lg" disabled={!draft.title.trim()}>
             <Save />
@@ -873,6 +1016,9 @@ function MemoryLibraryDrawer({
               </div>
             </DrawerHeader>
 
+            {memory.kind === 'progress' && memory.challenge && (
+              <ChallengeChart goal={memory} />
+            )}
             <section className="memory-summary">
               <div>
                 <small>最后走到</small>
@@ -906,14 +1052,20 @@ function MemoryLibraryDrawer({
                     ? memory.events.map((event) => (
                         <li key={event.id}>
                           <span className="footstep-copy">
-                            <span>{formatMoment(event.createdAt)}</span>
+                            <span>
+                              {event.date
+                                ? formatShortDate(event.date)
+                                : formatMoment(event.createdAt)}
+                            </span>
                             {event.note && <small>{event.note}</small>}
+                            {event.rule && (
+                              <small>当时的约定：{event.rule}</small>
+                            )}
                           </span>
-                          <strong>
-                            {event.delta >= 0 ? '+' : ''}
-                            {event.delta} {memory.unit}
-                          </strong>
-                          <small>累计 {event.valueAfter}</small>
+                          <strong>{progressEventLabel(memory, event)}</strong>
+                          {!memory.challenge && event.delta !== 0 && (
+                            <small>累计 {event.valueAfter}</small>
+                          )}
                         </li>
                       ))
                     : memory.notes.map((note) => (
@@ -1015,63 +1167,6 @@ function CountdownHistoryDrawer({
               </ol>
             ) : (
               <p className="history-empty">还没有日子手记</p>
-            )}
-          </div>
-        )}
-      </DrawerContent>
-    </Drawer>
-  );
-}
-
-function ProgressHistoryDrawer({
-  goal,
-  onOpenChange,
-  onDelete,
-}: {
-  goal: ProgressGoal | null;
-  onOpenChange: (open: boolean) => void;
-  onDelete: (goal: ProgressGoal, event: ProgressEvent) => void;
-}) {
-  return (
-    <Drawer open={!!goal} onOpenChange={onOpenChange}>
-      <DrawerContent className="sheet-drawer tall history-drawer">
-        {goal && (
-          <div
-            className="drawer-inner growth-history"
-            style={{ '--card-accent': goal.color } as CSSProperties}
-          >
-            <DrawerHeader>
-              <DrawerTitle>成长足迹 · {goal.events.length}</DrawerTitle>
-              <DrawerDescription>{goal.title}</DrawerDescription>
-            </DrawerHeader>
-            {goal.events.length ? (
-              <ol className="growth-history-list progress-history-list">
-                {[...goal.events].reverse().map((event) => (
-                  <li key={event.id}>
-                    <span className="footstep-copy">
-                      <time>{formatMoment(event.createdAt)}</time>
-                      {event.note && <strong>{event.note}</strong>}
-                    </span>
-                    <span className="history-value">
-                      <b className={event.delta >= 0 ? 'positive' : 'negative'}>
-                        {event.delta >= 0 ? '+' : ''}
-                        {event.delta} {goal.unit}
-                      </b>
-                      <small>累计 {event.valueAfter}</small>
-                    </span>
-                    <Button
-                      variant="ghost"
-                      size="icon-sm"
-                      aria-label={`删除${formatMoment(event.createdAt)}的足迹`}
-                      onClick={() => onDelete(goal, event)}
-                    >
-                      <Trash2 />
-                    </Button>
-                  </li>
-                ))}
-              </ol>
-            ) : (
-              <p className="history-empty">还没有成长足迹</p>
             )}
           </div>
         )}
