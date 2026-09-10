@@ -730,6 +730,8 @@ body:has(.photo-viewer) [data-slot='dialog-overlay'] {
 
 .diary-task-section li {
   position: relative;
+}
+.diary-task-section.is-editing li {
   padding-right: 38px;
 }
 .snapshot-remove {
@@ -756,4 +758,28 @@ body:has(.photo-viewer) [data-slot='dialog-overlay'] {
 }
 .diary-growth-snapshot > [data-decoration='sticker'] img {
   object-fit: contain;
+}
+
+.diary-task-actions {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex: none;
+}
+.snapshot-edit-toggle {
+  min-width: 42px;
+  min-height: 42px;
+  padding: 0 7px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--theme-accent-deep);
+  font-size: 12px;
+}
+.snapshot-edit-toggle:hover {
+  background: var(--theme-soft);
+}
+.snapshot-edit-toggle:focus-visible {
+  outline: 2px solid var(--theme-accent);
+  outline-offset: 1px;
 }

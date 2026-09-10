@@ -89,6 +89,22 @@ export function JournalView({
     );
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [taskPickerOpen, setTaskPickerOpen] = useState(false);
+  const hasSnapshots = taskSnapshots.length > 0 || growthSnapshots.length > 0;
+  const [snapshotEditor, setSnapshotEditor] = useState({
+    date: selectedDate,
+    hasSnapshots,
+    editing: false,
+  });
+  if (
+    snapshotEditor.date !== selectedDate ||
+    snapshotEditor.hasSnapshots !== hasSnapshots
+  ) {
+    setSnapshotEditor({ date: selectedDate, hasSnapshots, editing: false });
+  }
+  const editingSnapshots =
+    snapshotEditor.date === selectedDate &&
+    hasSnapshots &&
+    snapshotEditor.editing;
   const [pickerTab, setPickerTab] = useState<
     'tasks' | 'countdowns' | 'progress'
   >('tasks');
@@ -378,13 +394,33 @@ export function JournalView({
         </DrawerContent>
       </Drawer>
 
-      <section className="diary-task-section">
+      <section
+        className={`diary-task-section ${editingSnapshots ? 'is-editing' : ''}`}
+      >
         <div className="diary-task-heading">
           <h2>今日小事</h2>
-          <Button variant="outline" onClick={() => setTaskPickerOpen(true)}>
-            <ListPlus />
-            选择
-          </Button>
+          <div className="diary-task-actions">
+            {hasSnapshots && (
+              <button
+                type="button"
+                className="snapshot-edit-toggle"
+                aria-pressed={editingSnapshots}
+                onClick={() =>
+                  setSnapshotEditor({
+                    date: selectedDate,
+                    hasSnapshots,
+                    editing: !editingSnapshots,
+                  })
+                }
+              >
+                {editingSnapshots ? '完成' : '编辑'}
+              </button>
+            )}
+            <Button variant="outline" onClick={() => setTaskPickerOpen(true)}>
+              <ListPlus />
+              选择
+            </Button>
+          </div>
         </div>
         {(taskSnapshots.length > 0 || growthSnapshots.length > 0) && (
           <ul>
@@ -396,15 +432,18 @@ export function JournalView({
                 />
                 <strong>{item.title}</strong>
                 <i>{item.done ? '已完成' : '未完成'}</i>
-                <button
-                  className="snapshot-remove"
-                  aria-label={`从这篇日记移除${item.title}`}
-                  onClick={() =>
-                    onRemoveSnapshot(selectedDate, 'taskSnapshots', item.id)
-                  }
-                >
-                  <X size={15} />
-                </button>
+                {editingSnapshots && (
+                  <button
+                    type="button"
+                    className="snapshot-remove"
+                    aria-label={`从这篇日记移除${item.title}`}
+                    onClick={() =>
+                      onRemoveSnapshot(selectedDate, 'taskSnapshots', item.id)
+                    }
+                  >
+                    <X size={15} />
+                  </button>
+                )}
               </li>
             ))}
             {growthSnapshots.map((item) => (
@@ -428,15 +467,18 @@ export function JournalView({
                 {!(item.kind === 'progress' && item.challengeResult) && (
                   <i>{item.kind === 'countdown' ? '倒计时' : '进度'}</i>
                 )}
-                <button
-                  className="snapshot-remove"
-                  aria-label={`从这篇日记移除${item.title}`}
-                  onClick={() =>
-                    onRemoveSnapshot(selectedDate, 'growthSnapshots', item.id)
-                  }
-                >
-                  <X size={15} />
-                </button>
+                {editingSnapshots && (
+                  <button
+                    type="button"
+                    className="snapshot-remove"
+                    aria-label={`从这篇日记移除${item.title}`}
+                    onClick={() =>
+                      onRemoveSnapshot(selectedDate, 'growthSnapshots', item.id)
+                    }
+                  >
+                    <X size={15} />
+                  </button>
+                )}
               </li>
             ))}
           </ul>
