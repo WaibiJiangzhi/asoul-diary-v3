@@ -686,12 +686,12 @@ export function CompanionForm({
           <div className="color-options">
             <button
               type="button"
+              className="follow-theme-color"
               aria-label="跟随应用主题"
               aria-pressed={!draft.color}
-              style={{ '--swatch': 'var(--theme-accent)' } as CSSProperties}
               onClick={() => setDraft((c) => ({ ...c, color: undefined }))}
             >
-              ↺
+              跟随主题
             </button>
             {CARD_COLORS.map((color) => (
               <button

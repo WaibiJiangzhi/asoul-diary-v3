@@ -1113,12 +1113,16 @@
 }
 .record-editor-host {
   min-width: 0;
-  padding: 14px;
+  padding: 8px 14px 14px;
   border: 1px solid var(--theme-border);
   border-radius: 18px;
   background: rgb(255 255 255 / 50%);
 }
+.record-editor-host .rich-journal {
+  padding-top: 0;
+}
 .record-editor-host .journal-editor {
+  padding-top: 0;
   min-height: 150px;
   font-size: 16px;
 }
@@ -2102,4 +2106,23 @@ progress.life-progress::-moz-progress-bar {
 }
 .companion-navigation [aria-current='true'] i {
   background: var(--companion-accent, var(--theme-accent));
+}
+
+.color-options .follow-theme-color {
+  width: auto;
+  min-height: 32px;
+  height: auto;
+  padding: 4px 10px;
+  border: 1px solid var(--theme-border);
+  border-radius: 10px;
+  background: var(--theme-faint);
+  color: var(--theme-accent-deep);
+  font-size: 12px;
+  outline: none;
+}
+.color-options .follow-theme-color[aria-pressed='true'] {
+  background: var(--theme-soft);
+  border-color: var(--theme-accent);
+  outline: 1px solid var(--theme-accent);
+  outline-offset: 1px;
 }
