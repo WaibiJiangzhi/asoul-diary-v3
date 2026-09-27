@@ -686,16 +686,6 @@
   line-height: 1.8;
   color: var(--soft-ink);
 }
-.memory-intro {
-  font-size: 13px;
-  color: var(--soft-ink);
-  line-height: 1.8;
-  margin-bottom: 20px;
-}
-.has-wallpaper .memory-intro {
-  color: var(--ink);
-  text-shadow: 0 1px 5px white;
-}
 .memory-view > input {
   background: var(--theme-surface);
 }

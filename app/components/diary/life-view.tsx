@@ -596,7 +596,6 @@ export function MemoryView({
         </div>
         <span>{memories.length} 段经历</span>
       </div>
-      <p className="memory-intro">有些事，真的做过。以后也想再翻一遍。</p>
       {memories.length > 0 && (
         <>
           <Input
