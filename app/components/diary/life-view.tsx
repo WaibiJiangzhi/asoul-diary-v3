@@ -4,6 +4,7 @@ import {
   ArrowLeft,
   ArrowRight,
   Check,
+  ChevronDown,
   ChevronRight,
   MoreHorizontal,
   Plus,
@@ -488,9 +489,12 @@ export function LifeView({
       {!!upcoming.length && (
         <details className="upcoming-dates" key={today}>
           <summary>
-            今天有 {upcoming.filter((c) => c.date === today).length}{' '}
-            件期待，明天还有 {upcoming.filter((c) => c.date !== today).length}{' '}
-            件
+            <span>
+              今天 {upcoming.filter((c) => c.date === today).length}
+              <span className="upcoming-separator">·</span>
+              明天 {upcoming.filter((c) => c.date !== today).length}
+            </span>
+            <ChevronDown size={16} aria-hidden="true" />
           </summary>
           {upcoming.map((c) => (
             <button
@@ -501,7 +505,9 @@ export function LifeView({
               }
             >
               <span>{c.title}</span>
-              <small>{c.date === today ? '就是今天' : '还有 1 天'}</small>
+              <small data-today={c.date === today}>
+                {c.date === today ? '今天 ✨' : '明天'}
+              </small>
             </button>
           ))}
         </details>
