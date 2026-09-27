@@ -73,14 +73,16 @@ export function createDefaultState(): AppState {
         kind: 'quote',
         title: '你的梦想是什么？',
         note: '把喜欢的事，一点点变成自己的生活。',
-        emoji: '[嘉然_笔芯]',
+        emoji: '[2026嘉然的画册动态表情包_捏捏]',
+        color: '#E799B0',
       },
       {
         id: 'companion-today',
         kind: 'quote',
         title: '今天也往前走一点',
         note: '慢一点也没关系，留下自己的脚印。',
-        emoji: '[2026乃琳的酒馆动态表情包_爱你]',
+        emoji: '[2026贝拉的冒险动态表情包_恰！]',
+        color: '#DB7D74',
       },
     ],
     settings: {

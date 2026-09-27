@@ -96,6 +96,7 @@ const stateShape = shape({
     shape({
       id: nonempty,
       kind: oneOf('quote', 'countdown'),
+      color: optional(color),
       title: nonempty,
       note: text,
       emoji: text,

@@ -8,6 +8,9 @@ import {
 } from 'react';
 import {
   Archive,
+  Candy,
+  Star,
+  IceCreamCone,
   ArrowRight,
   Clock3,
   Pencil,
@@ -164,7 +167,11 @@ export default function DiaryApp({ preview = false }: { preview?: boolean }) {
   if (!state)
     return (
       <main className="app-loading">
-        <Sparkles />
+        <div className="loading-motifs" aria-hidden="true">
+          <Candy className="loading-jiaran" />
+          <Star className="loading-bella" />
+          <IceCreamCone className="loading-nailin" />
+        </div>
         <p>翻开生活，慢慢来…</p>
       </main>
     );

@@ -67,6 +67,7 @@ export interface LifeCard {
   stages?: Stage[];
 }
 export interface CompanionCard {
+  color?: CardColor;
   id: string;
   kind: 'quote' | 'countdown';
   title: string;

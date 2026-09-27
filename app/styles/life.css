@@ -43,12 +43,21 @@
 .companion-section {
   position: relative;
   margin-top: 18px;
-  border: 1.5px solid color-mix(in srgb, var(--theme-accent) 72%, transparent);
+  border: 1.5px solid
+    color-mix(
+      in srgb,
+      var(--companion-accent, var(--theme-accent)) 72%,
+      transparent
+    );
   border-radius: 25px;
   background: var(--theme-surface);
   background-clip: padding-box;
   box-shadow: 0 6px 20px
-    color-mix(in srgb, var(--theme-accent) 12%, transparent);
+    color-mix(
+      in srgb,
+      var(--companion-accent, var(--theme-accent)) 12%,
+      transparent
+    );
   overflow: hidden;
 }
 .companion-rail {
@@ -2069,4 +2078,28 @@ progress.life-progress::-moz-progress-bar {
 }
 .companion-navigation > button:last-child {
   bottom: 6px;
+}
+
+.companion-section {
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
+}
+.companion-navigation button,
+.companion-card .companion-count {
+  color: color-mix(
+    in srgb,
+    var(--companion-accent, var(--theme-accent)) 75%,
+    var(--ink)
+  );
+}
+.companion-navigation i {
+  background: color-mix(
+    in srgb,
+    var(--companion-accent, var(--theme-accent)) 25%,
+    transparent
+  );
+}
+.companion-navigation [aria-current='true'] i {
+  background: var(--companion-accent, var(--theme-accent));
 }

@@ -15,6 +15,7 @@ import { Input } from '@/components/ui/input';
 import { Decoration } from './decoration';
 import { DecorationPicker } from './sticker-picker';
 import { Sheet } from './life-form';
+import { CARD_COLORS } from './constants';
 import { usePhotoUrls } from './life-record';
 import Image from 'next/image';
 import { ProgressSummary, RecordText } from './life-detail';
@@ -68,7 +69,15 @@ export function CompanionShelf({
       });
   }
   return (
-    <section className="companion-section" aria-label="陪伴与期待">
+    <section
+      className="companion-section"
+      aria-label="陪伴与期待"
+      style={
+        {
+          '--companion-accent': cards[index]?.color ?? 'var(--theme-accent)',
+        } as CSSProperties
+      }
+    >
       {cards.length ? (
         <>
           <div
@@ -599,6 +608,7 @@ export function CompanionForm({
     title: '',
     note: '',
     emoji: '✨',
+    color: '#E799B0',
   });
   const [draft, setDraft] = useState<CompanionCard>(blank);
   const [error, setError] = useState('');
@@ -671,6 +681,30 @@ export function CompanionForm({
           value={draft.emoji}
           onChange={(emoji) => setDraft((c) => ({ ...c, emoji }))}
         />
+        <fieldset className="config-block">
+          <legend>卡片主题色</legend>
+          <div className="color-options">
+            <button
+              type="button"
+              aria-label="跟随应用主题"
+              aria-pressed={!draft.color}
+              style={{ '--swatch': 'var(--theme-accent)' } as CSSProperties}
+              onClick={() => setDraft((c) => ({ ...c, color: undefined }))}
+            >
+              ↺
+            </button>
+            {CARD_COLORS.map((color) => (
+              <button
+                key={color.value}
+                type="button"
+                aria-label={color.label}
+                aria-pressed={draft.color === color.value}
+                style={{ '--swatch': color.value } as CSSProperties}
+                onClick={() => setDraft((c) => ({ ...c, color: color.value }))}
+              />
+            ))}
+          </div>
+        </fieldset>
         <label>
           标题
           <Input
