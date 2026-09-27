@@ -31,6 +31,7 @@ export interface LifeRecord {
   statusId?: string;
   stageId?: string;
   stageDone?: boolean;
+  stageEmoji?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -84,6 +85,7 @@ export interface AppSettings {
 export interface AppState {
   version: 1;
   cards: LifeCard[];
+  commonCards?: LifeCard[];
   companions: CompanionCard[];
   settings: AppSettings;
 }

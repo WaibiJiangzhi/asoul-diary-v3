@@ -25,6 +25,7 @@ import {
   recordEnd,
   recordLabel,
   stageComplete,
+  stageEmoji,
   stageRecord,
   statusRecord,
 } from '@/lib/life';
@@ -309,6 +310,12 @@ export function CardDetail({
                 aria-pressed={stageComplete(card, s.id)}
               >
                 <i>{stageComplete(card, s.id) && <Check />}</i>
+                {stageEmoji(card, s.id) && (
+                  <Decoration
+                    value={stageEmoji(card, s.id)}
+                    className="stage-sticker"
+                  />
+                )}
                 <span>
                   {s.title}
                   {stageRecord(card, s.id) && (
@@ -424,6 +431,9 @@ export function CardDetail({
                 <p>
                   <RecordText text={r.body} />
                 </p>
+              )}
+              {r.stageDone && r.stageEmoji && (
+                <Decoration value={r.stageEmoji} className="stage-sticker" />
               )}
               <PhotoStrip ids={r.photoIds} />
             </li>

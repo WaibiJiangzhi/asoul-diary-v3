@@ -550,7 +550,7 @@
   position: absolute;
   left: 0;
   right: 0;
-  top: 13px;
+  top: 58px;
   height: 2px;
   background: color-mix(in srgb, var(--card-accent) 27%, white);
 }
@@ -927,7 +927,7 @@
 }
 .status-field {
   display: grid;
-  grid-template-columns: 44px minmax(0, 1fr) 59px 32px;
+  grid-template-columns: 44px minmax(0, 1fr) 36px;
   align-items: center;
   gap: 6px;
 }
@@ -936,6 +936,23 @@
   margin: 0 !important;
   padding: 8px !important;
   font-size: 13px !important;
+}
+.status-field > .decoration-select {
+  grid-column: 1;
+  grid-row: 1 / 3;
+}
+.status-field > input {
+  grid-column: 2;
+  grid-row: 1;
+}
+.status-field > select {
+  grid-column: 2 / 4;
+  grid-row: 2;
+  width: 100%;
+}
+.status-field > button:last-child {
+  grid-column: 3;
+  grid-row: 1;
 }
 .status-field .decoration-picker {
   width: 44px;
@@ -1085,8 +1102,11 @@
 .record-editor-host .journal-composer-dock {
   position: sticky;
   bottom: 0;
-  margin: 8px -6px 0;
-  max-width: 100%;
+  margin: 8px 0 0;
+  inset-inline: auto;
+  width: 100%;
+  max-width: none;
+  min-width: 0;
   border-radius: 14px;
   z-index: 5;
 }
@@ -1694,7 +1714,7 @@
     padding-right: 15px;
   }
   .status-field {
-    grid-template-columns: 36px minmax(0, 1fr) 52px 28px;
+    grid-template-columns: 36px minmax(0, 1fr) 32px;
     gap: 4px;
   }
   .kind-options {
@@ -1852,4 +1872,140 @@ progress.life-progress::-moz-progress-bar {
 .has-wallpaper .life-section-tools button {
   background: rgb(255 250 248 / 82%);
   text-shadow: none;
+}
+.common-card-list {
+  display: grid;
+  gap: 10px;
+}
+.common-card-row {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  border: 1px solid var(--theme-border);
+  border-radius: 18px;
+  padding: 4px;
+  background: var(--theme-surface);
+}
+.common-card-choice {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+  min-height: 70px;
+  padding: 8px;
+  text-align: left;
+  border-radius: 14px;
+}
+.common-card-choice > span:nth-child(2) {
+  display: grid;
+  gap: 5px;
+  flex: 1;
+  min-width: 0;
+}
+.common-card-choice strong {
+  font-size: 15px;
+  overflow-wrap: anywhere;
+}
+.common-card-choice small {
+  color: var(--soft-ink);
+  font-size: 11px;
+}
+.common-card-choice > i {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border: 1px solid var(--theme-border);
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.common-card-choice > svg,
+.common-card-choice > i svg {
+  width: 17px;
+  height: 17px;
+  flex-shrink: 0;
+}
+.common-card-choice[aria-pressed='true'] {
+  background: var(--theme-soft);
+}
+.common-card-choice[aria-pressed='true'] > i {
+  color: white;
+  background: var(--theme-accent);
+  border-color: var(--theme-accent);
+}
+.form-section {
+  border-top: 1px solid var(--theme-border);
+  padding-top: 16px;
+  display: grid;
+  gap: 14px;
+}
+.form-section > h3 {
+  font-size: 13px;
+  font-weight: 650;
+  color: var(--theme-accent-deep);
+}
+.card-configuration {
+  border-top: none;
+  padding-top: 0;
+}
+.card-configuration .card-config-content {
+  padding-top: 0;
+}
+.stage-sticker-slot {
+  display: grid;
+  place-items: center;
+  height: 40px;
+  width: 100%;
+}
+.stage-sticker {
+  width: 38px;
+  height: 38px;
+  display: inline-grid;
+  place-items: center;
+  font-size: 28px;
+  flex-shrink: 0;
+}
+.stage-sticker img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.stage-completion {
+  display: grid;
+  gap: 16px;
+  padding-top: 16px;
+}
+.quick-progress {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 12px;
+}
+.quick-progress button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-height: 44px;
+  border: 1px solid color-mix(in srgb, var(--card-accent) 35%, transparent);
+  border-radius: 13px;
+  color: var(--ink);
+  background: rgb(255 255 255 / 40%);
+  font-size: 16px;
+  font-weight: 650;
+}
+.quick-progress button:last-child {
+  background: color-mix(
+    in srgb,
+    var(--card-accent) 20%,
+    rgb(255 255 255 / 70%)
+  );
+}
+.quick-progress button:disabled {
+  opacity: 0.4;
+}
+.quick-progress small {
+  font-size: 11px;
+  font-weight: 400;
 }

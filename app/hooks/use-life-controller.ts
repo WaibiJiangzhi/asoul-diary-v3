@@ -5,12 +5,13 @@ import {
   type SetStateAction,
 } from 'react';
 import { createId } from '@/lib/defaults';
+import { getCommonCards, restartLifeCard } from '@/lib/card-templates';
 import { dateKey } from '@/lib/date';
 import {
   completed,
   reachedMilestone,
   saveLifeRecord,
-  stageComplete,
+  stageRecord,
   statusRecord,
   canRecord,
 } from '@/lib/life';
@@ -152,19 +153,55 @@ export function useLifeController({
       showToast((e as Error).message);
     }
   }
-  function toggleStage(cardId: string, stageId: string) {
+  function setStage(
+    cardId: string,
+    stageId: string,
+    done: boolean,
+    emoji = '',
+  ) {
     try {
       updateCard(
         cardId,
         (c) => {
           const now = new Date().toISOString();
+          const previous = stageRecord(c, stageId);
+          const existing =
+            previous?.stageDone === done && previous.date === dateKey()
+              ? previous
+              : undefined;
           return saveLifeRecord(c, {
+            ...existing,
+            id: existing?.id ?? createId('record'),
+            date: dateKey(),
+            body: existing?.body ?? '',
+            photoIds: existing?.photoIds ?? [],
+            stageId,
+            stageDone: done,
+            stageEmoji: done ? emoji : undefined,
+            createdAt: existing?.createdAt ?? now,
+            updatedAt: now,
+          });
+        },
+        true,
+      );
+    } catch (e) {
+      showToast((e as Error).message);
+    }
+  }
+  function adjustProgress(cardId: string, direction: -1 | 1) {
+    try {
+      updateCard(
+        cardId,
+        (card) => {
+          if (card.kind !== 'progress' || !card.progress)
+            throw new Error('这张卡片不能调整数量');
+          const now = new Date().toISOString();
+          return saveLifeRecord(card, {
             id: createId('record'),
             date: dateKey(),
             body: '',
             photoIds: [],
-            stageId,
-            stageDone: !stageComplete(c, stageId),
+            delta: direction * card.progress.step,
             createdAt: now,
             updatedAt: now,
           });
@@ -174,6 +211,49 @@ export function useLifeController({
     } catch (e) {
       showToast((e as Error).message);
     }
+  }
+  function saveCommonCard(draft: LifeCard) {
+    const state = stateRef.current;
+    if (!state) return;
+    const card = {
+      ...draft,
+      records: [],
+      title: draft.title.trim(),
+      note: draft.note.trim(),
+      updatedAt: new Date().toISOString(),
+    };
+    const current = getCommonCards(state);
+    const next = {
+      ...state,
+      commonCards: current.some((c) => c.id === card.id)
+        ? current.map((c) => (c.id === card.id ? card : c))
+        : [...current, card],
+    };
+    validateState(next);
+    setState(next);
+    showToast('常用卡片已保存');
+  }
+  function removeCommonCard(id: string) {
+    setState(
+      (state) =>
+        state && {
+          ...state,
+          commonCards: getCommonCards(state).filter((c) => c.id !== id),
+        },
+    );
+    showToast('已从常用卡片移除，生活里的卡片不受影响');
+  }
+  function addCommonCards(ids: string[]) {
+    const state = stateRef.current;
+    if (!state) return;
+    const cards = getCommonCards(state)
+      .filter((c) => ids.includes(c.id))
+      .map(restartLifeCard);
+    if (!cards.length) return;
+    const next = { ...state, cards: [...state.cards, ...cards] };
+    validateState(next);
+    setState(next);
+    showToast(cards.length + ' 张卡片已放进生活');
   }
   function removeRecord(cardId: string, recordId: string) {
     askConfirmation({
@@ -275,7 +355,11 @@ export function useLifeController({
     saveCard,
     saveRecord,
     quickStatus,
-    toggleStage,
+    setStage,
+    adjustProgress,
+    saveCommonCard,
+    removeCommonCard,
+    addCommonCards,
     removeRecord,
     removeCard,
     archive,

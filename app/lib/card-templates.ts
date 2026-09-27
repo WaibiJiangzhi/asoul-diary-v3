@@ -1,5 +1,5 @@
 import { createLifeCard } from './defaults';
-import type { LifeCard } from './types';
+import type { AppState, LifeCard } from './types';
 
 type CardTemplate = Pick<
   LifeCard,
@@ -94,6 +94,18 @@ export function createCardFromTemplate(id: string): LifeCard {
   const template = CARD_TEMPLATES.find((item) => item.id === id);
   if (!template) throw new Error('没有找到这个模板');
   return restartLifeCard({ ...createLifeCard(template.kind), ...template });
+}
+
+export function getCommonCards(
+  state: Pick<AppState, 'commonCards'>,
+): LifeCard[] {
+  return (
+    state.commonCards ??
+    CARD_TEMPLATES.map((template) => ({
+      ...createCardFromTemplate(template.id),
+      id: 'common-' + template.id,
+    }))
+  );
 }
 
 export function cardSetupLabel(card: LifeCard): string {

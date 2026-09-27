@@ -35,6 +35,8 @@ const {
   CARD_TEMPLATES,
   createCardFromTemplate,
   restartLifeCard,
+  getCommonCards,
+  stageEmoji,
 } = lib;
 const today = '2026-09-27';
 const card = (kind) => ({
@@ -53,6 +55,41 @@ const entry = (extra = {}) => ({
   ...extra,
 });
 const save = (c, r) => saveLifeRecord(c, r, today);
+await test('common cards are independent of living cards and an empty saved list stays empty', () => {
+  const state = createDefaultState();
+  const common = getCommonCards(state);
+  assert.equal(common.length, 4);
+  const living = restartLifeCard(common[0]);
+  const next = { ...state, commonCards: common, cards: [living] };
+  validateState(next);
+  next.commonCards[0].title = '改过的常用卡片';
+  next.commonCards[0].record.states[0].name = '新的名称';
+  assert.notEqual(living.title, next.commonCards[0].title);
+  assert.notEqual(
+    living.record.states[0].name,
+    next.commonCards[0].record.states[0].name,
+  );
+  assert.deepEqual(getCommonCards({ commonCards: [] }), []);
+  assert.throws(() =>
+    validateState({
+      ...next,
+      commonCards: [{ ...common[0], records: [entry()] }],
+    }),
+  );
+});
+await test('stage stickers follow the latest completion, clear on undo, and survive backup validation', () => {
+  let c = card('stage');
+  const id = c.stages[0].id;
+  c = save(c, entry({ stageId: id, stageDone: true, stageEmoji: '🎉' }));
+  assert.equal(stageEmoji(c, id), '🎉');
+  validateState({ ...createDefaultState(), cards: [c] });
+  c = save(c, entry({ stageId: id, stageDone: false, stageEmoji: '🎉' }));
+  assert.equal(stageEmoji(c, id), '');
+  const before = c;
+  c = save(c, entry({ stageId: id, stageDone: true, stageEmoji: '🥰' }));
+  assert.equal(stageEmoji(c, id), '🥰');
+  assert.ok(reachedMilestone(before, c));
+});
 await test('each template can be saved immediately; copies have independent identity and configuration', () => {
   const copies = CARD_TEMPLATES.flatMap((t) => [
     createCardFromTemplate(t.id),

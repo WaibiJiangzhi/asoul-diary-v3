@@ -31,6 +31,8 @@ import {
   lastRecord,
   recentDays,
   stageComplete,
+  stageEmoji,
+  progressValue,
   statusRecord,
 } from '@/lib/life';
 import { dateKey, daysUntil, formatShortDate } from '@/lib/date';
@@ -162,6 +164,7 @@ function SmallCard({
   onStage,
   onMenu,
   onStart,
+  onAdjust,
   handle,
 }: {
   card: LifeCard;
@@ -171,6 +174,7 @@ function SmallCard({
   onStage: (id: string) => void;
   onMenu: () => void;
   onStart: () => void;
+  onAdjust: (direction: -1 | 1) => void;
   handle?: SortableHandle;
 }) {
   const latest = lastRecord(card);
@@ -234,7 +238,37 @@ function SmallCard({
           })}
         </div>
       )}
-      {!isLater && card.kind === 'progress' && <ProgressSummary card={card} />}
+      {!isLater && card.kind === 'progress' && (
+        <>
+          <ProgressSummary card={card} />
+          <div className="quick-progress" aria-label={card.title + '快捷调整'}>
+            <button
+              type="button"
+              disabled={
+                !canRecord(card, today, today) || progressValue(card) <= 0
+              }
+              onClick={() => onAdjust(-1)}
+              aria-label={
+                '减少 ' + card.progress?.step + ' ' + card.progress?.unit
+              }
+            >
+              − {card.progress?.step}
+              <small>{card.progress?.unit}</small>
+            </button>
+            <button
+              type="button"
+              disabled={!canRecord(card, today, today)}
+              onClick={() => onAdjust(1)}
+              aria-label={
+                '增加 ' + card.progress?.step + ' ' + card.progress?.unit
+              }
+            >
+              ＋ {card.progress?.step}
+              <small>{card.progress?.unit}</small>
+            </button>
+          </div>
+        </>
+      )}
       {!isLater && card.kind === 'stage' && (
         <div className="stage-preview">
           {card.stages?.slice(0, 4).map((s) => (
@@ -244,6 +278,14 @@ function SmallCard({
               aria-pressed={stageComplete(card, s.id)}
               onClick={() => onStage(s.id)}
             >
+              <span className="stage-sticker-slot">
+                {stageEmoji(card, s.id) && (
+                  <Decoration
+                    value={stageEmoji(card, s.id)}
+                    className="stage-sticker"
+                  />
+                )}
+              </span>
               <i>{stageComplete(card, s.id) && <Check />}</i>
               <span>{s.title}</span>
             </button>
@@ -299,6 +341,7 @@ export function LifeView({
   onOpen,
   onRecord,
   onStage,
+  onAdjust,
   onMenu,
   onStart,
   onReorder,
@@ -311,6 +354,7 @@ export function LifeView({
   onOpen: (id: string) => void;
   onRecord: (id: string, date?: string) => void;
   onStage: (id: string, stage: string) => void;
+  onAdjust: (id: string, direction: -1 | 1) => void;
   onMenu: (id: string) => void;
   onStart: (id: string) => void;
   onReorder: (a: string, b: string) => void;
@@ -327,6 +371,7 @@ export function LifeView({
       onOpen={() => onOpen(card.id)}
       onRecord={(date) => onRecord(card.id, date)}
       onStage={(id) => onStage(card.id, id)}
+      onAdjust={(direction) => onAdjust(card.id, direction)}
       onMenu={() => onMenu(card.id)}
       onStart={() => onStart(card.id)}
       handle={handle}

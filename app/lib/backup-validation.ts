@@ -52,6 +52,7 @@ const record = shape({
   statusId: optional(nonempty),
   stageId: optional(nonempty),
   stageDone: optional(flag),
+  stageEmoji: optional(text),
 });
 const card = shape({
   id: nonempty,
@@ -90,6 +91,7 @@ const card = shape({
 const stateShape = shape({
   version: oneOf(1),
   cards: list(card),
+  commonCards: optional(list(card)),
   companions: list(
     shape({
       id: nonempty,
@@ -116,10 +118,15 @@ export function validateState(value: unknown): asserts value is AppState {
   const state = value as AppState;
   if (
     !unique(state.cards.map((c) => c.id)) ||
-    !unique(state.companions.map((c) => c.id))
+    !unique(state.companions.map((c) => c.id)) ||
+    !unique((state.commonCards ?? []).map((c) => c.id))
   )
     throw new Error('卡片编号重复，原有记录未替换');
-  for (const c of state.cards) {
+  if (
+    state.commonCards?.some((c) => c.records.length || c.location === 'memory')
+  )
+    throw new Error('常用卡片不能包含旧记录');
+  for (const c of [...state.cards, ...(state.commonCards ?? [])]) {
     if (
       !unique(c.records.map((r) => r.id)) ||
       !unique((c.stages ?? []).map((s) => s.id)) ||
@@ -139,6 +146,7 @@ export function validateState(value: unknown): asserts value is AppState {
           r.photoIds.length > 9 ||
           (r.delta !== undefined && !c.progress) ||
           (r.stageId && typeof r.stageDone !== 'boolean') ||
+          (r.stageEmoji && (!r.stageId || !r.stageDone)) ||
           (r.statusId && recordEnd(c) && r.date > recordEnd(c)!),
       )
     )

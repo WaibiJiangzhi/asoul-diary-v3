@@ -46,7 +46,7 @@ await test('all packs and covers exist, canonical tokens are unique, and chosen 
     '哈哈哈',
     '干杯',
     '爱你',
-    '爱你',
+    '厨艺展示',
   ];
   for (const [index, pack] of STICKER_PACKS.entries())
     assert.ok(

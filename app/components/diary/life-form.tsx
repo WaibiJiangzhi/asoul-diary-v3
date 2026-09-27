@@ -22,14 +22,13 @@ import { Input } from '@/components/ui/input';
 import { DecorationPicker } from './sticker-picker';
 import { CARD_COLORS } from './constants';
 import { createId, createLifeCard } from '@/lib/defaults';
-import { cardSetupLabel } from '@/lib/card-templates';
 
 import type { CardKind, LifeCard } from '@/lib/types';
 export const CARD_KINDS = [
   { id: 'record', name: '记录卡', hint: '每天的状态', Icon: CalendarDays },
   { id: 'progress', name: '进度卡', hint: '一点点积累', Icon: TrendingUp },
   { id: 'stage', name: '阶段卡', hint: '一步步做到', Icon: ListChecks },
-  { id: 'blank', name: '空白卡', hint: '先随便记', Icon: Sparkles },
+  { id: 'blank', name: '随记卡', hint: '文字与照片', Icon: Sparkles },
 ] as const;
 export function Sheet({
   title,
@@ -83,14 +82,14 @@ export function CardForm({
   onSave,
   onClose,
   isNew = false,
-  prefilled = false,
+  common = false,
   onBack,
 }: {
   initial: LifeCard;
   onSave: (c: LifeCard) => void;
   onClose: () => void;
   isNew?: boolean;
-  prefilled?: boolean;
+  common?: boolean;
   onBack?: () => void;
 }) {
   const [draft, setDraft] = useState(() => structuredClone(initial));
@@ -108,11 +107,17 @@ export function CardForm({
   }
   return (
     <Sheet
-      title={isNew ? '让它成为你的卡片' : '这张卡片的样子'}
+      title={
+        common
+          ? '这张常用卡片的样子'
+          : isNew
+            ? '让它成为你的卡片'
+            : '这张卡片的样子'
+      }
       description={
-        prefilled
-          ? '已经替你填好了，直接开始，或改成适合自己的样子。'
-          : '先写一个名字，记录方式以后也能调整。'
+        common
+          ? '保存的是记录方式；添加到生活后，各自独立记录。'
+          : '名字、表情和记录方式，都按自己的习惯来。'
       }
       onClose={onClose}
       wide
@@ -169,16 +174,7 @@ export function CardForm({
             onChange={(e) => patch({ note: e.target.value })}
           />
         </label>
-        {prefilled && (
-          <div className="preset-summary">
-            <strong>{CARD_KINDS.find((k) => k.id === draft.kind)?.name}</strong>
-            <span>{cardSetupLabel(draft)}</span>
-          </div>
-        )}
-        <details className="form-details card-configuration" open={!prefilled}>
-          <summary>
-            记录方式与设置 <small>随时能改</small>
-          </summary>
+        <section className="form-section card-configuration">
           <div className="card-config-content">
             <fieldset>
               <legend>怎么记录</legend>
@@ -415,10 +411,10 @@ export function CardForm({
                     添加状态
                   </Button>
                 )}
-                <details className="form-details">
-                  <summary>
+                <section className="form-section">
+                  <h3>
                     记录周期与期待 <small>可选</small>
-                  </summary>
+                  </h3>
                   <label>
                     记录多少天
                     <Input
@@ -486,7 +482,7 @@ export function CardForm({
                       </label>
                     )}
                   </div>
-                </details>
+                </section>
               </fieldset>
             )}
             {draft.kind === 'stage' && (
@@ -552,9 +548,9 @@ export function CardForm({
               </p>
             )}
           </div>
-        </details>
-        <details className="form-details">
-          <summary>开始日期、位置与颜色</summary>
+        </section>
+        <section className="form-section">
+          <h3>开始日期、位置与颜色</h3>
           <div className="field-pair">
             <label>
               开始日期
@@ -596,14 +592,14 @@ export function CardForm({
               />
             ))}
           </div>
-        </details>
+        </section>
         {error && (
           <p className="form-error" role="alert">
             {error}
           </p>
         )}
         <Button className="form-submit" type="submit">
-          {isNew ? '放进生活，开始记录' : '保存卡片'}
+          {common ? '保存常用卡片' : isNew ? '放进生活，开始记录' : '保存卡片'}
         </Button>
       </form>
     </Sheet>

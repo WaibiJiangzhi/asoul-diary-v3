@@ -8,10 +8,11 @@ import { Input } from '@/components/ui/input';
 import { JournalEditor } from './journal-editor';
 import { Sheet } from './life-form';
 import { Decoration } from './decoration';
+import { DecorationPicker } from './sticker-picker';
 import { getPhotos } from '@/lib/db';
 import { createId } from '@/lib/defaults';
 import { dateKey } from '@/lib/date';
-import { recordEnd, stageComplete } from '@/lib/life';
+import { canRecord, recordEnd, stageComplete, stageEmoji } from '@/lib/life';
 import type { LifeCard, LifeRecord } from '@/lib/types';
 export function usePhotoUrls(ids: string[]) {
   const key = ids.join('|');
@@ -133,6 +134,9 @@ export function RecordForm({
   const [status, setStatus] = useState(initial?.statusId ?? '');
   const [stage, setStage] = useState(initial?.stageId ?? '');
   const [stageDone, setStageDone] = useState(initial?.stageDone ?? true);
+  const [completionEmoji, setCompletionEmoji] = useState(
+    initial?.stageEmoji ?? '',
+  );
   const [photoIds, setPhotoIds] = useState(initial?.photoIds ?? []);
   const [files, setFiles] = useState<File[]>([]);
   const [busy, setBusy] = useState(false);
@@ -170,7 +174,13 @@ export function RecordForm({
             ? { delta: Number(delta) }
             : {}),
           ...(status ? { statusId: status } : {}),
-          ...(stage ? { stageId: stage, stageDone } : {}),
+          ...(stage
+            ? {
+                stageId: stage,
+                stageDone,
+                stageEmoji: stageDone ? completionEmoji : undefined,
+              }
+            : {}),
         },
         files,
       );
@@ -256,6 +266,7 @@ export function RecordForm({
               onChange={(e) => {
                 setStage(e.target.value);
                 setStageDone(!stageComplete(card, e.target.value));
+                setCompletionEmoji(stageEmoji(card, e.target.value));
               }}
             >
               <option value="">只写一条记录</option>
@@ -274,6 +285,13 @@ export function RecordForm({
                 />
                 这一步已完成
               </label>
+            )}
+            {stage && stageDone && (
+              <DecorationPicker
+                value={completionEmoji}
+                onChange={setCompletionEmoji}
+                label="完成这一步的表情（可选）"
+              />
             )}
           </fieldset>
         )}
@@ -335,6 +353,51 @@ export function RecordForm({
           {busy ? '正在保存照片…' : '确认记录'}
         </Button>
       </form>
+    </Sheet>
+  );
+}
+
+export function StageCompletion({
+  card,
+  stageId,
+  onSave,
+  onClose,
+}: {
+  card: LifeCard;
+  stageId: string;
+  onSave: (done: boolean, emoji: string) => void;
+  onClose: () => void;
+}) {
+  const done = stageComplete(card, stageId);
+  const [emoji, setEmoji] = useState(stageEmoji(card, stageId));
+  const allowed = canRecord(card, dateKey());
+  return (
+    <Sheet
+      title={done ? '给这一步留个表情' : '这一步，做到了'}
+      description={card.stages?.find((s) => s.id === stageId)?.title}
+      onClose={onClose}
+    >
+      <div className="stage-completion">
+        <DecorationPicker
+          value={emoji}
+          onChange={setEmoji}
+          label="挑一个完成表情（可选）"
+        />
+        <p className="field-hint">选好的表情会陪在节点上方，也可以直接打勾。</p>
+        <Button disabled={!allowed} onClick={() => onSave(true, emoji)}>
+          {done ? '保存表情' : '确认完成'}
+        </Button>
+        {done && (
+          <Button
+            disabled={!allowed}
+            variant="ghost"
+            onClick={() => onSave(false, '')}
+          >
+            撤回这一步
+          </Button>
+        )}
+        {!allowed && <p className="field-hint">到开始日期后，就可以记录了。</p>}
+      </div>
     </Sheet>
   );
 }

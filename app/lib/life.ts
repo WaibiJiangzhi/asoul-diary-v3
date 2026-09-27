@@ -35,6 +35,10 @@ export function stageRecord(card: LifeCard, id: string) {
 export function stageComplete(card: LifeCard, id: string) {
   return stageRecord(card, id)?.stageDone === true;
 }
+export function stageEmoji(card: LifeCard, id: string) {
+  const record = stageRecord(card, id);
+  return record?.stageDone ? (record.stageEmoji ?? '') : '';
+}
 export function statusRecord(card: LifeCard, date: string) {
   return card.records.find((r) => r.date === date && r.statusId);
 }
@@ -147,7 +151,12 @@ export function saveLifeRecord(
             4,
           ),
         );
-  const record = { ...input, delta, body: input.body.trim() };
+  const record = {
+    ...input,
+    delta,
+    body: input.body.trim(),
+    stageEmoji: input.stageId && input.stageDone ? input.stageEmoji : undefined,
+  };
   if (
     record.body ||
     record.photoIds.length ||

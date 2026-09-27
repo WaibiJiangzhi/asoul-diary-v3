@@ -32,7 +32,7 @@ import {
 import { CardForm, Sheet } from '@/components/diary/life-form';
 import { CardStarter } from '@/components/diary/card-starter';
 import { CardDetail, ArchiveForm } from '@/components/diary/life-detail';
-import { RecordForm } from '@/components/diary/life-record';
+import { RecordForm, StageCompletion } from '@/components/diary/life-record';
 import {
   LifeView,
   MemoryView,
@@ -47,8 +47,8 @@ import { useDiaryState } from '@/hooks/use-diary-state';
 import { useLifeController } from '@/hooks/use-life-controller';
 import { useToast } from '@/hooks/use-toast';
 import { formatShortDate } from '@/lib/date';
-import { wallpaperAssetUrl } from '@/lib/defaults';
-import { restartLifeCard } from '@/lib/card-templates';
+import { createLifeCard, wallpaperAssetUrl } from '@/lib/defaults';
+import { getCommonCards, restartLifeCard } from '@/lib/card-templates';
 import { canRecord, recordEnd, statusRecord } from '@/lib/life';
 import type { AppTab, LifeCard, LifeRecord } from '@/lib/types';
 
@@ -59,9 +59,10 @@ type Panel =
       draft: LifeCard;
       returnTo?: string;
       isNew?: boolean;
-      prefilled?: boolean;
+      common?: boolean;
     }
-  | { kind: 'starter' }
+  | { kind: 'starter'; managing?: boolean }
+  | { kind: 'stage'; id: string; stageId: string; returnTo?: string }
   | {
       kind: 'record' | 'status';
       id: string;
@@ -125,9 +126,11 @@ export default function DiaryApp({ preview = false }: { preview?: boolean }) {
   }
   function closePanel() {
     setPanel((p) =>
-      p && 'returnTo' in p && p.returnTo
-        ? { kind: 'detail', id: p.returnTo }
-        : null,
+      p?.kind === 'card' && p.common
+        ? { kind: 'starter', managing: true }
+        : p && 'returnTo' in p && p.returnTo
+          ? { kind: 'detail', id: p.returnTo }
+          : null,
     );
   }
   function openRecord(
@@ -206,7 +209,8 @@ export default function DiaryApp({ preview = false }: { preview?: boolean }) {
             onNew={() => setPanel({ kind: 'starter' })}
             onOpen={(id) => setPanel({ kind: 'detail', id })}
             onRecord={openRecord}
-            onStage={life.toggleStage}
+            onStage={(id, stageId) => setPanel({ kind: 'stage', id, stageId })}
+            onAdjust={life.adjustProgress}
             onMenu={(id) => setPanel({ kind: 'menu', id })}
             onStart={(id) => life.locate(id, 'active')}
             onReorder={life.reorder}
@@ -223,10 +227,18 @@ export default function DiaryApp({ preview = false }: { preview?: boolean }) {
       <BottomNav active={tab} onChange={changeTab} />
       {panel?.kind === 'starter' && (
         <CardStarter
-          cards={state.cards}
+          cards={getCommonCards(state)}
+          managing={Boolean(panel.managing)}
           onClose={closePanel}
-          onChoose={(draft, prefilled) =>
-            setPanel({ kind: 'card', draft, prefilled, isNew: true })
+          onManage={(managing) => setPanel({ kind: 'starter', managing })}
+          onAdd={(ids) => {
+            life.addCommonCards(ids);
+            setPanel(null);
+          }}
+          onEdit={(draft) => setPanel({ kind: 'card', draft, common: true })}
+          onRemove={life.removeCommonCard}
+          onWrite={() =>
+            setPanel({ kind: 'card', draft: createLifeCard(), isNew: true })
           }
         />
       )}
@@ -235,14 +247,15 @@ export default function DiaryApp({ preview = false }: { preview?: boolean }) {
           key={panel.draft.id}
           initial={panel.draft}
           isNew={panel.isNew}
-          prefilled={panel.prefilled}
+          common={panel.common}
           onBack={
             panel.isNew && !panel.returnTo
               ? () => setPanel({ kind: 'starter' })
               : undefined
           }
           onSave={(card) => {
-            life.saveCard(card);
+            if (panel.common) life.saveCommonCard(card);
+            else life.saveCard(card);
             if (panel.isNew) {
               setPanel(null);
               changeTab('life');
@@ -271,6 +284,16 @@ export default function DiaryApp({ preview = false }: { preview?: boolean }) {
             >
               <Pencil />
               编辑卡片与记录方式
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                life.saveCommonCard(restartLifeCard(current));
+                setPanel(null);
+              }}
+            >
+              <Plus />
+              存为常用卡片
             </button>
             <button
               type="button"
@@ -318,7 +341,14 @@ export default function DiaryApp({ preview = false }: { preview?: boolean }) {
             setPanel({ kind: 'card', draft: current, returnTo: current.id })
           }
           onDeleteRecord={(id) => life.removeRecord(current.id, id)}
-          onStage={(id) => life.toggleStage(current.id, id)}
+          onStage={(stageId) =>
+            setPanel({
+              kind: 'stage',
+              id: current.id,
+              stageId,
+              returnTo: current.id,
+            })
+          }
           onArchive={() => setPanel({ kind: 'archive', id: current.id })}
           onRestore={() => {
             life.locate(current.id, 'active');
@@ -330,7 +360,6 @@ export default function DiaryApp({ preview = false }: { preview?: boolean }) {
               kind: 'card',
               draft: restartLifeCard(current),
               isNew: true,
-              prefilled: true,
               returnTo: current.id,
             });
           }}
@@ -355,6 +384,18 @@ export default function DiaryApp({ preview = false }: { preview?: boolean }) {
           ruled={state.settings.journalLines}
           onSave={(record, files) => life.saveRecord(current.id, record, files)}
           onClose={closePanel}
+        />
+      )}
+      {current && panel?.kind === 'stage' && (
+        <StageCompletion
+          key={current.id + panel.stageId}
+          card={current}
+          stageId={panel.stageId}
+          onClose={closePanel}
+          onSave={(done, emoji) => {
+            life.setStage(current.id, panel.stageId, done, emoji);
+            closePanel();
+          }}
         />
       )}
       {current && panel?.kind === 'status' && (

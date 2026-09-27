@@ -6,7 +6,7 @@
 - `components/diary/life-*.tsx` 实现卡片列表、配置、记录和详情；`Sheet` 统一底部面板。
 - `hooks/use-life-controller.ts` 处理创建、记录、排序、归档与恢复；`use-diary-state.ts` 处理加载、自动保存、跨日刷新和主题。
 - `lib/types.ts` 定义结构，`lib/life.ts` 放纯规则，`lib/db.ts` 负责 IndexedDB。
-- `lib/card-templates.ts` 提供预填模板与重开规则；从旧卡片新建、纪念册再开一期共用同一份规则，先预填确认，再保存。
+- `lib/card-templates.ts` 提供常用卡片默认项与重开规则；常用清单独立保存在本地并随备份导出，修改不联动已添加的生活卡。纪念册可再开一期。
 - `styles/shell.css` 保留外壳与设置，`styles/life.css` 负责生活卡片；表情、编辑器有独立样式。
 
 ## 数据模型
