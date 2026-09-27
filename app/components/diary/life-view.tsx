@@ -117,13 +117,15 @@ export function CompanionShelf({
                 <div>
                   <h2>{c.title}</h2>
                   {c.kind === 'countdown' && c.targetDate && (
-                    <p className="companion-count">
+                    <p
+                      className={`companion-count ${daysUntil(c.targetDate) === 0 ? 'is-today' : ''}`}
+                    >
                       {daysUntil(c.targetDate) > 0 ? (
                         <>
                           还有 <strong>{daysUntil(c.targetDate)}</strong> 天
                         </>
                       ) : daysUntil(c.targetDate) === 0 ? (
-                        '就是今天'
+                        <strong className="companion-today">就是今天✨</strong>
                       ) : (
                         <>
                           已经过去{' '}

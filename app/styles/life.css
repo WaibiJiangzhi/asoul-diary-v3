@@ -2137,6 +2137,9 @@ progress.life-progress::-moz-progress-bar {
   cursor: pointer;
   color: var(--theme-accent-deep);
 }
+.upcoming-dates[open] {
+  padding-bottom: 4px;
+}
 .upcoming-dates button {
   display: flex;
   justify-content: space-between;
@@ -2153,4 +2156,49 @@ progress.life-progress::-moz-progress-bar {
 
 .card-deadline[data-urgent='true'] {
   font-weight: 700;
+}
+.companion-count.is-today {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  margin-top: 8px;
+}
+.companion-count .companion-today {
+  display: inline-block;
+  padding: 3px 11px 4px;
+  border-radius: 12px;
+  background: color-mix(
+    in srgb,
+    var(--companion-accent, var(--theme-accent)) 16%,
+    transparent
+  );
+  color: color-mix(
+    in srgb,
+    var(--companion-accent, var(--theme-accent)) 55%,
+    var(--ink)
+  );
+  font-size: 23px;
+  font-weight: 750;
+  line-height: 1.45;
+  white-space: nowrap;
+}
+.companion-count.is-today small {
+  margin-left: 0;
+  font-size: 12px;
+}
+.has-wallpaper .memory-view .life-section-heading > span,
+.has-wallpaper .memory-time-controls label {
+  color: var(--ink);
+  font-weight: 550;
+  text-shadow:
+    -1px 0 1px rgb(255 255 255 / 95%),
+    1px 0 1px rgb(255 255 255 / 95%),
+    0 -1px 1px rgb(255 255 255 / 95%),
+    0 1px 1px rgb(255 255 255 / 95%),
+    0 0 5px white;
+}
+.has-wallpaper .memory-time-controls select {
+  text-shadow: none;
+  font-weight: 400;
 }
