@@ -266,14 +266,8 @@ function dataUrlToBlob(dataUrl: string) {
 }
 
 export async function createBackup(state: AppState): Promise<DiaryBackup> {
-  const database = await openDatabase();
-  const transaction = database.transaction('photos', 'readonly');
-  const photos = (await requestResult(
-    transaction.objectStore('photos').getAll(),
-  )) as StoredPhoto[];
-  database.close();
   const referenced = new Set(allPhotoIds(state));
-  const included = photos.filter((photo) => referenced.has(photo.id));
+  const included = await getPhotos([...referenced]);
   if (included.length !== referenced.size)
     throw new Error('有照片暂时无法读取，请稍后重新备份');
   return {

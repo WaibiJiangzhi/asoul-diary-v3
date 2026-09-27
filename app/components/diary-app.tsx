@@ -48,6 +48,9 @@ import { useDataController } from '@/hooks/use-data-controller';
 import { useDiaryState } from '@/hooks/use-diary-state';
 import { useLifeController } from '@/hooks/use-life-controller';
 import { useToast } from '@/hooks/use-toast';
+import { PreviewPhotosContext } from '@/hooks/use-photo-urls';
+import { DEMO_PHOTOS } from '@/lib/demo-photos';
+import { useBackupReminder } from '@/hooks/use-backup-reminder';
 import { formatShortDate } from '@/lib/date';
 import { createLifeCard, wallpaperAssetUrl } from '@/lib/defaults';
 import { getCommonCards, restartLifeCard } from '@/lib/card-templates';
@@ -86,6 +89,10 @@ export default function DiaryApp({ preview = false }: { preview?: boolean }) {
     flushSave,
     replaceData,
   } = useDiaryState(showToast, preview);
+  const backupReminder = useBackupReminder(
+    Boolean(state?.cards.some((card) => card.records.length > 0)),
+    preview,
+  );
   const [tab, setTab] = useState<AppTab>('life');
   const [panel, setPanel] = useState<Panel>(null);
   const [settings, setSettings] = useState(false);
@@ -182,7 +189,7 @@ export default function DiaryApp({ preview = false }: { preview?: boolean }) {
           '--selected-wallpaper': `url("${wallpaperAssetUrl(state.settings.wallpaper)}")`,
         } as CSSProperties)
       : undefined;
-  return (
+  const content = (
     <main
       className={`app-shell theme-${state.settings.accent} ${state.settings.theme === 'wallpaper' ? 'has-wallpaper' : ''}`}
       style={wallpaperStyle}
@@ -194,6 +201,18 @@ export default function DiaryApp({ preview = false }: { preview?: boolean }) {
           updateAvailable={Boolean(updates.waitingServiceWorker)}
           onOpenSettings={() => setSettings(true)}
         />
+        {backupReminder.visible && (
+          <div className="backup-reminder">
+            <span>清空浏览器数据前，记得存一份数据备份~</span>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={backupReminder.acknowledge}
+            >
+              知道啦
+            </Button>
+          </div>
+        )}
         {preview && (
           <div className="preview-note">
             <span>体验示例 · 修改不会保存</span>
@@ -525,5 +544,10 @@ export default function DiaryApp({ preview = false }: { preview?: boolean }) {
           document.body,
         )}
     </main>
+  );
+  return (
+    <PreviewPhotosContext value={preview ? DEMO_PHOTOS : null}>
+      {content}
+    </PreviewPhotosContext>
   );
 }

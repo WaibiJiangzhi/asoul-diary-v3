@@ -1,11 +1,11 @@
 {
   "product": "asoul-life-v3",
-  "exportedAt": "2026-09-27T08:35:29.583Z",
+  "exportedAt": "2026-09-27T09:26:14.236Z",
   "state": {
     "version": 1,
     "cards": [
       {
-        "id": "card-e6feddfe-a09e-48a4-8399-5b043c027d84",
+        "id": "card-ca545101-9b67-4bf0-8dfe-7d9a2981701c",
         "kind": "record",
         "title": "把作息慢慢调回来",
         "emoji": "[2026乃琳的酒馆动态表情包_赖床]",
@@ -17,25 +17,25 @@
         "updatedAt": "2026-09-26T12:00:00.000Z",
         "records": [
           {
-            "id": "record-4167e924-cac7-4c27-97c8-7429d1a622d5",
+            "id": "record-d0e013d3-5988-4622-8a46-4d4cde404a0d",
             "date": "2026-09-14",
-            "body": "睡前把手机放远了一点，早上醒来没有那么累。",
+            "body": "昨晚看直播晚了些，今天慢慢调整。",
             "photoIds": [],
             "createdAt": "2026-09-14T12:00:00.000Z",
             "updatedAt": "2026-09-14T12:00:00.000Z",
             "statusId": "late"
           },
           {
-            "id": "record-04c62a94-bff6-42fb-9e66-80a4faca8528",
+            "id": "record-bba58dcb-1421-4bd5-823c-ed60921d3bc5",
             "date": "2026-09-15",
-            "body": "昨晚看直播晚了些，今天慢慢调整。",
+            "body": "睡前把手机放远了一点，早上醒来没有那么累。",
             "photoIds": [],
             "createdAt": "2026-09-15T12:00:00.000Z",
             "updatedAt": "2026-09-15T12:00:00.000Z",
             "statusId": "early"
           },
           {
-            "id": "record-d9ade760-cb50-46fd-a70c-5c3422f23ef0",
+            "id": "record-8a37d57b-fc1d-42a8-868b-02cd89e7e9dd",
             "date": "2026-09-16",
             "body": "给自己做了早餐。 [2026乃琳的酒馆动态表情包_厨艺展示]",
             "photoIds": [],
@@ -44,34 +44,34 @@
             "statusId": "early"
           },
           {
-            "id": "record-ec985853-b768-477a-9f9f-f8359e75644b",
+            "id": "record-fd465cde-3e46-497e-afc5-4a63750e2aa1",
             "date": "2026-09-17",
-            "body": "今天给自己留了一点余地。",
+            "body": "睡前把手机放远了一点，早上醒来没有那么累。",
             "photoIds": [],
             "createdAt": "2026-09-17T12:00:00.000Z",
             "updatedAt": "2026-09-17T12:00:00.000Z",
             "statusId": "early"
           },
           {
-            "id": "record-1fca07b5-4b3e-4832-94cb-0f0a9aa5569a",
+            "id": "record-a141fa8e-8b41-4267-9383-a594e9203315",
             "date": "2026-09-18",
-            "body": "睡前把手机放远了一点，早上醒来没有那么累。",
+            "body": "昨晚看直播晚了些，今天慢慢调整。",
             "photoIds": [],
             "createdAt": "2026-09-18T12:00:00.000Z",
             "updatedAt": "2026-09-18T12:00:00.000Z",
             "statusId": "late"
           },
           {
-            "id": "record-ebb561fa-cc7d-4b77-bd9a-b2f03bb82911",
+            "id": "record-3d131ab4-295a-47c1-9871-c0a8375b314e",
             "date": "2026-09-19",
-            "body": "昨晚看直播晚了些，今天慢慢调整。",
+            "body": "今天给自己留了一点余地，好好休息。",
             "photoIds": [],
             "createdAt": "2026-09-19T12:00:00.000Z",
             "updatedAt": "2026-09-19T12:00:00.000Z",
             "statusId": "rest"
           },
           {
-            "id": "record-95226430-c268-4220-b873-5afeb2f2fa54",
+            "id": "record-6810da62-eeea-4f74-8e9d-a0d2b14301c5",
             "date": "2026-09-20",
             "body": "给自己做了早餐。 [2026乃琳的酒馆动态表情包_厨艺展示]",
             "photoIds": [],
@@ -80,54 +80,54 @@
             "statusId": "early"
           },
           {
-            "id": "record-178a7bf7-1674-406d-8f3a-b61b92dae61e",
+            "id": "record-88f27805-b3a8-419d-9464-fda538e870d3",
             "date": "2026-09-21",
-            "body": "今天给自己留了一点余地。",
+            "body": "睡前把手机放远了一点，早上醒来没有那么累。",
             "photoIds": [],
             "createdAt": "2026-09-21T12:00:00.000Z",
             "updatedAt": "2026-09-21T12:00:00.000Z",
             "statusId": "early"
           },
           {
-            "id": "record-f32285d2-9d85-4f74-ae16-9fa6be7b67c7",
+            "id": "record-3944ffd2-53dc-49ff-b375-216c86c68697",
             "date": "2026-09-22",
-            "body": "睡前把手机放远了一点，早上醒来没有那么累。",
+            "body": "昨晚看直播晚了些，今天慢慢调整。",
             "photoIds": [],
             "createdAt": "2026-09-22T12:00:00.000Z",
             "updatedAt": "2026-09-22T12:00:00.000Z",
             "statusId": "late"
           },
           {
-            "id": "record-4974e7e3-21f0-4b88-a7ab-6a0ffec8ab17",
+            "id": "record-aa908e23-c852-43ca-b9c4-daade74b6e01",
             "date": "2026-09-23",
-            "body": "昨晚看直播晚了些，今天慢慢调整。",
+            "body": "睡前把手机放远了一点，早上醒来没有那么累。",
             "photoIds": [],
             "createdAt": "2026-09-23T12:00:00.000Z",
             "updatedAt": "2026-09-23T12:00:00.000Z",
             "statusId": "early"
           },
           {
-            "id": "record-7d592ae6-19f3-405f-8212-eb0475ca0648",
+            "id": "record-790a800c-a6b0-41cf-9a75-ce934a7ad814",
             "date": "2026-09-24",
-            "body": "给自己做了早餐。 [2026乃琳的酒馆动态表情包_厨艺展示]",
+            "body": "今天给自己留了一点余地，好好休息。",
             "photoIds": [],
             "createdAt": "2026-09-24T12:00:00.000Z",
             "updatedAt": "2026-09-24T12:00:00.000Z",
             "statusId": "rest"
           },
           {
-            "id": "record-ae577c59-4359-4d86-8cec-873f2f293967",
+            "id": "record-4045f25b-1028-47b1-936d-fddf61b6a970",
             "date": "2026-09-25",
-            "body": "今天给自己留了一点余地。",
+            "body": "睡前把手机放远了一点，早上醒来没有那么累。",
             "photoIds": [],
             "createdAt": "2026-09-25T12:00:00.000Z",
             "updatedAt": "2026-09-25T12:00:00.000Z",
             "statusId": "early"
           },
           {
-            "id": "record-3bd0ed5a-e97d-4971-ad5b-ba96e2157066",
+            "id": "record-6240ac21-3a5f-4910-8ff6-042df8be1467",
             "date": "2026-09-26",
-            "body": "睡前把手机放远了一点，早上醒来没有那么累。",
+            "body": "昨晚看直播晚了些，今天慢慢调整。",
             "photoIds": [],
             "createdAt": "2026-09-26T12:00:00.000Z",
             "updatedAt": "2026-09-26T12:00:00.000Z",
@@ -161,7 +161,7 @@
         }
       },
       {
-        "id": "card-daf8c32f-2ba6-4ebf-b345-ad8b9aaffa5a",
+        "id": "card-c261e898-ee1a-4ce2-a4e8-174eef540a4b",
         "kind": "progress",
         "title": "秋天慢慢跑 100 km",
         "emoji": "🏃",
@@ -173,7 +173,7 @@
         "updatedAt": "2026-09-26T12:00:00.000Z",
         "records": [
           {
-            "id": "record-1c9cd4c0-bff1-41b4-a8da-31f8b5d101d2",
+            "id": "record-31770212-3bf9-4394-ae01-b388f3f9d41a",
             "date": "2026-09-07",
             "body": "前两公里有点喘，后面找到了舒服的节奏。",
             "photoIds": [],
@@ -182,7 +182,7 @@
             "delta": 5
           },
           {
-            "id": "record-b7a79e48-708d-4e27-ae65-c4bccff65903",
+            "id": "record-dc90f562-6e64-42cb-bef1-37ac9249a492",
             "date": "2026-09-08",
             "body": "跑完买了一瓶水，绕着河边走了一会儿。",
             "photoIds": [],
@@ -191,7 +191,7 @@
             "delta": 5
           },
           {
-            "id": "record-693f86ea-8dd1-41d1-b6d4-f275fdfc1429",
+            "id": "record-b5c4125f-1858-4a1f-953b-242299f053c6",
             "date": "2026-09-09",
             "body": "今天不追速度，能出门就很好。",
             "photoIds": [],
@@ -200,7 +200,7 @@
             "delta": 5
           },
           {
-            "id": "record-5b8dd24d-ac3b-4493-a398-3f62263fa1be",
+            "id": "record-b5304bf1-de87-4216-b6ea-dfafffa3c2e3",
             "date": "2026-09-10",
             "body": "河边的风很舒服。[2026乃琳的酒馆动态表情包_爱你]",
             "photoIds": [],
@@ -209,7 +209,7 @@
             "delta": 5
           },
           {
-            "id": "record-3160a941-ad72-4343-ab81-76389730424d",
+            "id": "record-8e47f81d-3ec8-4aeb-a390-2a2f891c95e6",
             "date": "2026-09-11",
             "body": "前两公里有点喘，后面找到了舒服的节奏。",
             "photoIds": [],
@@ -218,7 +218,7 @@
             "delta": 5
           },
           {
-            "id": "record-99935933-5d73-4221-a809-ee96b8740657",
+            "id": "record-bfe5c850-c024-4974-9ac8-356edaaa6e77",
             "date": "2026-09-12",
             "body": "跑完买了一瓶水，绕着河边走了一会儿。",
             "photoIds": [],
@@ -227,7 +227,7 @@
             "delta": 5
           },
           {
-            "id": "record-6c2b1444-cc18-4745-92fd-c8fb5faa8d8d",
+            "id": "record-c22f43e3-7f41-4f46-a671-6b3ed273db54",
             "date": "2026-09-13",
             "body": "今天不追速度，能出门就很好。",
             "photoIds": [],
@@ -236,7 +236,7 @@
             "delta": 5
           },
           {
-            "id": "record-4c19d0f6-5af3-4454-b312-018dbec651e7",
+            "id": "record-0e346048-6e23-4a2b-910a-79c8484b3767",
             "date": "2026-09-14",
             "body": "河边的风很舒服。[2026乃琳的酒馆动态表情包_爱你]",
             "photoIds": [],
@@ -245,7 +245,7 @@
             "delta": 5
           },
           {
-            "id": "record-40eeaa64-9b52-4cb8-b5ba-008997be979e",
+            "id": "record-7ae924b0-2824-41a0-8c96-4a0fd67dbd9f",
             "date": "2026-09-15",
             "body": "前两公里有点喘，后面找到了舒服的节奏。",
             "photoIds": [],
@@ -254,7 +254,7 @@
             "delta": 5
           },
           {
-            "id": "record-2574390c-0400-484e-a452-eb395aef1db7",
+            "id": "record-7f650585-b9c5-4ff3-80b8-412445cc0fec",
             "date": "2026-09-16",
             "body": "跑完买了一瓶水，绕着河边走了一会儿。",
             "photoIds": [],
@@ -263,7 +263,7 @@
             "delta": 5
           },
           {
-            "id": "record-247f354e-e537-42bb-988f-4dc9469903e1",
+            "id": "record-4f617c23-c12f-493e-8c28-70a93f08f754",
             "date": "2026-09-17",
             "body": "今天不追速度，能出门就很好。",
             "photoIds": [],
@@ -272,7 +272,7 @@
             "delta": 5
           },
           {
-            "id": "record-4d2894cf-cb11-4993-a74e-13f8090f611d",
+            "id": "record-ee39483b-bb73-48e3-a820-7cd177ba991c",
             "date": "2026-09-18",
             "body": "河边的风很舒服。[2026乃琳的酒馆动态表情包_爱你]",
             "photoIds": [],
@@ -281,7 +281,7 @@
             "delta": 5
           },
           {
-            "id": "record-71fa3073-b068-4dbf-b0da-f1b27302c616",
+            "id": "record-fdc411d2-a3f8-4b57-a87d-be95e1af7833",
             "date": "2026-09-19",
             "body": "前两公里有点喘，后面找到了舒服的节奏。",
             "photoIds": [],
@@ -290,7 +290,7 @@
             "delta": 5
           },
           {
-            "id": "record-d844e216-a1ca-43d4-899e-310d3d8a4ba9",
+            "id": "record-9b55738b-172a-465e-967b-7deb656e0ca7",
             "date": "2026-09-20",
             "body": "跑完买了一瓶水，绕着河边走了一会儿。",
             "photoIds": [],
@@ -299,7 +299,7 @@
             "delta": 5
           },
           {
-            "id": "record-3ee1d9ea-a4c9-4fba-b076-8e61483e662d",
+            "id": "record-103dbff2-e24e-4921-a6d3-5bee71474944",
             "date": "2026-09-21",
             "body": "今天不追速度，能出门就很好。",
             "photoIds": [],
@@ -308,7 +308,7 @@
             "delta": 5
           },
           {
-            "id": "record-80e47704-2ca3-4d42-9c20-ac9e4e0f6c61",
+            "id": "record-2e461c0a-1216-4774-b422-1d0c6883d31d",
             "date": "2026-09-26",
             "body": "最后一段慢慢走回来了。",
             "photoIds": [],
@@ -326,7 +326,7 @@
         }
       },
       {
-        "id": "card-b1249b68-2692-4ddb-999b-9e7ee7a88efa",
+        "id": "card-b7ad84c0-60b4-4991-8af1-38302eddf9ea",
         "kind": "stage",
         "title": "准备一次喜欢的旅行",
         "emoji": "🧳",
@@ -338,7 +338,7 @@
         "updatedAt": "2026-09-24T12:00:00.000Z",
         "records": [
           {
-            "id": "record-a3fc433a-6f9a-42b7-9827-74ce1ca9c95b",
+            "id": "record-375a8e89-895f-4155-a752-68afeb4299b7",
             "date": "2026-09-12",
             "body": "想去海边看看日出。",
             "photoIds": [],
@@ -349,7 +349,7 @@
             "stageEmoji": "[2026嘉然的画册动态表情包_捏捏]"
           },
           {
-            "id": "record-759db6ea-4dac-40a1-93d8-183ee1cf92a1",
+            "id": "record-4b2bac34-503c-477b-86be-eb1674e00251",
             "date": "2026-09-17",
             "body": "留够路费和住宿费，再给好吃的留一点预算。",
             "photoIds": [],
@@ -360,9 +360,9 @@
             "stageEmoji": "✨"
           },
           {
-            "id": "record-d1f5f840-5b56-4a52-a942-f49c2fc66167",
+            "id": "record-63019a21-c7ba-47c0-bc35-8f0cd83243ca",
             "date": "2026-09-24",
-            "body": "路线和住宿都安排好了，留一点时间随便逛逛。",
+            "body": "路线安排好了，住宿还在挑。也留一点时间随便逛逛。",
             "photoIds": [],
             "createdAt": "2026-09-24T12:00:00.000Z",
             "updatedAt": "2026-09-24T12:00:00.000Z",
@@ -396,10 +396,11 @@
             "id": "step-5",
             "title": "出发去看看"
           }
-        ]
+        ],
+        "expectedDate": "2026-09-28"
       },
       {
-        "id": "card-ca6746c8-4515-4d71-b84f-bb613a3ad17e",
+        "id": "card-53c93182-4f11-4904-935a-189e76cf2fd6",
         "kind": "blank",
         "title": "想把脑海里的画面画出来",
         "emoji": "🎨",
@@ -411,7 +412,7 @@
         "updatedAt": "2026-09-25T12:00:00.000Z",
         "records": [
           {
-            "id": "record-6c7fb082-2a86-45b6-9da1-6c6f0001feaa",
+            "id": "record-d78f8611-fd0c-4ec4-b39d-57977fcd6cb2",
             "date": "2026-09-20",
             "body": "先从桌上的杯子开始，线条歪歪的也没关系。",
             "photoIds": [],
@@ -419,7 +420,7 @@
             "updatedAt": "2026-09-20T12:00:00.000Z"
           },
           {
-            "id": "record-1f3fced4-ec93-4a7b-a4db-355c257f239a",
+            "id": "record-1dcdd04f-cb17-4bab-b937-64c8e6d47f71",
             "date": "2026-09-23",
             "body": "试了暖色阴影，发现自己很喜欢这个配色。\n下次想画一张小小的明信片。",
             "photoIds": [],
@@ -427,17 +428,20 @@
             "updatedAt": "2026-09-23T12:00:00.000Z"
           },
           {
-            "id": "record-5cc08a78-8791-4cd8-9d2e-fd2d01b9d7b5",
+            "id": "record-fc16e3ae-5d31-43e6-bc3f-c688cd5eb887",
             "date": "2026-09-25",
-            "body": "画了第一张人物速写，眼睛比上次自然一点。 [2026嘉然的画册动态表情包_捏捏]",
-            "photoIds": [],
+            "body": "杯子和海边明信片，都画完啦。线条还有点歪，但很喜欢。 [2026嘉然的画册动态表情包_捏捏]",
+            "photoIds": [
+              "demo-photo-sketch",
+              "demo-photo-coast"
+            ],
             "createdAt": "2026-09-25T12:00:00.000Z",
             "updatedAt": "2026-09-25T12:00:00.000Z"
           }
         ]
       },
       {
-        "id": "card-6897d4b6-a5fb-4fcd-9399-276624bff1bb",
+        "id": "card-c8f1c0f4-f26c-4fc1-b0f6-ad4d334a005d",
         "kind": "blank",
         "title": "去看一次团线下",
         "emoji": "[2026乃琳的酒馆动态表情包_蹦蹦跳跳]",
@@ -450,7 +454,7 @@
         "records": []
       },
       {
-        "id": "card-a242c1d6-5cac-4007-a4b4-8fdb590b0d24",
+        "id": "card-9364e7c6-bf37-49ff-8996-da4d582b8077",
         "kind": "progress",
         "title": "读完一本喜欢的书",
         "emoji": "📚",
@@ -462,7 +466,7 @@
         "updatedAt": "2026-09-19T04:00:00.000Z",
         "records": [
           {
-            "id": "record-4f7933f2-045b-4c99-a2d3-65f5fc8830d5",
+            "id": "record-994949d0-4cd1-4d20-b232-2d31d6c4a572",
             "date": "2026-08-14",
             "body": "睡前读了两章，记下了一句喜欢的话。",
             "photoIds": [],
@@ -471,7 +475,7 @@
             "delta": 30
           },
           {
-            "id": "record-91a39f60-d848-435a-aaae-79e74e3a770a",
+            "id": "record-e6a6ff7b-d414-422e-aa99-b1ca859d62be",
             "date": "2026-08-18",
             "body": "在咖啡店读了一会儿，故事开始有趣起来。",
             "photoIds": [],
@@ -480,7 +484,7 @@
             "delta": 30
           },
           {
-            "id": "record-a348b35e-eeec-4c50-a26e-faf70989daf3",
+            "id": "record-9e38366b-442d-456e-a583-b22c7db6f245",
             "date": "2026-08-22",
             "body": "睡前读了两章，记下了一句喜欢的话。",
             "photoIds": [],
@@ -489,7 +493,7 @@
             "delta": 30
           },
           {
-            "id": "record-8b22f4b6-f1ee-47ab-84d3-46b4f6133333",
+            "id": "record-8a9b0fe9-1cbc-4551-9eb8-2b827232de55",
             "date": "2026-08-26",
             "body": "在咖啡店读了一会儿，故事开始有趣起来。",
             "photoIds": [],
@@ -498,7 +502,7 @@
             "delta": 30
           },
           {
-            "id": "record-d248af19-f140-415c-b7a5-4c987eae49ca",
+            "id": "record-7d4fd5fc-47a2-41d4-bff8-571519445b74",
             "date": "2026-08-30",
             "body": "睡前读了两章，记下了一句喜欢的话。",
             "photoIds": [],
@@ -507,7 +511,7 @@
             "delta": 30
           },
           {
-            "id": "record-c0fcaebd-f257-4ecc-956c-3fc9c20c5ce5",
+            "id": "record-6c16c855-e42d-49c7-a1d9-0b4899e90884",
             "date": "2026-09-03",
             "body": "在咖啡店读了一会儿，故事开始有趣起来。",
             "photoIds": [],
@@ -516,7 +520,7 @@
             "delta": 30
           },
           {
-            "id": "record-57ab12a7-230c-4c31-82de-545b41bd233b",
+            "id": "record-c29cd93e-d478-482e-8793-371560c2dbb4",
             "date": "2026-09-07",
             "body": "睡前读了两章，记下了一句喜欢的话。",
             "photoIds": [],
@@ -525,7 +529,7 @@
             "delta": 30
           },
           {
-            "id": "record-261aae16-7a94-4d60-843c-d438b06323bb",
+            "id": "record-f9b2e9d9-a075-4bcc-8a7f-3a8ed531c861",
             "date": "2026-09-11",
             "body": "在咖啡店读了一会儿，故事开始有趣起来。",
             "photoIds": [],
@@ -534,7 +538,7 @@
             "delta": 30
           },
           {
-            "id": "record-d316f031-8a99-4f1d-999d-1f1e73eb438f",
+            "id": "record-c76dd502-b963-4036-b731-6572b2700f57",
             "date": "2026-09-15",
             "body": "睡前读了两章，记下了一句喜欢的话。",
             "photoIds": [],
@@ -543,10 +547,12 @@
             "delta": 30
           },
           {
-            "id": "record-d642d1a4-fad5-4247-9453-f60f9955f71d",
+            "id": "record-09ab5e52-adc0-4e1c-b3d7-83efcc24b244",
             "date": "2026-09-19",
             "body": "合上书的时候，有一点舍不得。",
-            "photoIds": [],
+            "photoIds": [
+              "demo-photo-reading"
+            ],
             "createdAt": "2026-09-19T12:00:00.000Z",
             "updatedAt": "2026-09-19T12:00:00.000Z",
             "delta": 30
@@ -563,7 +569,7 @@
         "summary": "原来每天留一点时间，就能看完一个很长的故事。"
       },
       {
-        "id": "card-93149ddc-a1ab-4f9a-b2d1-0b022cb80483",
+        "id": "card-f4931c53-3f51-428e-bf52-a38040403a2e",
         "kind": "blank",
         "title": "试着做一周手帐",
         "emoji": "📝",
@@ -575,7 +581,7 @@
         "updatedAt": "2026-07-16T04:00:00.000Z",
         "records": [
           {
-            "id": "record-38a40ce5-aabe-4f55-b897-52f55b58e2e3",
+            "id": "record-aea53f00-71c8-4a43-a05f-b0669c6d6ff7",
             "date": "2026-07-09",
             "body": "贴了一张小贴纸，写下今天的天气。",
             "photoIds": [],
@@ -583,7 +589,7 @@
             "updatedAt": "2026-07-09T12:00:00.000Z"
           },
           {
-            "id": "record-6d727475-fbb0-4162-a5bf-4c6076d2829f",
+            "id": "record-098c41c1-f29e-4c44-a415-92477fe7c3bc",
             "date": "2026-07-12",
             "body": "排版有点花时间，今天只想写一句：晚饭很好吃。",
             "photoIds": [],
@@ -591,7 +597,7 @@
             "updatedAt": "2026-07-12T12:00:00.000Z"
           },
           {
-            "id": "record-821ca4e8-d253-484c-8e4c-2a4bde7e02a5",
+            "id": "record-7e299ef2-e718-45bf-abff-fc7409a9a001",
             "date": "2026-07-16",
             "body": "不勉强自己做满一整本，这一周也值得留下。",
             "photoIds": [],
@@ -629,6 +635,15 @@
         "note": "把期待留给那个晴天。",
         "emoji": "⛰️",
         "targetDate": "2026-10-09"
+      },
+      {
+        "id": "demo-today",
+        "color": "#E799B0",
+        "kind": "countdown",
+        "title": "然糖之约 100 天",
+        "note": "把这份喜欢，好好留在今天。",
+        "emoji": "[2026嘉然的画册动态表情包_捏捏]",
+        "targetDate": "2026-09-27"
       }
     ],
     "settings": {
@@ -639,5 +654,24 @@
       "sounds": true
     }
   },
-  "photos": []
+  "photos": [
+    {
+      "id": "demo-photo-sketch",
+      "name": "杯子练习 · 示例插画",
+      "createdAt": "2026-09-27T09:26:14.239Z",
+      "dataUrl": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2NDAiIGhlaWdodD0iODAwIiB2aWV3Qm94PSIwIDAgNjQwIDgwMCI+CjxyZWN0IHdpZHRoPSI2NDAiIGhlaWdodD0iODAwIiBmaWxsPSIjZjlmMWU4Ii8+PHJlY3QgeD0iNDQiIHk9IjQ0IiB3aWR0aD0iNTUyIiBoZWlnaHQ9IjcxMiIgcng9IjgiIGZpbGw9IiNmZmZhZjIiLz4KPHBhdGggZD0iTTExMCA1ODNRMzIwIDU1MiA1MTYgNTgzIiBmaWxsPSJub25lIiBzdHJva2U9IiNlM2M2YjYiIHN0cm9rZS13aWR0aD0iMyIvPgo8ZWxsaXBzZSBjeD0iMzA0IiBjeT0iNTU2IiByeD0iMTYxIiByeT0iMzAiIGZpbGw9IiNlZmUwZDgiLz4KPGcgc3Ryb2tlPSIjOTI3ODY5IiBzdHJva2Utd2lkdGg9IjUiIGZpbGw9Im5vbmUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+CjxwYXRoIGQ9Ik0xOTkgMzIyTDIxNSA1MTBRMzA0IDU2NyAzOTMgNTEwTDQwOCAzMjIiLz48ZWxsaXBzZSBjeD0iMzA0IiBjeT0iMzIyIiByeD0iMTA1IiByeT0iMzQiLz4KPHBhdGggZD0iTTQwNSAzNDVDNTMyIDMyMiA1MjYgNDkxIDM5OCA0NzdNNDA2IDM2OEM0OTEgMzUxIDQ4NiA0NjQgNDAxIDQ1MiIvPgo8cGF0aCBkPSJNMjc0IDI2NEMyNDYgMjIzIDMxMCAyMTAgMjgwIDE2NU0zMzAgMjczQzMwMyAyMzggMzY1IDIxNiAzMzcgMTc2IiBzdHJva2U9IiNkYmMyYjMiLz4KPHBhdGggZD0iTTIzNiAzNzhMMjQ3IDQ4OU0yNTQgNDAxTDI2MiA0ODVNMzYwIDM4M0wzNTIgNDg3IiBzdHJva2U9IiNjMGE1OTMiIHN0cm9rZS13aWR0aD0iMyIvPgo8L2c+PHBhdGggZD0iTTQ1NCA2MDRMNDkyIDU2NUw1MTEgNTg0TDQ3MyA2MjNaIiBmaWxsPSIjZTVhMGFjIi8+PHBhdGggZD0iTTQ1NCA2MDRMNDQ1IDYzM0w0NzMgNjIzWiIgZmlsbD0iI2Q3YjU4YiIvPgo8Y2lyY2xlIGN4PSIxMDAiIGN5PSIxMDIiIHI9IjEwIiBmaWxsPSIjZTliNmM0Ii8+PHBhdGggZD0iTTEyNiAxMDNIMjIwIiBzdHJva2U9IiNkY2M2YmQiIHN0cm9rZS13aWR0aD0iNCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+Cjwvc3ZnPgo="
+    },
+    {
+      "id": "demo-photo-coast",
+      "name": "海边明信片 · 示例插画",
+      "createdAt": "2026-09-27T09:26:14.239Z",
+      "dataUrl": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI5MDAiIGhlaWdodD0iNjAwIiB2aWV3Qm94PSIwIDAgOTAwIDYwMCI+CjxkZWZzPjxsaW5lYXJHcmFkaWVudCBpZD0ic2t5IiB4Mj0iMCIgeTI9IjEiPjxzdG9wIHN0b3AtY29sb3I9IiNlYWQ4ZTciLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiNmZmVhZDciLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz4KPHJlY3Qgd2lkdGg9IjkwMCIgaGVpZ2h0PSI2MDAiIGZpbGw9IiNmZmY3ZWQiLz48cmVjdCB4PSIzMCIgeT0iMzAiIHdpZHRoPSI4NDAiIGhlaWdodD0iNTEwIiByeD0iNiIgZmlsbD0idXJsKCNza3kpIi8+CjxjaXJjbGUgY3g9IjYyNSIgY3k9IjIxOCIgcj0iNTgiIGZpbGw9IiNmZmY1ZDAiLz48cGF0aCBkPSJNMzAgMzA0UTI0MiAyOTMgNDUwIDMwOFQ4NzAgMjk3VjU0MEgzMFoiIGZpbGw9IiM4NmI2YjQiLz4KPHBhdGggZD0iTTMwIDM3MFEyNzQgMzU1IDQ4MCAzODFUODcwIDM2NlY1NDBIMzBaIiBmaWxsPSIjNjU5YjllIi8+CjxwYXRoIGQ9Ik0zMCA0ODJRMjAyIDM4OSA0MjEgNDQ4VDg3MCA0NTBWNTQwSDMwWiIgZmlsbD0iI2YwZDViOCIvPgo8ZyBzdHJva2U9IiNkM2U2ZDkiIHN0cm9rZS13aWR0aD0iNCIgZmlsbD0ibm9uZSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIj48cGF0aCBkPSJNNDYwIDMzMUg3NDVNNTA1IDM0Nkg2OTJNOTUgNDAxSDI3OU02NTIgNDA5SDc5NyIvPjwvZz4KPHBhdGggZD0iTTEzMiAxOTBRMTQ1IDE3NiAxNTggMTkwUTE3MSAxNzYgMTg0IDE5ME0yMzkgMTY3UTI0OSAxNTcgMjU5IDE2N1EyNjkgMTU3IDI3OSAxNjciIHN0cm9rZT0iIzdiN2Q4YyIgc3Ryb2tlLXdpZHRoPSIzIiBmaWxsPSJub25lIi8+CjxwYXRoIGQ9Ik05MyA1NjhIMjcxIiBzdHJva2U9IiNkY2JjYWUiIHN0cm9rZS13aWR0aD0iNCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PGNpcmNsZSBjeD0iODEyIiBjeT0iNTY4IiByPSI3IiBmaWxsPSIjZTRhMWFkIi8+Cjwvc3ZnPgo="
+    },
+    {
+      "id": "demo-photo-reading",
+      "name": "阅读时光 · 示例插画",
+      "createdAt": "2026-09-27T09:26:14.239Z",
+      "dataUrl": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2NDAiIGhlaWdodD0iNjQwIiB2aWV3Qm94PSIwIDAgNjQwIDY0MCI+CjxyZWN0IHdpZHRoPSI2NDAiIGhlaWdodD0iNjQwIiBmaWxsPSIjZWNlOWUwIi8+PHBhdGggZD0iTTAgNDUwTDY0MCAxODVWNjQwSDBaIiBmaWxsPSIjZjZkY2NjIi8+CjxlbGxpcHNlIGN4PSIzMDMiIGN5PSI0NDkiIHJ4PSIyMjUiIHJ5PSI2MCIgZmlsbD0iI2RlYzhiYSIvPgo8cGF0aCBkPSJNODMgMjIyUTE4OCAxOTIgMzE1IDI1MFE0MzYgMTg2IDU1NyAyMjJMNTMxIDQ1MFE0MTggNDE4IDMxNSA0NzdRMjAwIDQyMiAxMDkgNDUzWiIgZmlsbD0iI2I0N2Y4OSIvPgo8cGF0aCBkPSJNOTYgMjEyUTE5OSAxODYgMzE1IDI0M0wzMTUgNDYwUTIwOCA0MDYgMTE1IDQzOFoiIGZpbGw9IiNmZmY2ZTYiLz4KPHBhdGggZD0iTTMxNSAyNDNRNDMyIDE4OCA1NDQgMjEyTDUyNSA0MzhRNDIyIDQwNSAzMTUgNDYwWiIgZmlsbD0iI2ZmZmJlZiIvPgo8ZyBmaWxsPSJub25lIiBzdHJva2U9IiNkNGMxYWUiIHN0cm9rZS13aWR0aD0iNCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIj48cGF0aCBkPSJNMTM5IDI2M1EyMTcgMjUwIDI3NCAyODBNMTQ1IDI5NFEyMjAgMjgyIDI3OCAzMTJNMTUxIDMyNlEyMTggMzE1IDI3NiAzNDRNMzYxIDI4MVE0MzcgMjQ3IDUwMiAyNjBNMzYwIDMxM1E0MzQgMjgxIDQ5OCAyOTFNMzU5IDM0NVE0MzEgMzE1IDQ5MyAzMjMiLz48L2c+CjxwYXRoIGQ9Ik00MzkgMjE4TDQ0NiAzNzFMNDY5IDM1NEw0OTAgMzY2TDQ4MCAyMTBaIiBmaWxsPSIjZTdhMmFlIi8+CjxwYXRoIGQ9Ik05OSAxNTZRMTI4IDExNCAxNDUgNjVNMTEzIDEyOVE4NyA5MyA2NSAxMDZRNzggMTM2IDExMyAxMjlNMTMyIDk4UTE0OCA1NiAxNzkgNTdRMTc2IDg4IDEzMiA5OCIgZmlsbD0iIzk4YWM4ZCIgc3Ryb2tlPSIjODE5YjdlIiBzdHJva2Utd2lkdGg9IjMiLz4KPC9zdmc+Cg=="
+    }
+  ]
 }

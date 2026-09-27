@@ -15,32 +15,9 @@ export function moveDate(value: string, days: number) {
   return dateKey(date);
 }
 
-export function formatFullDate(value: string) {
-  return new Intl.DateTimeFormat('zh-CN', {
-    month: 'long',
-    day: 'numeric',
-    weekday: 'long',
-  }).format(fromDateKey(value));
-}
-
 export function formatShortDate(value: string) {
   return new Intl.DateTimeFormat('zh-CN', {
     month: 'short',
     day: 'numeric',
   }).format(fromDateKey(value));
-}
-
-export function daysUntil(value: string) {
-  const target = fromDateKey(value).getTime();
-  const today = fromDateKey(dateKey()).getTime();
-  return Math.ceil((target - today) / 86_400_000);
-}
-
-export function formatMoment(value: string) {
-  return new Intl.DateTimeFormat('zh-CN', {
-    month: 'numeric',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(new Date(value));
 }

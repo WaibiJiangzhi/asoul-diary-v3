@@ -69,7 +69,6 @@
   --paper: #fffdf8;
   --ink: #3f3945;
   --soft-ink: #7f7782;
-  --rule: rgb(87 102 144 / 6%);
   --serif: 'Songti SC', 'STSong', 'Noto Serif CJK SC', serif;
   --sans:
     'PingFang SC', 'Microsoft YaHei', 'Noto Sans CJK SC', system-ui, sans-serif;
@@ -90,7 +89,6 @@
   --paper: #fffaf9;
   --ink: #443943;
   --soft-ink: #84747e;
-  --rule: rgb(231 153 176 / 7%);
 }
 
 :root[data-accent='nailin'] {
@@ -108,7 +106,6 @@
   --paper: #fbfbff;
   --ink: #373b49;
   --soft-ink: #74798a;
-  --rule: rgb(87 102 144 / 8%);
 }
 
 @layer base {

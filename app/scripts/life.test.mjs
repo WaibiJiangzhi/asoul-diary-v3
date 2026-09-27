@@ -4,7 +4,7 @@ import { build } from 'esbuild';
 const { outputFiles } = await build({
   stdin: {
     contents:
-      "export * from './lib/life'; export * from './lib/defaults'; export * from './lib/backup-validation'; export * from './lib/card-templates';",
+      "export * from './lib/life'; export * from './lib/defaults'; export * from './lib/backup-validation'; export * from './lib/card-templates'; export * from './lib/card-edit'; export * from './lib/backup-reminder'; export * from './lib/demo-photos';",
     resolveDir: process.cwd(),
   },
   bundle: true,
@@ -339,4 +339,84 @@ await test('deadlines respect card type and countdown priority uses today before
   validateState(state);
   stage.expectedDate = '2026-13-42';
   assert.throws(() => validateState(state));
+});
+
+await test('editing after a recording deadline preserves later entries and uses the latest records', () => {
+  const original = card('record');
+  original.record.periodDays = 3;
+  const draft = structuredClone(original);
+  const updated = save(original, entry({ statusId: 'done' }));
+  const state = { ...createDefaultState(), cards: [updated] };
+  const next = lib.saveCardDraft(state, { ...draft, title: ' 新的标题 ' });
+  assert.equal(next.cards[0].title, '新的标题');
+  assert.deepEqual(next.cards[0].records, updated.records);
+  assert.equal(lib.recordEnd(next.cards[0]), '2026-09-03');
+  assert.throws(
+    () => lib.saveCardDraft(state, { ...draft, startDate: '2026-09-28' }),
+    /开始日期/,
+  );
+});
+await test('photo limits reject overflow before a record can corrupt saved state', () => {
+  assert.throws(
+    () =>
+      save(
+        card('blank'),
+        entry({ photoIds: Array.from({ length: 10 }, (_, i) => 'photo-' + i) }),
+      ),
+    /9/,
+  );
+  assert.throws(
+    () => save(card('blank'), entry({ photoIds: ['same', 'same'] })),
+    /不同/,
+  );
+  assert.equal(
+    save(card('blank'), entry({ photoIds: ['a', 'b'] })).records[0].photoIds
+      .length,
+    2,
+  );
+});
+await test('same-millisecond stage changes use the last action without reordering records', () => {
+  const c = card('stage');
+  const stageId = c.stages[0].id;
+  const timestamp = '2026-09-27T08:00:00Z';
+  c.records = [
+    entry({ stageId, stageDone: true, createdAt: timestamp }),
+    entry({ stageId, stageDone: false, createdAt: timestamp }),
+  ];
+  const before = structuredClone(c);
+  assert.equal(stageComplete(c, stageId), false);
+  assert.deepEqual(c, before);
+  assert.equal(lib.lastRecord(c).id, c.records[0].id);
+});
+await test('monthly reminder respects 30 days and session dismissal when persistent writes fail', () => {
+  const now = Date.parse('2026-09-27T12:00:00Z');
+  const since = now - lib.BACKUP_REMINDER_INTERVAL;
+  assert.equal(lib.backupReminderDue(since, now - 1), false);
+  assert.equal(lib.backupReminderDue(since, now), true);
+  const dismissed = lib.backupReminderSince(since, now, now + 60000);
+  assert.equal(dismissed, now);
+  assert.equal(lib.backupReminderDue(dismissed, now + 60000), false);
+  assert.equal(lib.backupReminderSince(NaN, null, now), now);
+  assert.equal(lib.backupReminderSince(now + 1000, null, now), now);
+  assert.equal(lib.backupReminderSince(now, since, now), now);
+});
+await test('example dates remain relative, contain today/tomorrow/future and resolve every illustration', () => {
+  const demo = createDemoState('2027-01-01');
+  validateState(demo);
+  assert.equal(demo.cards.filter((c) => c.location === 'active').length, 4);
+  assert.equal(
+    lib.priorityCompanions(demo.companions, '2027-01-01')[0].targetDate,
+    '2027-01-01',
+  );
+  assert.ok(demo.cards.some((c) => lib.cardDeadline(c) === '2027-01-02'));
+  assert.ok(demo.companions.some((c) => c.targetDate === '2027-01-13'));
+  const photoIds = lib.allPhotoIds(demo);
+  assert.ok(photoIds.length >= 3);
+  assert.ok(photoIds.every((id) => lib.DEMO_PHOTOS.some((p) => p.id === id)));
+  assert.equal(
+    progressValue(
+      demo.cards.find((c) => c.kind === 'progress' && c.location === 'active'),
+    ),
+    77.5,
+  );
 });

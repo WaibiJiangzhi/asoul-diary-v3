@@ -16,7 +16,7 @@ import { Decoration } from './decoration';
 import { DecorationPicker } from './sticker-picker';
 import { Sheet } from './life-form';
 import { CARD_COLORS } from './constants';
-import { usePhotoUrls } from './life-record';
+import { usePhotoUrls } from '@/hooks/use-photo-urls';
 import Image from 'next/image';
 import { ProgressSummary, RecordText } from './life-detail';
 import {
@@ -39,47 +39,63 @@ import {
   progressValue,
   statusRecord,
 } from '@/lib/life';
-import { dateKey, daysUntil, formatShortDate } from '@/lib/date';
+import { dateKey, formatShortDate } from '@/lib/date';
 import type { CompanionCard, LifeCard } from '@/lib/types';
 export function CompanionShelf({
   cards,
   onEdit,
   today,
-  selectedId,
+  selection,
 }: {
   today: string;
-  selectedId?: string;
+  selection?: { id: string };
   cards: CompanionCard[];
   onEdit: () => void;
 }) {
   const rail = useRef<HTMLDivElement>(null);
-  const initialized = useRef(false);
+  const initializedDay = useRef<string | null>(null);
   const lastIndex = useRef(0);
   const [index, setIndex] = useState(0);
   const ids = cards.map((c) => c.id).join('|');
   useEffect(() => {
     const node = rail.current;
     if (!node || !cards.length) return;
-    const next = initialized.current
-      ? Math.min(lastIndex.current, cards.length - 1)
-      : cards.indexOf(
-          priorityCompanions(cards, today)[
-            Math.floor(Math.random() * priorityCompanions(cards, today).length)
-          ],
-        );
-    initialized.current = true;
+    const priority = priorityCompanions(cards, today);
+    const next =
+      initializedDay.current === today
+        ? Math.min(lastIndex.current, cards.length - 1)
+        : cards.indexOf(priority[Math.floor(Math.random() * priority.length)]);
+    initializedDay.current = today;
+    lastIndex.current = next;
     node.scrollTo({ left: next * node.clientWidth, behavior: 'instant' });
     setIndex(next);
-  }, [ids, cards, today]); // Keep the chosen card until a fresh app session.
+  }, [ids, cards, today]); // Keep the choice during the day; reconsider priority after midnight.
   useEffect(() => {
-    const i = cards.findIndex((c) => c.id === selectedId);
+    const i = cards.findIndex((c) => c.id === selection?.id);
+    if (!selection) return;
     if (i >= 0 && rail.current) {
       rail.current.scrollTo({
         left: i * rail.current.clientWidth,
         behavior: 'smooth',
       });
     }
-  }, [selectedId, cards]);
+    rail.current
+      ?.closest('.companion-section')
+      ?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }, [selection, cards]);
+  useEffect(() => {
+    const node = rail.current;
+    if (!node) return;
+    const observer = new ResizeObserver(() => {
+      if (node.clientWidth)
+        node.scrollTo({
+          left: lastIndex.current * node.clientWidth,
+          behavior: 'instant',
+        });
+    });
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
   function move(i: number) {
     const node = rail.current;
     if (node)
@@ -118,18 +134,24 @@ export function CompanionShelf({
                   <h2>{c.title}</h2>
                   {c.kind === 'countdown' && c.targetDate && (
                     <p
-                      className={`companion-count ${daysUntil(c.targetDate) === 0 ? 'is-today' : ''}`}
+                      className={`companion-count ${deadlineDistance(c.targetDate, today) === 0 ? 'is-today' : ''}`}
                     >
-                      {daysUntil(c.targetDate) > 0 ? (
+                      {deadlineDistance(c.targetDate, today) > 0 ? (
                         <>
-                          还有 <strong>{daysUntil(c.targetDate)}</strong> 天
+                          还有{' '}
+                          <strong>
+                            {deadlineDistance(c.targetDate, today)}
+                          </strong>{' '}
+                          天
                         </>
-                      ) : daysUntil(c.targetDate) === 0 ? (
+                      ) : deadlineDistance(c.targetDate, today) === 0 ? (
                         <strong className="companion-today">就是今天✨</strong>
                       ) : (
                         <>
                           已经过去{' '}
-                          <strong>{Math.abs(daysUntil(c.targetDate))}</strong>{' '}
+                          <strong>
+                            {Math.abs(deadlineDistance(c.targetDate, today))}
+                          </strong>{' '}
                           天
                         </>
                       )}
@@ -152,17 +174,23 @@ export function CompanionShelf({
               </button>
             )}
             <div>
-              {cards.map((c, i) => (
-                <button
-                  type="button"
-                  key={c.id}
-                  aria-label={'查看陪伴卡 ' + (i + 1)}
-                  aria-current={index === i}
-                  onClick={() => move(i)}
-                >
-                  <i />
-                </button>
-              ))}
+              {cards.length > 5 ? (
+                <span className="companion-page" aria-live="polite">
+                  {index + 1} / {cards.length}
+                </span>
+              ) : (
+                cards.map((c, i) => (
+                  <button
+                    type="button"
+                    key={c.id}
+                    aria-label={'查看陪伴卡 ' + (i + 1)}
+                    aria-current={index === i}
+                    onClick={() => move(i)}
+                  >
+                    <i />
+                  </button>
+                ))
+              )}
             </div>
             {cards.length > 1 && (
               <button
@@ -410,7 +438,7 @@ export function LifeView({
   onCompanions: () => void;
 }) {
   const [sorting, setSorting] = useState(false);
-  const [selectedCompanion, setSelectedCompanion] = useState<string>();
+  const [selectedCompanion, setSelectedCompanion] = useState<{ id: string }>();
   const upcoming = [
     ...companions
       .filter((c) => c.kind === 'countdown' && c.targetDate)
@@ -455,7 +483,7 @@ export function LifeView({
         cards={companions}
         onEdit={onCompanions}
         today={today}
-        selectedId={selectedCompanion}
+        selection={selectedCompanion}
       />
       {!!upcoming.length && (
         <details className="upcoming-dates" key={today}>
@@ -469,7 +497,7 @@ export function LifeView({
               type="button"
               key={c.id}
               onClick={() =>
-                c.companion ? setSelectedCompanion(c.id) : onOpen(c.id)
+                c.companion ? setSelectedCompanion({ id: c.id }) : onOpen(c.id)
               }
             >
               <span>{c.title}</span>
@@ -659,7 +687,11 @@ export function MemoryView({
                 {c.ending === 'achieved' ? '愿望实现了' : '这一段，先收好了'}
               </small>
               <strong>{c.title}</strong>
-              <span>{c.summary || c.note || '把这一段经历，好好留下。'}</span>
+              <span>
+                <RecordText
+                  text={c.summary || c.note || '把这一段经历，好好留下。'}
+                />
+              </span>
               <small>
                 {formatShortDate(c.startDate)} —{' '}
                 {formatShortDate(

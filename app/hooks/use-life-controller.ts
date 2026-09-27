@@ -17,6 +17,7 @@ import {
 } from '@/lib/life';
 import { dataGeneration, deletePhotos, storePhotos } from '@/lib/db';
 import { validateState } from '@/lib/backup-validation';
+import { saveCardDraft } from '@/lib/card-edit';
 import type { AppState, LifeCard, LifeRecord } from '@/lib/types';
 import type { Confirmation } from '@/components/diary/confirm-dialog';
 import type { ShowToast } from './use-toast';
@@ -71,29 +72,7 @@ export function useLifeController({
     const state = stateRef.current;
     if (!state) return;
     const before = state.cards.find((c) => c.id === draft.id);
-    const card = {
-      ...draft,
-      title: draft.title.trim(),
-      note: draft.note.trim(),
-      records: before?.records ?? draft.records,
-      updatedAt: new Date().toISOString(),
-    };
-    if (card.records.some((r) => r.date < card.startDate))
-      throw new Error('开始日期需要包含已有记录');
-    if (card.record?.periodDays) {
-      const end = new Date(card.startDate + 'T12:00:00');
-      end.setDate(end.getDate() + card.record.periodDays - 1);
-      if (card.records.some((r) => r.statusId && r.date > dateKey(end)))
-        throw new Error('记录周期需要包含已记录的日子');
-    }
-    const next = {
-      ...state,
-      cards: before
-        ? state.cards.map((c) => (c.id === card.id ? card : c))
-        : [...state.cards, card],
-    };
-    validateState(next);
-    setState(next);
+    setState(saveCardDraft(state, draft));
     showToast(before ? '卡片已更新' : '新的一段生活，开始了');
   }
   async function saveRecord(
@@ -104,6 +83,8 @@ export function useLifeController({
     const generation = dataGeneration();
     const before = stateRef.current?.cards.find((c) => c.id === cardId);
     if (!before) throw new Error('这张卡片已经不存在了');
+    if (record.photoIds.length + files.length > 9)
+      throw new Error('每条记录最多放 9 张照片');
     saveLifeRecord(before, record);
     if (preview && files.length)
       throw new Error('示例页不保存照片，请返回生活页添加');

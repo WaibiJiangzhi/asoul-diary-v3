@@ -28,6 +28,8 @@
     "out/**",
     "build/**",
     "dist/**",
+    "outputs/**",
+    "work/**",
     "coverage/**",
     "components/ui/**",
     "hooks/**",

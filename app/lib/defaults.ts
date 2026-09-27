@@ -141,9 +141,8 @@ export function createLifeCard(kind: CardKind = 'blank'): LifeCard {
       : {}),
   };
 }
-export function createDemoState(): AppState {
+export function createDemoState(today = dateKey()): AppState {
   const state = createDefaultState();
-  const today = dateKey();
   const now = new Date().toISOString();
   const record = (offset: number, body: string, extras: object = {}) => ({
     id: createId('record'),
@@ -176,20 +175,20 @@ export function createDemoState(): AppState {
     targetStateId: 'early',
     targetDays: 20,
   };
-  sleep.records = Array.from({ length: 13 }, (_, i) =>
-    record(
+  sleep.records = Array.from({ length: 13 }, (_, i) => {
+    const statusId = i % 4 === 0 ? 'late' : i % 5 === 0 ? 'rest' : 'early';
+    return record(
       i - 13,
-      [
-        '睡前把手机放远了一点，早上醒来没有那么累。',
-        '昨晚看直播晚了些，今天慢慢调整。',
-        '给自己做了早餐。 [2026乃琳的酒馆动态表情包_厨艺展示]',
-        '今天给自己留了一点余地。',
-      ][i % 4],
-      {
-        statusId: i % 4 === 0 ? 'late' : i % 5 === 0 ? 'rest' : 'early',
-      },
-    ),
-  );
+      statusId === 'late'
+        ? '昨晚看直播晚了些，今天慢慢调整。'
+        : statusId === 'rest'
+          ? '今天给自己留了一点余地，好好休息。'
+          : i % 2
+            ? '睡前把手机放远了一点，早上醒来没有那么累。'
+            : '给自己做了早餐。 [2026乃琳的酒馆动态表情包_厨艺展示]',
+      { statusId },
+    );
+  });
   const run = {
     ...createLifeCard('progress'),
     title: '秋天慢慢跑 100 km',
@@ -225,6 +224,7 @@ export function createDemoState(): AppState {
     note: '给自己留一段看看世界的时间。',
     color: '#8B78A8' as CardColor,
     startDate: moveDate(today, -19),
+    expectedDate: moveDate(today, 1),
     stages: [
       '选好目的地',
       '留出预算',
@@ -245,7 +245,7 @@ export function createDemoState(): AppState {
       stageDone: true,
       stageEmoji: '✨',
     }),
-    record(-3, '路线和住宿都安排好了，留一点时间随便逛逛。', {
+    record(-3, '路线安排好了，住宿还在挑。也留一点时间随便逛逛。', {
       stageId: 'step-2',
       stageDone: true,
       stageEmoji: '[2026贝拉的冒险动态表情包_恰！]',
@@ -265,7 +265,8 @@ export function createDemoState(): AppState {
       ),
       record(
         -2,
-        '画了第一张人物速写，眼睛比上次自然一点。 [2026嘉然的画册动态表情包_捏捏]',
+        '杯子和海边明信片，都画完啦。线条还有点歪，但很喜欢。 [2026嘉然的画册动态表情包_捏捏]',
+        { photoIds: ['demo-photo-sketch', 'demo-photo-coast'] },
       ),
     ],
   };
@@ -296,7 +297,7 @@ export function createDemoState(): AppState {
               '睡前读了两章，记下了一句喜欢的话。',
               '在咖啡店读了一会儿，故事开始有趣起来。',
             ][i % 2],
-        { delta: 30 },
+        { delta: 30, ...(i === 9 ? { photoIds: ['demo-photo-reading'] } : {}) },
       ),
     ),
   };
@@ -335,6 +336,15 @@ export function createDemoState(): AppState {
     note: '把期待留给那个晴天。',
     emoji: '⛰️',
     targetDate: moveDate(today, 12),
+  });
+  state.companions.push({
+    id: 'demo-today',
+    color: '#E799B0',
+    kind: 'countdown',
+    title: '然糖之约 100 天',
+    note: '把这份喜欢，好好留在今天。',
+    emoji: '[2026嘉然的画册动态表情包_捏捏]',
+    targetDate: today,
   });
   state.settings.theme = 'wallpaper';
   return state;

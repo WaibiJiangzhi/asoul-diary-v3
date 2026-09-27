@@ -138,6 +138,13 @@
   justify-content: center;
   align-items: center;
 }
+.companion-page {
+  min-width: 64px;
+  text-align: center;
+  color: var(--soft-ink);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
 .companion-navigation button {
   display: grid;
   place-items: center;
@@ -768,6 +775,10 @@
   height: 65px;
   font-size: 32px;
   flex-shrink: 0;
+}
+.life-memory-card .record-text .inline-sticker {
+  width: 1.65em;
+  height: 1.65em;
 }
 .memory-card-emoji img {
   width: 100%;
@@ -2201,4 +2212,26 @@ progress.life-progress::-moz-progress-bar {
 .has-wallpaper .memory-time-controls select {
   text-shadow: none;
   font-weight: 400;
+}
+.backup-reminder {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+  padding: 8px 12px;
+  border: 1px solid var(--theme-border);
+  border-radius: 16px;
+  background: var(--theme-surface);
+  color: var(--ink);
+  font-size: 12px;
+  line-height: 1.7;
+}
+.backup-reminder span {
+  flex: 1;
+  min-width: 0;
+}
+.backup-reminder button {
+  flex-shrink: 0;
+  min-height: 44px;
+  color: var(--theme-accent-deep);
 }

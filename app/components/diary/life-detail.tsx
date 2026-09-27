@@ -27,7 +27,6 @@ import {
   stageComplete,
   stageEmoji,
   stageRecord,
-  statusRecord,
 } from '@/lib/life';
 import { splitStickerText } from '@/lib/stickers';
 import { useRingReveal } from '@/hooks/use-ring-reveal';
@@ -108,12 +107,15 @@ export function RecordRing({ card }: { card: LifeCard }) {
   const days = elapsedDays(start, end);
   const dates = Array.from({ length: days }, (_, i) => moveDate(start, i));
   const states = card.record?.states ?? [];
+  const statusByDate = new Map(
+    card.records.filter((r) => r.statusId).map((r) => [r.date, r.statusId]),
+  );
   const counts = states.map((s) => ({
     ...s,
-    count: dates.filter((d) => statusRecord(card, d)?.statusId === s.id).length,
+    count: dates.filter((d) => statusByDate.get(d) === s.id).length,
   }));
   const pending = dates.filter(
-    (d) => d <= today && !statusRecord(card, d),
+    (d) => d <= today && !statusByDate.has(d),
   ).length;
   const future = dates.filter((d) => d > today).length;
   let offset = 0;
@@ -121,8 +123,8 @@ export function RecordRing({ card }: { card: LifeCard }) {
     view === 'date'
       ? dates.map((d) => ({
           color:
-            states.find((s) => s.id === statusRecord(card, d)?.statusId)
-              ?.color ?? (d > today ? '#f4eff1' : '#c8bdc8'),
+            states.find((s) => s.id === statusByDate.get(d))?.color ??
+            (d > today ? '#f4eff1' : '#c8bdc8'),
           count: 1,
         }))
       : [
@@ -244,6 +246,10 @@ export function CardDetail({
   const [calendar, setCalendar] = useState(false);
   const [date, setDate] = useState<string | null>(null);
   const [limit, setLimit] = useState(30);
+  const recordedDates = new Set(card.records.map((r) => r.date));
+  const statusesByDate = new Map(
+    card.records.filter((r) => r.statusId).map((r) => [r.date, r.statusId]),
+  );
   const memory = card.location === 'memory';
   const records = [...card.records]
     .filter((r) => !date || r.date === date)
@@ -361,9 +367,9 @@ export function CardDetail({
               components={{
                 DayButton: (props) => {
                   const key = dateKey(props.day.date);
-                  const has = card.records.some((r) => r.date === key);
+                  const has = recordedDates.has(key);
                   const state = card.record?.states.find(
-                    (s) => s.id === statusRecord(card, key)?.statusId,
+                    (s) => s.id === statusesByDate.get(key),
                   );
                   return (
                     <CalendarDayButton {...props}>

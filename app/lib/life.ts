@@ -24,13 +24,15 @@ export function progressValue(card: LifeCard) {
   );
 }
 export function stageRecord(card: LifeCard, id: string) {
-  return [...card.records]
-    .reverse()
-    .filter((r) => r.stageId === id)
-    .sort(
-      (a, b) =>
-        b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt),
-    )[0];
+  let latest: LifeRecord | undefined;
+  for (const record of card.records) {
+    if (record.stageId !== id) continue;
+    if (!latest || compareRecords(record, latest) >= 0) latest = record;
+  }
+  return latest;
+}
+function compareRecords(a: LifeRecord, b: LifeRecord) {
+  return a.date.localeCompare(b.date) || a.createdAt.localeCompare(b.createdAt);
 }
 export function stageComplete(card: LifeCard, id: string) {
   return stageRecord(card, id)?.stageDone === true;
@@ -92,10 +94,10 @@ export function recentDays(today = dateKey()) {
   return Array.from({ length: 7 }, (_, i) => moveDate(today, i - 6));
 }
 export function lastRecord(card: LifeCard) {
-  return [...card.records].sort(
-    (a, b) =>
-      b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt),
-  )[0];
+  let latest: LifeRecord | undefined;
+  for (const record of card.records)
+    if (!latest || compareRecords(record, latest) > 0) latest = record;
+  return latest;
 }
 export function recordLabel(card: LifeCard, record: LifeRecord) {
   if (record.statusId)
@@ -124,6 +126,11 @@ export function saveLifeRecord(
 ): LifeCard {
   if (!canRecord(card, input.date, today))
     throw new Error('请选择今天及以前、卡片记录范围内的日期');
+  if (
+    input.photoIds.length > 9 ||
+    new Set(input.photoIds).size !== input.photoIds.length
+  )
+    throw new Error('每条记录最多放 9 张不同的照片');
   if (
     input.delta !== undefined &&
     (!Number.isFinite(input.delta) || !card.progress)

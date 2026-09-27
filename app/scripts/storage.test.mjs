@@ -248,3 +248,25 @@ await test('the complete sample backup round-trips with every diary and embedded
   await db.restoreBackup(exported);
   assert.deepEqual(await db.loadState(), restored);
 });
+
+await test('heavy-data backup restores and re-exports all records and 1152 photos', async () => {
+  const { db } = await setup();
+  const fixture = JSON.parse(
+    readFileSync(
+      new URL('../fixtures/life-full-test-backup.json', import.meta.url),
+      'utf8',
+    ),
+  );
+  const restored = await db.restoreBackup(fixture);
+  assert.equal(restored.cards.length, 120);
+  assert.equal(
+    restored.cards.reduce((n, c) => n + c.records.length, 0),
+    15936,
+  );
+  const exported = await db.createBackup(restored);
+  assert.equal(exported.photos.length, 1152);
+  assert.deepEqual(exported.state, fixture.state);
+  const expected = new Map(fixture.photos.map((p) => [p.id, p]));
+  exported.photos.forEach((p) => assert.deepEqual(p, expected.get(p.id)));
+  assert.deepEqual(await db.loadState(), restored);
+});

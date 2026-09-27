@@ -1,7 +1,7 @@
 'use client';
 import Image from 'next/image';
 import { Dialog } from '@base-ui/react/dialog';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Camera, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,40 +9,11 @@ import { JournalEditor } from './journal-editor';
 import { Sheet } from './life-form';
 import { Decoration } from './decoration';
 import { DecorationPicker } from './sticker-picker';
-import { getPhotos } from '@/lib/db';
+import { usePhotoUrls } from '@/hooks/use-photo-urls';
 import { createId } from '@/lib/defaults';
 import { dateKey } from '@/lib/date';
 import { canRecord, stageComplete, stageEmoji } from '@/lib/life';
 import type { LifeCard, LifeRecord } from '@/lib/types';
-export function usePhotoUrls(ids: string[]) {
-  const key = ids.join('|');
-  const [photos, setPhotos] = useState<
-    { id: string; url: string; name: string }[]
-  >([]);
-  useEffect(() => {
-    let disposed = false;
-    let urls: string[] = [];
-    void getPhotos(key ? key.split('|') : [])
-      .then((items) => {
-        if (disposed) return;
-        const next = items.map((p) => ({
-          id: p.id,
-          url: URL.createObjectURL(p.blob),
-          name: p.name,
-        }));
-        urls = next.map((p) => p.url);
-        setPhotos(next);
-      })
-      .catch(() => {
-        if (!disposed) setPhotos([]);
-      });
-    return () => {
-      disposed = true;
-      urls.forEach((url) => URL.revokeObjectURL(url));
-    };
-  }, [key]);
-  return photos;
-}
 export function PhotoStrip({
   ids,
   onRemove,
@@ -90,7 +61,7 @@ export function PhotoStrip({
         }}
       >
         <Dialog.Portal>
-          <Dialog.Backdrop className="photo-backdrop" />
+          <Dialog.Backdrop className="photo-backdrop" forceRender />
           <Dialog.Popup className="life-lightbox">
             <Dialog.Title className="sr-only">照片预览</Dialog.Title>
             <Dialog.Close aria-label="关闭照片">

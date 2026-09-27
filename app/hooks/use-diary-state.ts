@@ -20,7 +20,6 @@ export function useDiaryState(showToast: ShowToast, preview = false) {
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('saved');
   const stateRef = useRef<AppState | null>(null);
   const savedRef = useRef<AppState | null>(null);
-  const storageAvailable = useRef(true);
   const loaded = useRef(false);
   const replacing = useRef(false);
   const conflict = useRef(false);
@@ -67,7 +66,6 @@ export function useDiaryState(showToast: ShowToast, preview = false) {
       try {
         await saveState(snapshot);
         if (started !== generation.current || !alive.current) return false;
-        storageAvailable.current = true;
         failures.current = 0;
         savedRef.current = snapshot;
         if (snapshot !== stateRef.current) {
@@ -80,7 +78,6 @@ export function useDiaryState(showToast: ShowToast, preview = false) {
         return true;
       } catch (error) {
         if (started !== generation.current || !alive.current) return false;
-        storageAvailable.current = false;
         setSaveStatus('unavailable');
         conflict.current = error instanceof StorageConflictError;
         if (!failures.current++ || conflict.current)
@@ -117,7 +114,6 @@ export function useDiaryState(showToast: ShowToast, preview = false) {
         loaded.current = true;
         conflict.current = false;
         failures.current = 0;
-        storageAvailable.current = true;
         setState(next);
         setSaveStatus('saved');
         succeeded = true;
@@ -141,7 +137,6 @@ export function useDiaryState(showToast: ShowToast, preview = false) {
       })
       .catch(() => {
         if (disposed) return;
-        storageAvailable.current = false;
         setState(createDefaultState());
         setSaveStatus('unavailable');
         showToast('本地存储不可用，当前内容不会被保存');
@@ -195,11 +190,12 @@ export function useDiaryState(showToast: ShowToast, preview = false) {
     document
       .querySelector('meta[name="theme-color"]')
       ?.setAttribute('content', BROWSER_THEME_COLORS[activeAccent]);
-  }, [activeAccent]);
+  }, [activeAccent, preview]);
 
   useEffect(() => {
     if (!isReady) return;
     let currentDay = dateKey();
+    let lastNotice = '';
     const refreshDayBoundary = () => {
       const nextDay = dateKey();
       if (nextDay !== currentDay) {
@@ -207,7 +203,8 @@ export function useDiaryState(showToast: ShowToast, preview = false) {
         setTodayDate(nextDay);
       }
       const now = new Date();
-      if (now.getHours() !== 0) return;
+      if (preview || now.getHours() !== 0 || lastNotice === nextDay) return;
+      lastNotice = nextDay;
       const noticeKey = `asoul-midnight-notice:${dateKey(now)}`;
       try {
         if (localStorage.getItem(noticeKey)) return;
@@ -224,15 +221,13 @@ export function useDiaryState(showToast: ShowToast, preview = false) {
       window.clearInterval(timer);
       document.removeEventListener('visibilitychange', refreshDayBoundary);
     };
-  }, [isReady, showToast, setState]);
+  }, [isReady, showToast, preview]);
 
   return {
     state,
     setState,
     stateRef,
-    storageAvailable,
     saveStatus,
-    setSaveStatus,
     todayDate,
     setTodayDate,
     isReady,
