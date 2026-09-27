@@ -420,3 +420,45 @@ await test('example dates remain relative, contain today/tomorrow/future and res
     77.5,
   );
 });
+
+await test('memory edits preserve structure and only update existing records', () => {
+  const state = createDemoState(today);
+  const memory = state.cards.find(
+    (c) => c.location === 'memory' && c.kind === 'progress',
+  );
+  const original = memory.records[0];
+  const edited = saveLifeRecord(
+    memory,
+    { ...original, body: '修正后的记录', delta: 1 },
+    today,
+  );
+  assert.equal(edited.location, 'memory');
+  assert.equal(edited.archivedAt, memory.archivedAt);
+  assert.equal(
+    edited.records.find((r) => r.id === original.id).body,
+    '修正后的记录',
+  );
+  assert.equal(
+    progressValue(edited),
+    progressValue(memory) - original.delta + 1,
+  );
+  assert.throws(() =>
+    saveLifeRecord(memory, { ...original, id: 'new-memory-record' }, today),
+  );
+  assert.throws(() =>
+    saveLifeRecord(memory, { ...original, date: today }, today),
+  );
+  const saved = lib.saveCardDraft(state, {
+    ...memory,
+    title: '新的标题',
+    summary: '新的感想',
+    kind: 'blank',
+    startDate: today,
+  });
+  const result = saved.cards.find((c) => c.id === memory.id);
+  assert.equal(result.title, '新的标题');
+  assert.equal(result.summary, '新的感想');
+  assert.equal(result.kind, memory.kind);
+  assert.equal(result.startDate, memory.startDate);
+  assert.deepEqual(result.records, memory.records);
+});

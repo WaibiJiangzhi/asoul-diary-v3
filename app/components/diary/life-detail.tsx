@@ -3,6 +3,7 @@ import Image from 'next/image';
 import { useState, type CSSProperties } from 'react';
 import {
   CalendarDays,
+  MoreHorizontal,
   Check,
   Pencil,
   Trash2,
@@ -244,6 +245,7 @@ export function CardDetail({
   onDelete: () => void;
 }) {
   const [calendar, setCalendar] = useState(false);
+  const [editingRecords, setEditingRecords] = useState(false);
   const [date, setDate] = useState<string | null>(null);
   const [limit, setLimit] = useState(30);
   const recordedDates = new Set(card.records.map((r) => r.date));
@@ -287,6 +289,28 @@ export function CardDetail({
               天 · {card.records.length} 条记录
             </small>
           </span>
+          {memory && (
+            <details className="memory-edit-menu">
+              <summary aria-label="纪念册编辑选项">
+                <MoreHorizontal />
+              </summary>
+              <div>
+                <Button variant="ghost" onClick={onEdit}>
+                  编辑卡片
+                </Button>
+                <Button
+                  variant="ghost"
+                  onClick={(event) => {
+                    setEditingRecords((v) => !v);
+                    const menu = event.currentTarget.closest('details');
+                    if (menu) menu.open = false;
+                  }}
+                >
+                  {editingRecords ? '完成编辑' : '编辑记录'}
+                </Button>
+              </div>
+            </details>
+          )}
           {!memory && (
             <Button
               variant="ghost"
@@ -413,7 +437,7 @@ export function CardDetail({
               <div className="history-record-head">
                 <time>{formatShortDate(r.date)}</time>
                 <strong>{recordLabel(card, r)}</strong>
-                {!memory && (
+                {(!memory || editingRecords) && (
                   <div>
                     <Button
                       variant="ghost"
@@ -423,14 +447,16 @@ export function CardDetail({
                     >
                       <Pencil />
                     </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon-sm"
-                      aria-label={'删除 ' + r.date + ' 的记录'}
-                      onClick={() => onDeleteRecord(r.id)}
-                    >
-                      <Trash2 />
-                    </Button>
+                    {!memory && (
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        aria-label={'删除 ' + r.date + ' 的记录'}
+                        onClick={() => onDeleteRecord(r.id)}
+                      >
+                        <Trash2 />
+                      </Button>
+                    )}
                   </div>
                 )}
               </div>

@@ -3,6 +3,16 @@ import type { AppState, LifeCard } from './types';
 
 export function saveCardDraft(state: AppState, draft: LifeCard): AppState {
   const before = state.cards.find((card) => card.id === draft.id);
+  if (before?.location === 'memory') {
+    draft = {
+      ...before,
+      title: draft.title,
+      note: draft.note,
+      emoji: draft.emoji,
+      color: draft.color,
+      summary: draft.summary,
+    };
+  }
   const card = {
     ...draft,
     title: draft.title.trim(),

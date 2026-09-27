@@ -152,7 +152,14 @@ export default function DiaryApp({ preview = false }: { preview?: boolean }) {
     const card = stateRef.current?.cards.find((c) => c.id === id);
     if (!card) return;
     const target = date ?? todayDate;
-    if (!canRecord(card, target, todayDate)) {
+    if (
+      !canRecord(card, target, todayDate) &&
+      !(
+        card.location === 'memory' &&
+        record &&
+        card.records.some((r) => r.id === record.id && r.date === target)
+      )
+    ) {
       showToast('这一天还不能记录，可以先调整卡片的开始日期。');
       return;
     }

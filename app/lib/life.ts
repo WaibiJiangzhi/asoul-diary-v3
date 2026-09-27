@@ -124,7 +124,10 @@ export function saveLifeRecord(
   input: LifeRecord,
   today = dateKey(),
 ): LifeCard {
-  if (!canRecord(card, input.date, today))
+  const editingMemory =
+    card.location === 'memory' &&
+    card.records.some((r) => r.id === input.id && r.date === input.date);
+  if (!canRecord(card, input.date, today) && !editingMemory)
     throw new Error('请选择今天及以前、卡片记录范围内的日期');
   if (
     input.photoIds.length > 9 ||

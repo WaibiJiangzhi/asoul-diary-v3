@@ -184,7 +184,7 @@ export function RecordForm({
             max={max}
             value={selectedDate}
             onChange={(e) => setDate(e.target.value)}
-            disabled={busy}
+            disabled={busy || card.location === 'memory'}
           />
         </label>
         {card.kind === 'progress' && (

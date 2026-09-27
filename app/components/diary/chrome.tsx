@@ -106,8 +106,8 @@ export function SettingsDrawer({
 
   return (
     <Sheet
-      title="让生活更像你"
-      description="选择温馨纸张，或让一张收藏壁纸陪着你记录。"
+      title="设置与偏好"
+      description="按喜欢的样子布置，也照顾好留下的记录。"
       onClose={() => onOpenChange(false)}
       wide
     >
@@ -147,7 +147,7 @@ export function SettingsDrawer({
         <section className="settings-section">
           <h3>主题色</h3>
           <p className="setting-note">
-            主题色会统一改变标题、按钮、线条和选择状态。
+            选择喜欢的颜色，用在标题、按钮和选中状态上。
           </p>
           <div className="accent-theme-grid">
             {ACCENT_THEMES.map((theme) => (
@@ -210,19 +210,19 @@ export function SettingsDrawer({
             ))}
           </div>
           <p className="setting-note">
-            壁纸会铺在整本日记后面，内容使用半透明纸面保持清楚。
+            壁纸铺在页面背景，半透明卡片让记录依然清楚。
           </p>
         </section>
 
         <section className="settings-section">
-          <h3>安装与反馈</h3>
+          <h3>使用体验</h3>
           <Button
             variant="outline"
             className="settings-wide"
             onClick={onInstall}
           >
             <Smartphone />
-            安装到手机桌面
+            添加到桌面
           </Button>
           <label className="toggle-row">
             <span>
@@ -255,9 +255,9 @@ export function SettingsDrawer({
         </section>
 
         <section className="settings-section">
-          <h3>本地数据</h3>
+          <h3>数据与备份</h3>
           <p className="setting-note">
-            文字和照片只在这台设备里。清理浏览器或换手机前，请先下载备份。
+            记录和照片保存在当前浏览器，不会自动同步。清空浏览器数据或更换设备前，记得下载完整备份。
           </p>
           <div className="settings-buttons">
             <Button onClick={onExport}>
@@ -287,6 +287,13 @@ export function SettingsDrawer({
         <Link className="settings-preview-link" href="/preview">
           体验一段示例生活 →
         </Link>
+        <section className="settings-section settings-feedback">
+          <h3>有想法，或者遇到了问题？</h3>
+          <p className="setting-note">欢迎来 B 站找我反馈~</p>
+          <p className="feedback-id">
+            B 站搜索：<strong>就一枝匠纸</strong>
+          </p>
+        </section>
         <footer className="settings-footer">
           <strong>Asoul一个魂生活日记</strong>
           <span>作者：就一枝匠纸 · AI 生成</span>
