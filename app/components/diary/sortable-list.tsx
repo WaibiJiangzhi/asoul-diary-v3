@@ -2,6 +2,7 @@
 
 /* oxlint-disable react/react-compiler -- dnd-kit exposes callback refs and sensor refs as render-time hook results. */
 
+import { GripVertical } from 'lucide-react';
 import type { CSSProperties, ReactNode } from 'react';
 import {
   closestCenter,
@@ -120,5 +121,26 @@ function SortableItem({
         sortable.isDragging,
       )}
     </div>
+  );
+}
+
+export function SortableGrip({
+  handle,
+  label,
+}: {
+  handle: SortableHandle;
+  label: string;
+}) {
+  return (
+    <button
+      type="button"
+      ref={handle.setActivatorNodeRef}
+      {...handle.attributes}
+      {...handle.listeners}
+      className="life-icon-button drag-handle"
+      aria-label={label}
+    >
+      <GripVertical />
+    </button>
   );
 }

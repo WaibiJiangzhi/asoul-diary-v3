@@ -1,5 +1,6 @@
 import {
   readdir,
+  access,
   readFile,
   mkdir,
   copyFile,
@@ -26,14 +27,21 @@ async function indexReplacements(directory) {
     }
   }
 }
-if (process.argv[2])
-  await indexReplacements(resolve(process.cwd(), process.argv[2]));
+const replacementRoot = process.argv[2]
+  ? resolve(process.cwd(), process.argv[2])
+  : resolve(app, '../本地素材（不上传）/gif');
+try {
+  await access(replacementRoot);
+  await indexReplacements(replacementRoot);
+} catch (error) {
+  if (error.code !== 'ENOENT') throw error;
+}
 let replaced = 0;
 /** @type {Array<[string, string, string[]]>} */
 const members = [
   ['嘉然', 'jiaran', ['笔芯', '可爱捏', '哈哈哈', '画！', '比心', '你在干嘛']],
   ['贝拉', 'bella', ['加油', '贝极星', '哈哈哈', '送花', '不是吧', '摸脑袋']],
-  ['乃琳', 'nailin', ['小狐狸', '打招呼', '哈哈哈', '干杯', '爱你']],
+  ['乃琳', 'nailin', ['小狐狸', '打招呼', '哈哈哈', '干杯', '爱你', '爱你']],
 ];
 const slugs = ['classic', '2', 'brainwave', '2025', '2026', '2026-animated'];
 const packs = [];
@@ -43,10 +51,19 @@ for (const [member, memberId, covers] of members) {
   )
     .filter((e) => e.isDirectory())
     .sort((a, b) => parseInt(a.name) - parseInt(b.name));
+  if (
+    memberId === 'nailin' &&
+    !folders.some((folder) => parseInt(folder.name) === 6)
+  ) {
+    folders.push({
+      name: '6-2026乃琳的酒馆动态表情包',
+      source: resolve(replacementRoot, '乃琳/2026乃琳的酒馆动态表情包'),
+    });
+  }
   for (const folder of folders) {
     const order = parseInt(folder.name) - 1;
     const id = `${memberId}-${slugs[order]}`;
-    const directory = resolve(source, member, folder.name);
+    const directory = folder.source ?? resolve(source, member, folder.name);
     const output = resolve(app, 'public/stickers', id);
     await mkdir(output, { recursive: true });
     const files = (await readdir(directory))

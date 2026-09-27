@@ -3,7 +3,7 @@ import './globals.css';
 
 export const metadata: Metadata = {
   title: 'Asoul一个魂生活日记',
-  description: '躺着也能轻松记录的温馨生活日记。',
+  description: '记录愿望变成生活的每一小步。',
   applicationName: 'Asoul一个魂生活日记',
   manifest: '/manifest.webmanifest?v=4',
   icons: {
@@ -16,7 +16,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: '一个魂日记',
+    title: '一个魂生活',
   },
 };
 

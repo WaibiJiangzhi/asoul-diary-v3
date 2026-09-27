@@ -1,10 +1,7 @@
 'use client';
-
-import { useEffect } from 'react';
-import { createPortal } from 'react-dom';
+import { AlertDialog } from '@base-ui/react/alert-dialog';
 import { AlertTriangle } from 'lucide-react';
 import type { AccentTheme } from '@/lib/types';
-
 export type Confirmation = {
   title: string;
   description: string;
@@ -12,7 +9,6 @@ export type Confirmation = {
   destructive?: boolean;
   action: () => void | Promise<void>;
 };
-
 export function ConfirmDialog({
   confirmation,
   onClose,
@@ -22,58 +18,43 @@ export function ConfirmDialog({
   onClose: () => void;
   accent: AccentTheme;
 }) {
-  useEffect(() => {
-    if (!confirmation) return;
-    const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onClose();
-    };
-    window.addEventListener('keydown', closeOnEscape);
-    return () => window.removeEventListener('keydown', closeOnEscape);
-  }, [confirmation, onClose]);
-
-  if (!confirmation) return null;
-
-  const confirm = () => {
-    const action = confirmation.action;
-    onClose();
-    void action();
-  };
-
-  return createPortal(
-    <div className={`confirm-backdrop theme-${accent}`}>
-      <button
-        type="button"
-        className="confirm-dismiss"
-        aria-label="取消操作"
-        onClick={onClose}
-      />
-      <dialog
-        className="confirm-dialog"
-        open
-        aria-labelledby="confirm-title"
-        aria-describedby="confirm-description"
-      >
-        <span className="confirm-icon" aria-hidden="true">
-          <AlertTriangle />
-        </span>
-        <h2 id="confirm-title">{confirmation.title}</h2>
-        <p id="confirm-description">{confirmation.description}</p>
-        <footer>
-          <button type="button" className="confirm-cancel" onClick={onClose}>
-            取消
-          </button>
-          <button
-            type="button"
-            className={
-              confirmation.destructive ? 'confirm-danger' : 'confirm-action'
-            }
-            onClick={confirm}
-          >
-            {confirmation.confirmLabel ?? '确定'}
-          </button>
-        </footer>
-      </dialog>
-    </div>,
-    document.body,
+  return (
+    <AlertDialog.Root
+      open={!!confirmation}
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+    >
+      <AlertDialog.Portal>
+        <AlertDialog.Backdrop className="confirm-backdrop" />
+        <AlertDialog.Popup className={'life-confirm theme-' + accent}>
+          <span className="confirm-icon" aria-hidden="true">
+            <AlertTriangle />
+          </span>
+          <AlertDialog.Title>{confirmation?.title}</AlertDialog.Title>
+          <AlertDialog.Description>
+            {confirmation?.description}
+          </AlertDialog.Description>
+          <footer>
+            <AlertDialog.Close className="confirm-cancel">
+              取消
+            </AlertDialog.Close>
+            <button
+              type="button"
+              className={
+                confirmation?.destructive ? 'confirm-danger' : 'confirm-action'
+              }
+              onClick={() => {
+                const action = confirmation?.action;
+                onClose();
+                void action?.();
+              }}
+            >
+              {confirmation?.confirmLabel ?? '确定'}
+            </button>
+          </footer>
+        </AlertDialog.Popup>
+      </AlertDialog.Portal>
+    </AlertDialog.Root>
   );
 }

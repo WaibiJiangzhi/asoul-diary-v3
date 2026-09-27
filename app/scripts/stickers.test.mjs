@@ -25,9 +25,9 @@ const {
 } = await load('../lib/stickers.ts');
 
 await test('all packs and covers exist, canonical tokens are unique, and chosen representatives remain available', async () => {
-  assert.equal(STICKER_PACKS.length, 17);
-  assert.equal(STICKERS.length, 370);
-  assert.equal(new Set(STICKERS.map((s) => s.token)).size, 370);
+  assert.equal(STICKER_PACKS.length, 18);
+  assert.equal(STICKERS.length, 390);
+  assert.equal(new Set(STICKERS.map((s) => s.token)).size, 390);
   const covers = [
     '笔芯',
     '可爱捏',
@@ -45,6 +45,7 @@ await test('all packs and covers exist, canonical tokens are unique, and chosen 
     '打招呼',
     '哈哈哈',
     '干杯',
+    '爱你',
     '爱你',
   ];
   for (const [index, pack] of STICKER_PACKS.entries())
@@ -113,4 +114,12 @@ await test('paragraphs, blank lines, inline images and the empty editor serializ
     readJournalContent(line(text('开头'), br(), br(), text('下一段'))),
     '开头\n\n下一段',
   );
+});
+
+await test('Nailin 2026 animated pack keeps all 20 GIFs and a static cover', () => {
+  const pack = STICKER_PACKS.find((p) => p.id === 'nailin-2026-animated');
+  assert.equal(pack.stickers.length, 20);
+  assert.ok(pack.stickers.every((s) => s.animated && s.src.includes('.gif')));
+  assert.ok(pack.cover.includes('cover.webp'));
+  assert.ok(getSticker('[2026乃琳的酒馆动态表情包_爱你]'));
 });

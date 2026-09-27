@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
-import { createDefaultState } from '@/lib/defaults';
+import { createDefaultState, createDemoState } from '@/lib/defaults';
 import { dateKey } from '@/lib/date';
 import { loadState, saveState, StorageConflictError } from '@/lib/db';
-import { prepareLoadedState } from '@/lib/state';
+
 import type { AppState } from '@/lib/types';
 import type { ShowToast } from '@/hooks/use-toast';
 
@@ -14,7 +14,7 @@ const BROWSER_THEME_COLORS = {
   nailin: '#f1f3fa',
 } as const;
 
-export function useDiaryState(showToast: ShowToast) {
+export function useDiaryState(showToast: ShowToast, preview = false) {
   const [state, renderState] = useState<AppState | null>(null);
   const [todayDate, setTodayDate] = useState(dateKey());
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('saved');
@@ -49,6 +49,7 @@ export function useDiaryState(showToast: ShowToast) {
 
   const flushSave = useCallback(
     async function attempt(): Promise<boolean> {
+      if (preview) return true;
       clearTimeout(saveTimer.current);
       clearTimeout(retryTimer.current);
       const snapshot = stateRef.current;
@@ -98,7 +99,7 @@ export function useDiaryState(showToast: ShowToast) {
         return false;
       }
     },
-    [showToast],
+    [showToast, preview],
   );
 
   const replaceData = useCallback(
@@ -111,7 +112,7 @@ export function useDiaryState(showToast: ShowToast) {
       let succeeded = false;
       try {
         const restored = await operation();
-        const next = prepareLoadedState(restored);
+        const next = restored;
         savedRef.current = restored;
         loaded.current = true;
         conflict.current = false;
@@ -131,12 +132,12 @@ export function useDiaryState(showToast: ShowToast) {
   useEffect(() => {
     let disposed = false;
     alive.current = true;
-    void loadState()
+    void (preview ? Promise.resolve(createDemoState()) : loadState())
       .then((loadedState) => {
         if (disposed) return;
         loaded.current = true;
         savedRef.current = loadedState;
-        setState(prepareLoadedState(loadedState));
+        setState(loadedState);
       })
       .catch(() => {
         if (disposed) return;
@@ -151,10 +152,11 @@ export function useDiaryState(showToast: ShowToast) {
       clearTimeout(saveTimer.current);
       clearTimeout(retryTimer.current);
     };
-  }, [showToast, setState]);
+  }, [showToast, setState, preview]);
 
   useEffect(() => {
     if (
+      preview ||
       !state ||
       state === savedRef.current ||
       !loaded.current ||
@@ -167,7 +169,7 @@ export function useDiaryState(showToast: ShowToast) {
       void flushSave();
     }, 280);
     return () => clearTimeout(saveTimer.current);
-  }, [state, flushSave]);
+  }, [state, flushSave, preview]);
 
   useEffect(() => {
     const onVisibility = () => {
@@ -185,7 +187,8 @@ export function useDiaryState(showToast: ShowToast) {
     if (!activeAccent) return;
     document.documentElement.dataset.accent = activeAccent;
     try {
-      localStorage.setItem('asoul-diary-theme-hint', activeAccent);
+      if (!preview)
+        localStorage.setItem('asoul-diary-theme-hint', activeAccent);
     } catch {
       /* Optional loading hint. */
     }
@@ -202,7 +205,6 @@ export function useDiaryState(showToast: ShowToast) {
       if (nextDay !== currentDay) {
         currentDay = nextDay;
         setTodayDate(nextDay);
-        setState((current) => current && prepareLoadedState(current, nextDay));
       }
       const now = new Date();
       if (now.getHours() !== 0) return;
@@ -213,7 +215,7 @@ export function useDiaryState(showToast: ShowToast) {
       } catch {
         /* The reminder works without preference storage. */
       }
-      showToast('已经是新的一天啦，昨天的小事还可以补进日记。');
+      showToast('新的一天开始了，过去的记录也随时可以补记。');
     };
     refreshDayBoundary();
     const timer = window.setInterval(refreshDayBoundary, 30_000);

@@ -7,7 +7,7 @@ import { IDBFactory, IDBObjectStore } from 'fake-indexeddb';
 const { outputFiles } = await build({
   stdin: {
     contents:
-      "export * from './lib/db'; export { createDefaultState } from './lib/defaults';",
+      "export * from './lib/db'; export { createDefaultState, createLifeCard } from './lib/defaults';",
     resolveDir: process.cwd(),
   },
   bundle: true,
@@ -32,13 +32,11 @@ globalThis.FileReader = class {
 };
 const image = (name = 'photo.png') =>
   new File(['image contents'], name, { type: 'image/png' });
-const diary = (body, photoIds = []) => ({
+const record = (body, photoIds = []) => ({
+  id: 'test-record',
   date: '2026-09-10',
-  mood: '',
   body,
   photoIds,
-  taskSnapshots: [],
-  growthSnapshots: [],
   createdAt: '2026-09-10T00:00:00Z',
   updatedAt: '2026-09-10T00:00:00Z',
 });
@@ -47,7 +45,14 @@ async function setup() {
   const db = await page();
   const state = await db.loadState();
   const photos = await db.storePhotos([image()]);
-  state.diaries = [diary('原来的日记', [photos[0].id])];
+  state.cards = [
+    {
+      ...db.createLifeCard(),
+      title: '原来的记录',
+      startDate: '2026-09-01',
+      records: [record('原来的日记', [photos[0].id])],
+    },
+  ];
   await db.saveState(state);
   return { db, state, photos, backup: await db.createBackup(state) };
 }
@@ -65,7 +70,7 @@ await test('invalid image decoding and malformed JSON leave both diaries and pho
     variants.push(candidate);
   }
   const badText = structuredClone(backup);
-  badText.state.diaries[0].body = 123;
+  badText.state.cards[0].records[0].body = 123;
   variants.push(badText);
   const missing = structuredClone(backup);
   missing.photos = [];
@@ -83,7 +88,7 @@ await test('invalid image decoding and malformed JSON leave both diaries and pho
 await test('a synchronous write failure after clear rolls back the entire replacement', async () => {
   const { db, state, photos, backup } = await setup();
   const incoming = structuredClone(backup);
-  incoming.state.diaries[0].body = '新日记';
+  incoming.state.cards[0].records[0].body = '新日记';
   // Keep the original method for apply/restore during fault injection.
   // eslint-disable-next-line typescript/unbound-method
   const originalPut = IDBObjectStore.prototype.put;
@@ -108,9 +113,9 @@ await test('two pages cannot silently overwrite each other, including photo remo
   const second = await page();
   const stale = await second.loadState();
   const newer = structuredClone(state);
-  newer.diaries[0].body = '第一页面刚写的新内容';
+  newer.cards[0].records[0].body = '第一页面刚写的新内容';
   await first.saveState(newer);
-  stale.diaries[0].body = '第二页未保存的内容';
+  stale.cards[0].records[0].body = '第二页未保存的内容';
   await assert.rejects(second.saveState(stale), {
     name: 'StorageConflictError',
   });
@@ -121,7 +126,7 @@ await test('two pages cannot silently overwrite each other, including photo remo
   assert.deepEqual(await first.loadState(), newer);
   assert.equal((await first.getPhotos([photos[0].id])).length, 1);
   assert.equal(
-    (await second.createBackup(stale)).state.diaries[0].body,
+    (await second.createBackup(stale)).state.cards[0].records[0].body,
     '第二页未保存的内容',
   );
 });
@@ -130,17 +135,39 @@ await test('own queued saves stay ordered; queued pre-import saves cannot undo t
   const { db, state, backup } = await setup();
   const a = structuredClone(state);
   const b = structuredClone(state);
-  a.diaries[0].body = '第一次';
-  b.diaries[0].body = '第二次';
+  a.cards[0].records[0].body = '第一次';
+  b.cards[0].records[0].body = '第二次';
   await Promise.all([db.saveState(a), db.saveState(b)]);
-  assert.equal((await db.loadState()).diaries[0].body, '第二次');
+  assert.equal((await db.loadState()).cards[0].records[0].body, '第二次');
   const importing = db.restoreBackup(backup);
   const staleSaving = db.saveState(b);
   const result = await Promise.allSettled([importing, staleSaving]);
   assert.equal(result[0].status, 'fulfilled');
   assert.equal(result[1].status, 'rejected');
-  assert.equal((await db.loadState()).diaries[0].body, '原来的日记');
+  assert.equal((await db.loadState()).cards[0].records[0].body, '原来的日记');
 });
+
+async function storedPhotoCount() {
+  return new Promise((resolve, reject) => {
+    const open = indexedDB.open('asoul-life-v3-preview');
+    open.onerror = () => reject(open.error);
+    open.onsuccess = () => {
+      const db = open.result;
+      const request = db
+        .transaction('photos', 'readonly')
+        .objectStore('photos')
+        .count();
+      request.onsuccess = () => {
+        db.close();
+        resolve(request.result);
+      };
+      request.onerror = () => {
+        db.close();
+        reject(request.error);
+      };
+    };
+  });
+}
 
 await test('failed photo batches leave no orphan blobs, and the next batch still succeeds', async () => {
   const { db, state } = await setup();
@@ -150,12 +177,12 @@ await test('failed photo batches leave no orphan blobs, and the next batch still
       new File(['bad'], 'note.txt', { type: 'text/plain' }),
     ]),
   );
-  assert.equal((await db.createBackup(state)).photos.length, 1);
+  assert.equal(await storedPhotoCount(), 1);
   // eslint-disable-next-line typescript/unbound-method
   const originalPut = IDBObjectStore.prototype.put;
-  let added = 0;
+  let attemptedWrites = 0;
   IDBObjectStore.prototype.put = function (...args) {
-    if (this.name === 'photos' && ++added === 2)
+    if (this.name === 'photos' && ++attemptedWrites === 2)
       throw new DOMException('full', 'QuotaExceededError');
     return originalPut.apply(this, args);
   };
@@ -164,9 +191,14 @@ await test('failed photo batches leave no orphan blobs, and the next batch still
   } finally {
     IDBObjectStore.prototype.put = originalPut;
   }
+  assert.equal(await storedPhotoCount(), 1);
+  const added = await db.storePhotos([image(), image()]);
+  assert.equal((await db.getPhotos(added.map((p) => p.id))).length, 2);
+  assert.equal(await storedPhotoCount(), 3);
   assert.equal((await db.createBackup(state)).photos.length, 1);
-  await db.storePhotos([image(), image()]);
-  assert.equal((await db.createBackup(state)).photos.length, 3);
+  const withAdded = structuredClone(state);
+  withAdded.cards[0].records[0].photoIds.push(...added.map((p) => p.id));
+  assert.equal((await db.createBackup(withAdded)).photos.length, 3);
 });
 
 await test('photo removal commits atomically with diary references and survives a failed save', async () => {
@@ -174,7 +206,10 @@ await test('photo removal commits atomically with diary references and survives 
   await db.deletePhotos([photos[0].id]);
   await db.saveState(state); // An earlier pending save still references the photo.
   assert.equal((await db.getPhotos([photos[0].id])).length, 1);
-  const removed = { ...state, diaries: [diary('照片已移除')] };
+  const removed = {
+    ...state,
+    cards: [{ ...state.cards[0], records: [record('照片已移除')] }],
+  };
   // eslint-disable-next-line typescript/unbound-method
   const originalPut = IDBObjectStore.prototype.put;
   IDBObjectStore.prototype.put = function () {
@@ -188,22 +223,22 @@ await test('photo removal commits atomically with diary references and survives 
   assert.equal((await db.getPhotos([photos[0].id])).length, 1);
   await db.saveState(removed);
   assert.equal((await db.getPhotos([photos[0].id])).length, 0);
-  assert.deepEqual((await db.loadState()).diaries[0].photoIds, []);
+  assert.deepEqual((await db.loadState()).cards[0].records[0].photoIds, []);
 });
 
 await test('the complete sample backup round-trips with every diary and embedded photo', async () => {
   const { db } = await setup();
   const fixture = JSON.parse(
     readFileSync(
-      new URL('../fixtures/two-years-sample-backup.json', import.meta.url),
+      new URL('../fixtures/life-sample-backup.json', import.meta.url),
       'utf8',
     ),
   );
   const restored = await db.restoreBackup(fixture);
-  assert.equal(restored.diaries.length, fixture.state.diaries.length);
+  assert.equal(restored.cards.length, fixture.state.cards.length);
   assert.equal(
-    (await db.loadState()).memories.length,
-    fixture.state.memories.length,
+    (await db.loadState()).cards.filter((c) => c.location === 'memory').length,
+    fixture.state.cards.filter((c) => c.location === 'memory').length,
   );
   const exported = await db.createBackup(restored);
   assert.deepEqual(

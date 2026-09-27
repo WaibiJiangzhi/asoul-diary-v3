@@ -2724,5 +2724,153 @@
         "animated": false
       }
     ]
+  },
+  {
+    "id": "nailin-2026-animated",
+    "member": "乃琳",
+    "name": "2026乃琳的酒馆动态表情包",
+    "cover": "/stickers/nailin-2026-animated/cover.webp?v=2319528967",
+    "stickers": [
+      {
+        "id": "nailin-2026-animated:72841dae1f1c",
+        "name": "不对劲",
+        "token": "[2026乃琳的酒馆动态表情包_不对劲]",
+        "src": "/stickers/nailin-2026-animated/72841dae1f1c.gif?v=d3f2d65884",
+        "animated": true
+      },
+      {
+        "id": "nailin-2026-animated:bb677b5e042b",
+        "name": "五体投地",
+        "token": "[2026乃琳的酒馆动态表情包_五体投地]",
+        "src": "/stickers/nailin-2026-animated/bb677b5e042b.gif?v=ac9a376a97",
+        "animated": true
+      },
+      {
+        "id": "nailin-2026-animated:a9cdbd113177",
+        "name": "优雅",
+        "token": "[2026乃琳的酒馆动态表情包_优雅]",
+        "src": "/stickers/nailin-2026-animated/a9cdbd113177.gif?v=ca7583cc90",
+        "animated": true
+      },
+      {
+        "id": "nailin-2026-animated:352f3d08950b",
+        "name": "厨艺展示",
+        "token": "[2026乃琳的酒馆动态表情包_厨艺展示]",
+        "src": "/stickers/nailin-2026-animated/352f3d08950b.gif?v=14a7ae8fcd",
+        "animated": true
+      },
+      {
+        "id": "nailin-2026-animated:6cabcc96f63b",
+        "name": "否定",
+        "token": "[2026乃琳的酒馆动态表情包_否定]",
+        "src": "/stickers/nailin-2026-animated/6cabcc96f63b.gif?v=98694a977e",
+        "animated": true
+      },
+      {
+        "id": "nailin-2026-animated:98bac4adce44",
+        "name": "喏咖啡",
+        "token": "[2026乃琳的酒馆动态表情包_喏咖啡]",
+        "src": "/stickers/nailin-2026-animated/98bac4adce44.gif?v=84bb075d38",
+        "animated": true
+      },
+      {
+        "id": "nailin-2026-animated:fa15de7e11e1",
+        "name": "奶淇琳~",
+        "token": "[2026乃琳的酒馆动态表情包_奶淇琳~]",
+        "src": "/stickers/nailin-2026-animated/fa15de7e11e1.gif?v=186bfeb046",
+        "animated": true
+      },
+      {
+        "id": "nailin-2026-animated:ff862f90e68d",
+        "name": "帅气",
+        "token": "[2026乃琳的酒馆动态表情包_帅气]",
+        "src": "/stickers/nailin-2026-animated/ff862f90e68d.gif?v=4f252160b1",
+        "animated": true
+      },
+      {
+        "id": "nailin-2026-animated:c814077844c8",
+        "name": "打游戏",
+        "token": "[2026乃琳的酒馆动态表情包_打游戏]",
+        "src": "/stickers/nailin-2026-animated/c814077844c8.gif?v=44b5b87d78",
+        "animated": true
+      },
+      {
+        "id": "nailin-2026-animated:4555539c3da9",
+        "name": "拍桌",
+        "token": "[2026乃琳的酒馆动态表情包_拍桌]",
+        "src": "/stickers/nailin-2026-animated/4555539c3da9.gif?v=0850f3cee7",
+        "animated": true
+      },
+      {
+        "id": "nailin-2026-animated:c16f3d1fa098",
+        "name": "捂脸",
+        "token": "[2026乃琳的酒馆动态表情包_捂脸]",
+        "src": "/stickers/nailin-2026-animated/c16f3d1fa098.gif?v=0565ef3415",
+        "animated": true
+      },
+      {
+        "id": "nailin-2026-animated:b860157f7675",
+        "name": "摇摆",
+        "token": "[2026乃琳的酒馆动态表情包_摇摆]",
+        "src": "/stickers/nailin-2026-animated/b860157f7675.gif?v=71d8570686",
+        "animated": true
+      },
+      {
+        "id": "nailin-2026-animated:e2a2b2c4c4d5",
+        "name": "有猪",
+        "token": "[2026乃琳的酒馆动态表情包_有猪]",
+        "src": "/stickers/nailin-2026-animated/e2a2b2c4c4d5.gif?v=896021d706",
+        "animated": true
+      },
+      {
+        "id": "nailin-2026-animated:535bbf266c27",
+        "name": "柔弱",
+        "token": "[2026乃琳的酒馆动态表情包_柔弱]",
+        "src": "/stickers/nailin-2026-animated/535bbf266c27.gif?v=fb111eb429",
+        "animated": true
+      },
+      {
+        "id": "nailin-2026-animated:d8b65a8fcaf3",
+        "name": "气鼓鼓",
+        "token": "[2026乃琳的酒馆动态表情包_气鼓鼓]",
+        "src": "/stickers/nailin-2026-animated/d8b65a8fcaf3.gif?v=848263df82",
+        "animated": true
+      },
+      {
+        "id": "nailin-2026-animated:a0db2917dc55",
+        "name": "爆了",
+        "token": "[2026乃琳的酒馆动态表情包_爆了]",
+        "src": "/stickers/nailin-2026-animated/a0db2917dc55.gif?v=81dfa19385",
+        "animated": true
+      },
+      {
+        "id": "nailin-2026-animated:879d7a86fcc1",
+        "name": "爱你",
+        "token": "[2026乃琳的酒馆动态表情包_爱你]",
+        "src": "/stickers/nailin-2026-animated/879d7a86fcc1.gif?v=7ea0b0e8a9",
+        "animated": true
+      },
+      {
+        "id": "nailin-2026-animated:198af1b4be05",
+        "name": "装傻",
+        "token": "[2026乃琳的酒馆动态表情包_装傻]",
+        "src": "/stickers/nailin-2026-animated/198af1b4be05.gif?v=f924fa8abf",
+        "animated": true
+      },
+      {
+        "id": "nailin-2026-animated:7b4e6b6dfd2f",
+        "name": "赖床",
+        "token": "[2026乃琳的酒馆动态表情包_赖床]",
+        "src": "/stickers/nailin-2026-animated/7b4e6b6dfd2f.gif?v=4b84db064d",
+        "animated": true
+      },
+      {
+        "id": "nailin-2026-animated:a82ec6c0aacb",
+        "name": "蹦蹦跳跳",
+        "token": "[2026乃琳的酒馆动态表情包_蹦蹦跳跳]",
+        "src": "/stickers/nailin-2026-animated/a82ec6c0aacb.gif?v=af5fa22eda",
+        "animated": true
+      }
+    ]
   }
 ]

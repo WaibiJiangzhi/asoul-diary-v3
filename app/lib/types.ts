@@ -1,5 +1,4 @@
-export type AppTab = 'today' | 'growth' | 'journal';
-export type Mood = 'happy' | 'good' | 'plain' | 'annoyed' | 'sad' | '';
+export type AppTab = 'life' | 'memories';
 export type ThemeMode = 'paper' | 'wallpaper';
 export type AccentTheme = 'bella' | 'jiaran' | 'nailin';
 export type CardColor =
@@ -12,213 +11,96 @@ export type CardColor =
   | '#5B9292'
   | '#8B78A8'
   | '#84787E';
-
-export interface CommonItem {
-  id: string;
-  emoji: string;
-  title: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface DailyTask {
-  id: string;
-  date: string;
-  emoji: string;
-  title: string;
-  done: boolean;
-  sourceCommonId?: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface Countdown {
-  id: string;
-  kind: 'countdown';
-  emoji: string;
-  title: string;
-  targetDate: string;
-  note: string;
-  notes: CountdownNote[];
-  color: CardColor;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface CountdownNote {
-  id: string;
-  text: string;
-  createdAt: string;
-}
-
-export interface ProgressEvent {
-  id: string;
-  delta: number;
-  valueAfter: number;
-  note?: string;
-  createdAt: string;
-  date?: string;
-  outcome?: string;
-  rule?: string;
-}
-
+export type CardKind = 'record' | 'progress' | 'stage' | 'blank';
 export interface RecordStatus {
   id: string;
   name: string;
+  emoji: string;
   color: CardColor;
-  emoji: string;
 }
-
-export interface ChallengeConfig {
-  startDate: string;
-  states: RecordStatus[];
-  targetStateId?: string;
-  targetDays?: number;
-  targetCelebrated?: boolean;
-}
-
-export interface ProgressGoal {
+export interface Stage {
   id: string;
-  kind: 'progress';
-  emoji: string;
   title: string;
-  current: number;
-  total: number;
-  unit: string;
-  step: number;
-  note: string;
-  color: CardColor;
-  events: ProgressEvent[];
-  challenge?: ChallengeConfig;
-  expectedDate?: string;
-  createdAt: string;
-  updatedAt: string;
 }
-
-export interface ProgressMemory {
+export interface LifeRecord {
   id: string;
-  kind: 'progress';
-  sourceGoalId: string;
-  emoji: string;
-  title: string;
-  current: number;
-  total: number;
-  unit: string;
-  note: string;
-  color: CardColor;
-  completedNaturally: boolean;
-  startedAt: string;
-  endedAt: string;
-  events: ProgressEvent[];
-  challenge?: ChallengeConfig;
-  expectedDate?: string;
-}
-
-export interface CountdownMemory {
-  id: string;
-  kind: 'countdown';
-  sourceCountdownId: string;
-  emoji: string;
-  title: string;
-  targetDate: string;
-  note: string;
-  notes: CountdownNote[];
-  color: CardColor;
-  startedAt: string;
-  endedAt: string;
-  endedEarly: boolean;
-}
-
-export type GrowthMemory = ProgressMemory | CountdownMemory;
-
-export interface DiaryTaskSnapshot {
-  id: string;
-  sourceTaskId: string;
-  emoji: string;
-  title: string;
-  done: boolean;
-}
-
-export type DiaryGrowthSnapshot =
-  | {
-      id: string;
-      kind: 'countdown';
-      sourceId: string;
-      emoji: string;
-      title: string;
-      remainingDays: number;
-      note: string;
-      capturedAt: string;
-    }
-  | {
-      id: string;
-      kind: 'progress';
-      sourceId: string;
-      emoji: string;
-      title: string;
-      delta: number;
-      challengeResult?: string;
-      current: number;
-      total: number;
-      unit: string;
-      note: string;
-      capturedAt: string;
-    };
-
-export interface DiaryEntry {
   date: string;
-  mood: Mood;
   body: string;
   photoIds: string[];
-  taskSnapshots: DiaryTaskSnapshot[];
-  growthSnapshots: DiaryGrowthSnapshot[];
+  delta?: number;
+  statusId?: string;
+  stageId?: string;
+  stageDone?: boolean;
   createdAt: string;
   updatedAt: string;
 }
-
-export interface DateMarker {
-  date: string;
+export interface LifeCard {
+  id: string;
+  kind: CardKind;
+  title: string;
+  emoji: string;
+  note: string;
   color: CardColor;
+  location: 'active' | 'later' | 'memory';
+  startDate: string;
+  createdAt: string;
+  updatedAt: string;
+  archivedAt?: string;
+  ending?: 'achieved' | 'closed';
+  summary?: string;
+  records: LifeRecord[];
+  // Configurations survive switching the primary display, as do all records.
+  progress?: {
+    initial: number;
+    total?: number;
+    unit: string;
+    step: number;
+    expectedDate?: string;
+  };
+  record?: {
+    states: RecordStatus[];
+    periodDays?: number;
+    targetStateId?: string;
+    targetDays?: number;
+  };
+  stages?: Stage[];
 }
-
+export interface CompanionCard {
+  id: string;
+  kind: 'quote' | 'countdown';
+  title: string;
+  note: string;
+  emoji: string;
+  targetDate?: string;
+}
 export interface AppSettings {
   theme: ThemeMode;
   accent: AccentTheme;
   wallpaper: string;
-  wallpaperCatalogVersion: 3;
   haptics: boolean;
   sounds: boolean;
   journalLines: boolean;
 }
-
 export interface AppState {
-  version: 4;
-  commonItems: CommonItem[];
-  dailyTasks: DailyTask[];
-  countdowns: Countdown[];
-  progressGoals: ProgressGoal[];
-  memories: GrowthMemory[];
-  diaries: DiaryEntry[];
-  dateMarkers: DateMarker[];
+  version: 1;
+  cards: LifeCard[];
+  companions: CompanionCard[];
   settings: AppSettings;
 }
-
 export interface StoredPhoto {
   id: string;
   blob: Blob;
   name: string;
   createdAt: string;
 }
-
 export interface BackupPhoto {
   id: string;
   dataUrl: string;
   name: string;
   createdAt: string;
 }
-
 export interface DiaryBackup {
-  product: 'asoul-diary-v3';
+  product: 'asoul-life-v3';
   exportedAt: string;
   state: AppState;
   photos: BackupPhoto[];

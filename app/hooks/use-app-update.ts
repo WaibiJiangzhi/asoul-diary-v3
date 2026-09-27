@@ -7,11 +7,16 @@ interface BeforeInstallPromptEvent extends Event {
 }
 
 interface AppUpdateOptions {
+  enabled?: boolean;
   flushSave: () => Promise<boolean>;
   showToast: ShowToast;
 }
 
-export function useAppUpdate({ flushSave, showToast }: AppUpdateOptions) {
+export function useAppUpdate({
+  flushSave,
+  showToast,
+  enabled = true,
+}: AppUpdateOptions) {
   const [installPrompt, setInstallPrompt] =
     useState<BeforeInstallPromptEvent | null>(null);
   const [waitingServiceWorker, setWaitingServiceWorker] =
@@ -33,6 +38,7 @@ export function useAppUpdate({ flushSave, showToast }: AppUpdateOptions) {
 
   useEffect(() => {
     if (
+      !enabled ||
       !('serviceWorker' in navigator) ||
       process.env.NODE_ENV !== 'production'
     ) {
@@ -121,7 +127,7 @@ export function useAppUpdate({ flushSave, showToast }: AppUpdateOptions) {
       if (updateCheckTimer) clearInterval(updateCheckTimer);
       if (updateNoticeTimer.current) clearTimeout(updateNoticeTimer.current);
     };
-  }, [flushSave, showToast]);
+  }, [flushSave, showToast, enabled]);
 
   const applyReadyUpdate = useCallback(async () => {
     const worker = waitingServiceWorker;

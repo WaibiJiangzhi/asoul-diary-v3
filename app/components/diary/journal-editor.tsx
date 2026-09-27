@@ -25,10 +25,12 @@ export function JournalEditor({
   value,
   onChange,
   ruled,
+  portalTarget,
 }: {
   value: string;
   onChange: (text: string) => void;
   ruled: boolean;
+  portalTarget?: HTMLElement | null;
 }) {
   const editor = useRef<HTMLDivElement>(null);
   const dock = useRef<HTMLDivElement>(null);
@@ -208,7 +210,7 @@ export function JournalEditor({
         // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- Inline images require contenteditable.
         role="textbox"
         tabIndex={0}
-        aria-label="日记正文"
+        aria-label="记录正文"
         aria-multiline="true"
         spellCheck
         onFocus={() => {
@@ -284,7 +286,7 @@ export function JournalEditor({
             }
           >
             <div className="journal-composer-toolbar">
-              <span>正在写这一页</span>
+              <span>留下这一刻</span>
               <Button
                 type="button"
                 variant="ghost"
@@ -325,7 +327,7 @@ export function JournalEditor({
               />
             )}
           </div>,
-          document.body,
+          portalTarget ?? document.body,
         )}
     </section>
   );

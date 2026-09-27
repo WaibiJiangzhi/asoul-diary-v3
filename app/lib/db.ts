@@ -1,8 +1,9 @@
 import { createDefaultState, createId, normalizeState } from './defaults';
 import type { AppState, DiaryBackup, StoredPhoto } from './types';
-import { validateBackup } from './backup-validation';
+import { validateBackup, validateState } from './backup-validation';
+import { allPhotoIds } from './life';
 
-const DB_NAME = 'asoul-diary-v3';
+const DB_NAME = 'asoul-life-v3-preview';
 const DB_VERSION = 1;
 const STATE_KEY = 'main';
 const REVISION_KEY = 'revision';
@@ -141,8 +142,8 @@ export async function loadState(): Promise<AppState> {
     requestResult(store.get(REVISION_KEY)),
   ]).finally(() => database.close());
   expectedRevision = (revision as string | undefined) ?? null;
-  if (!stored || (stored as AppState).version !== 4)
-    return createDefaultState();
+  if (!stored) return createDefaultState();
+  validateState(stored);
   return normalizeState(stored as AppState);
 }
 
@@ -151,9 +152,7 @@ export function saveState(state: AppState): Promise<void> {
   return queueWrite(async () => {
     if (generation !== replacementGeneration)
       throw new Error('记录已替换，旧保存已取消');
-    const referenced = new Set(
-      state.diaries.flatMap((entry) => entry.photoIds),
-    );
+    const referenced = new Set(allPhotoIds(state));
     const removed = [...pendingPhotoDeletes].filter(
       (id) => !referenced.has(id),
     );
@@ -235,7 +234,7 @@ export async function deletePhotos(ids: string[]): Promise<void> {
   if (!ids.length) return;
   await queueWrite(async () => {
     await writeTransaction(() => {});
-    // Remove blobs in the same commit that removes their diary references.
+    // Remove blobs in the same commit that removes their record references.
     // A failed autosave must leave the previously saved photos intact.
     ids.forEach((id) => pendingPhotoDeletes.add(id));
   });
@@ -273,12 +272,16 @@ export async function createBackup(state: AppState): Promise<DiaryBackup> {
     transaction.objectStore('photos').getAll(),
   )) as StoredPhoto[];
   database.close();
+  const referenced = new Set(allPhotoIds(state));
+  const included = photos.filter((photo) => referenced.has(photo.id));
+  if (included.length !== referenced.size)
+    throw new Error('有照片暂时无法读取，请稍后重新备份');
   return {
-    product: 'asoul-diary-v3',
+    product: 'asoul-life-v3',
     exportedAt: new Date().toISOString(),
     state,
     photos: await Promise.all(
-      photos.map(async (photo) => ({
+      included.map(async (photo) => ({
         id: photo.id,
         dataUrl: await blobToDataUrl(photo.blob),
         name: photo.name,
@@ -303,7 +306,7 @@ export async function restoreBackup(backup: DiaryBackup): Promise<AppState> {
   if (
     ids.size !== photos.length ||
     photos.some((photo) => !photo.id) ||
-    restored.diaries.some((entry) => entry.photoIds.some((id) => !ids.has(id)))
+    allPhotoIds(restored).some((id) => !ids.has(id))
   )
     throw new Error('备份中的照片缺失或重复，原有记录未替换');
   await queueWrite(() =>

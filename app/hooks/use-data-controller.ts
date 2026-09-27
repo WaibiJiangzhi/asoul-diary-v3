@@ -31,7 +31,7 @@ export function useDataController({
       );
       const link = document.createElement('a');
       link.href = url;
-      link.download = `asoul-diary-v3-${dateKey()}.json`;
+      link.download = `asoul-life-v3-${dateKey()}.json`;
       link.click();
       setTimeout(() => URL.revokeObjectURL(url), 1000);
       showToast('完整备份已下载');
@@ -48,7 +48,7 @@ export function useDataController({
     if (!file) return;
     askConfirmation({
       title: '用备份替换现在的记录？',
-      description: '当前设备上的事项、成长、日记和照片都会被备份内容替换。',
+      description: '当前设备上的卡片、记录和照片都会被备份内容替换。',
       confirmLabel: '恢复备份',
       action: async () => {
         try {
@@ -65,8 +65,7 @@ export function useDataController({
   function clearData() {
     askConfirmation({
       title: '清空这台设备上的全部记录？',
-      description:
-        '事项、成长、日记和照片都会永久删除。建议先取消并下载完整备份。',
+      description: '卡片、记录和照片都会永久删除。建议先取消并下载完整备份。',
       confirmLabel: '确认全部清空',
       destructive: true,
       action: async () => {

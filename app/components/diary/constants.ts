@@ -1,41 +1,4 @@
-import { dateKey, moveDate } from '@/lib/date';
-import type { CardColor, Mood, ProgressGoal, RecordStatus } from '@/lib/types';
-import { DEFAULT_RECORD_STATES } from '@/lib/challenge';
-
-export type GrowthDraft = {
-  id?: string;
-  kind: 'progress' | 'countdown';
-  emoji: string;
-  title: string;
-  targetDate: string;
-  current: string;
-  total: string;
-  unit: string;
-  step: string;
-  note: string;
-  color: ProgressGoal['color'];
-  mode: 'counter' | 'challenge';
-  expectedDateEnabled: boolean;
-  expectedDate: string;
-  startDate: string;
-  states: RecordStatus[];
-  targetStateId: string;
-  targetEnabled: boolean;
-  targetDays: string;
-};
-
-export const MOOD_OPTIONS: {
-  value: Exclude<Mood, ''>;
-  emoji: string;
-  label: string;
-}[] = [
-  { value: 'happy', emoji: '😄', label: '开心' },
-  { value: 'good', emoji: '😌', label: '还不错' },
-  { value: 'plain', emoji: '😐', label: '一般般' },
-  { value: 'annoyed', emoji: '😣', label: '有点烦' },
-  { value: 'sad', emoji: '🥹', label: '难受' },
-];
-
+import type { CardColor } from '@/lib/types';
 export const DAILY_EMOJIS = [
   '🌱',
   '✨',
@@ -67,26 +30,3 @@ export const CARD_COLORS: { value: CardColor; label: string }[] = [
   { value: '#8B78A8', label: '暮光紫' },
   { value: '#84787E', label: '暖灰' },
 ];
-
-export function createEmptyGrowthDraft(): GrowthDraft {
-  return {
-    kind: 'progress',
-    emoji: pickDailyEmoji(),
-    title: '',
-    targetDate: moveDate(dateKey(), 30),
-    current: '0',
-    total: '30',
-    unit: 'km',
-    step: '1',
-    note: '',
-    color: '#E799B0',
-    mode: 'counter',
-    expectedDateEnabled: false,
-    expectedDate: moveDate(dateKey(), 30),
-    startDate: dateKey(),
-    states: DEFAULT_RECORD_STATES.map((state) => ({ ...state })),
-    targetStateId: 'done',
-    targetEnabled: false,
-    targetDays: '20',
-  };
-}

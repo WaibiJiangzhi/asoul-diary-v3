@@ -1,0 +1,482 @@
+{
+  "product": "asoul-life-v3",
+  "exportedAt": "2026-09-27T03:37:09.350Z",
+  "state": {
+    "version": 1,
+    "cards": [
+      {
+        "id": "card-21c17c91-70ef-4540-b06b-43990e2f9319",
+        "kind": "record",
+        "title": "把作息慢慢调回来",
+        "emoji": "[2026乃琳的酒馆动态表情包_赖床]",
+        "note": "好好睡觉，明天也会是喜欢的一天。",
+        "color": "#E799B0",
+        "location": "active",
+        "startDate": "2026-09-14",
+        "createdAt": "2026-09-27T03:37:09.351Z",
+        "updatedAt": "2026-09-27T03:37:09.351Z",
+        "records": [
+          {
+            "id": "record-004c0a2f-115d-48cc-9081-8dc6a5eb3ba0",
+            "date": "2026-09-14",
+            "body": "",
+            "photoIds": [],
+            "createdAt": "2026-09-27T03:37:09.351Z",
+            "updatedAt": "2026-09-27T03:37:09.351Z",
+            "statusId": "late"
+          },
+          {
+            "id": "record-428908f0-7983-4086-8bb9-79d5ce1e38e7",
+            "date": "2026-09-15",
+            "body": "",
+            "photoIds": [],
+            "createdAt": "2026-09-27T03:37:09.351Z",
+            "updatedAt": "2026-09-27T03:37:09.351Z",
+            "statusId": "early"
+          },
+          {
+            "id": "record-f6ef243f-f309-47b5-9b4e-31f248a8991a",
+            "date": "2026-09-16",
+            "body": "",
+            "photoIds": [],
+            "createdAt": "2026-09-27T03:37:09.351Z",
+            "updatedAt": "2026-09-27T03:37:09.351Z",
+            "statusId": "early"
+          },
+          {
+            "id": "record-a5c68c18-124f-4b8d-873a-867791acbecd",
+            "date": "2026-09-17",
+            "body": "",
+            "photoIds": [],
+            "createdAt": "2026-09-27T03:37:09.351Z",
+            "updatedAt": "2026-09-27T03:37:09.351Z",
+            "statusId": "early"
+          },
+          {
+            "id": "record-ff394ae1-8a8b-45d4-852e-97703d0937bd",
+            "date": "2026-09-18",
+            "body": "",
+            "photoIds": [],
+            "createdAt": "2026-09-27T03:37:09.351Z",
+            "updatedAt": "2026-09-27T03:37:09.351Z",
+            "statusId": "late"
+          },
+          {
+            "id": "record-a3d9f682-3754-4414-ba37-2be0de23d0ac",
+            "date": "2026-09-19",
+            "body": "",
+            "photoIds": [],
+            "createdAt": "2026-09-27T03:37:09.351Z",
+            "updatedAt": "2026-09-27T03:37:09.351Z",
+            "statusId": "rest"
+          },
+          {
+            "id": "record-19088940-0827-4878-9785-bca8faf66606",
+            "date": "2026-09-20",
+            "body": "",
+            "photoIds": [],
+            "createdAt": "2026-09-27T03:37:09.351Z",
+            "updatedAt": "2026-09-27T03:37:09.351Z",
+            "statusId": "early"
+          },
+          {
+            "id": "record-e54b2eaf-6c55-4ca7-8102-45fa4a6d4eb7",
+            "date": "2026-09-21",
+            "body": "",
+            "photoIds": [],
+            "createdAt": "2026-09-27T03:37:09.351Z",
+            "updatedAt": "2026-09-27T03:37:09.351Z",
+            "statusId": "early"
+          },
+          {
+            "id": "record-8dc68079-4382-45d1-bb66-684de307f602",
+            "date": "2026-09-22",
+            "body": "",
+            "photoIds": [],
+            "createdAt": "2026-09-27T03:37:09.351Z",
+            "updatedAt": "2026-09-27T03:37:09.351Z",
+            "statusId": "late"
+          },
+          {
+            "id": "record-3a0679a5-b44c-433d-9c71-f6d1904e9e4e",
+            "date": "2026-09-23",
+            "body": "",
+            "photoIds": [],
+            "createdAt": "2026-09-27T03:37:09.351Z",
+            "updatedAt": "2026-09-27T03:37:09.351Z",
+            "statusId": "early"
+          },
+          {
+            "id": "record-0a5f96d1-0fcf-44cb-8162-b40f57a9c547",
+            "date": "2026-09-24",
+            "body": "",
+            "photoIds": [],
+            "createdAt": "2026-09-27T03:37:09.351Z",
+            "updatedAt": "2026-09-27T03:37:09.351Z",
+            "statusId": "rest"
+          },
+          {
+            "id": "record-b0184fb3-7841-4c97-95e4-4a571d016815",
+            "date": "2026-09-25",
+            "body": "",
+            "photoIds": [],
+            "createdAt": "2026-09-27T03:37:09.351Z",
+            "updatedAt": "2026-09-27T03:37:09.351Z",
+            "statusId": "early"
+          },
+          {
+            "id": "record-e02a2d5e-002e-4995-b7f6-950ad85e8007",
+            "date": "2026-09-26",
+            "body": "今天给自己留了一点余地。",
+            "photoIds": [],
+            "createdAt": "2026-09-27T03:37:09.351Z",
+            "updatedAt": "2026-09-27T03:37:09.351Z",
+            "statusId": "late"
+          }
+        ],
+        "record": {
+          "states": [
+            {
+              "id": "early",
+              "name": "早睡早起",
+              "emoji": "[2026乃琳的酒馆动态表情包_爱你]",
+              "color": "#E799B0"
+            },
+            {
+              "id": "late",
+              "name": "晚睡了",
+              "emoji": "🌙",
+              "color": "#8B78A8"
+            },
+            {
+              "id": "rest",
+              "name": "好好休息",
+              "emoji": "😌",
+              "color": "#6F9A76"
+            }
+          ],
+          "periodDays": 30,
+          "targetStateId": "early",
+          "targetDays": 20
+        }
+      },
+      {
+        "id": "card-8c2d6c16-64c7-40e4-a4ca-5c1c68506b11",
+        "kind": "progress",
+        "title": "秋天慢慢跑 100 km",
+        "emoji": "🏃",
+        "note": "一点点跑回喜欢的自己。",
+        "color": "#DB7D74",
+        "location": "active",
+        "startDate": "2026-09-02",
+        "createdAt": "2026-09-27T03:37:09.352Z",
+        "updatedAt": "2026-09-27T03:37:09.352Z",
+        "records": [
+          {
+            "id": "record-fef08f03-0074-4a71-b4a8-4fac0fde58de",
+            "date": "2026-09-07",
+            "body": "",
+            "photoIds": [],
+            "createdAt": "2026-09-27T03:37:09.351Z",
+            "updatedAt": "2026-09-27T03:37:09.351Z",
+            "delta": 5
+          },
+          {
+            "id": "record-bba2610d-e624-45b9-80ca-62c2e77422fb",
+            "date": "2026-09-08",
+            "body": "",
+            "photoIds": [],
+            "createdAt": "2026-09-27T03:37:09.351Z",
+            "updatedAt": "2026-09-27T03:37:09.351Z",
+            "delta": 5
+          },
+          {
+            "id": "record-17bfa814-fba8-4e4f-90f2-700a86fa4994",
+            "date": "2026-09-09",
+            "body": "",
+            "photoIds": [],
+            "createdAt": "2026-09-27T03:37:09.351Z",
+            "updatedAt": "2026-09-27T03:37:09.351Z",
+            "delta": 5
+          },
+          {
+            "id": "record-64280d66-1698-4dfe-af55-08a4cbf42517",
+            "date": "2026-09-10",
+            "body": "",
+            "photoIds": [],
+            "createdAt": "2026-09-27T03:37:09.351Z",
+            "updatedAt": "2026-09-27T03:37:09.351Z",
+            "delta": 5
+          },
+          {
+            "id": "record-8e7d780d-29e2-42f0-956b-7e37986e78f9",
+            "date": "2026-09-11",
+            "body": "",
+            "photoIds": [],
+            "createdAt": "2026-09-27T03:37:09.351Z",
+            "updatedAt": "2026-09-27T03:37:09.351Z",
+            "delta": 5
+          },
+          {
+            "id": "record-92f27e2c-7d8e-4744-94c0-db68f1b1162d",
+            "date": "2026-09-12",
+            "body": "",
+            "photoIds": [],
+            "createdAt": "2026-09-27T03:37:09.351Z",
+            "updatedAt": "2026-09-27T03:37:09.351Z",
+            "delta": 5
+          },
+          {
+            "id": "record-18f43760-aa2c-4e0a-873c-a9ccd3c337a8",
+            "date": "2026-09-13",
+            "body": "",
+            "photoIds": [],
+            "createdAt": "2026-09-27T03:37:09.351Z",
+            "updatedAt": "2026-09-27T03:37:09.351Z",
+            "delta": 5
+          },
+          {
+            "id": "record-0e41e80a-012b-4944-8d7f-591ee0251a09",
+            "date": "2026-09-14",
+            "body": "",
+            "photoIds": [],
+            "createdAt": "2026-09-27T03:37:09.351Z",
+            "updatedAt": "2026-09-27T03:37:09.351Z",
+            "delta": 5
+          },
+          {
+            "id": "record-4dce5f3d-d348-4c1a-bcaa-9bb181ec607f",
+            "date": "2026-09-15",
+            "body": "",
+            "photoIds": [],
+            "createdAt": "2026-09-27T03:37:09.351Z",
+            "updatedAt": "2026-09-27T03:37:09.351Z",
+            "delta": 5
+          },
+          {
+            "id": "record-ad14ce66-e7d2-4ffc-a9c2-738924a2f628",
+            "date": "2026-09-16",
+            "body": "",
+            "photoIds": [],
+            "createdAt": "2026-09-27T03:37:09.351Z",
+            "updatedAt": "2026-09-27T03:37:09.351Z",
+            "delta": 5
+          },
+          {
+            "id": "record-0caea60e-d373-4f2f-8984-8f741be7b887",
+            "date": "2026-09-17",
+            "body": "",
+            "photoIds": [],
+            "createdAt": "2026-09-27T03:37:09.351Z",
+            "updatedAt": "2026-09-27T03:37:09.351Z",
+            "delta": 5
+          },
+          {
+            "id": "record-b5a38363-4fe0-4905-b24f-574ed187bac8",
+            "date": "2026-09-18",
+            "body": "",
+            "photoIds": [],
+            "createdAt": "2026-09-27T03:37:09.351Z",
+            "updatedAt": "2026-09-27T03:37:09.351Z",
+            "delta": 5
+          },
+          {
+            "id": "record-db858994-4096-4078-9721-923bf4fa93c3",
+            "date": "2026-09-19",
+            "body": "",
+            "photoIds": [],
+            "createdAt": "2026-09-27T03:37:09.351Z",
+            "updatedAt": "2026-09-27T03:37:09.351Z",
+            "delta": 5
+          },
+          {
+            "id": "record-39ca623d-5d57-4f69-aaef-053b7a9f04b0",
+            "date": "2026-09-20",
+            "body": "",
+            "photoIds": [],
+            "createdAt": "2026-09-27T03:37:09.351Z",
+            "updatedAt": "2026-09-27T03:37:09.351Z",
+            "delta": 5
+          },
+          {
+            "id": "record-7c21cb39-c7f9-4350-94dc-1dd74cbeaceb",
+            "date": "2026-09-21",
+            "body": "河边的风很舒服。[2026乃琳的酒馆动态表情包_爱你]",
+            "photoIds": [],
+            "createdAt": "2026-09-27T03:37:09.351Z",
+            "updatedAt": "2026-09-27T03:37:09.351Z",
+            "delta": 5
+          },
+          {
+            "id": "record-d20df793-288c-42c2-bf00-9ac1ab10ac00",
+            "date": "2026-09-26",
+            "body": "最后一段慢慢走回来了。",
+            "photoIds": [],
+            "createdAt": "2026-09-27T03:37:09.351Z",
+            "updatedAt": "2026-09-27T03:37:09.351Z",
+            "delta": 2.5
+          }
+        ],
+        "progress": {
+          "initial": 0,
+          "total": 100,
+          "unit": "km",
+          "step": 3,
+          "expectedDate": "2026-10-17"
+        }
+      },
+      {
+        "id": "card-aae2ef3f-e9f4-4f8b-9567-8933f6bb7b97",
+        "kind": "stage",
+        "title": "准备一次喜欢的旅行",
+        "emoji": "🧳",
+        "note": "给自己留一段看看世界的时间。",
+        "color": "#8B78A8",
+        "location": "active",
+        "startDate": "2026-09-08",
+        "createdAt": "2026-09-27T03:37:09.352Z",
+        "updatedAt": "2026-09-27T03:37:09.352Z",
+        "records": [
+          {
+            "id": "record-af52fe97-288f-4afd-842a-4c9e82ce9a03",
+            "date": "2026-09-12",
+            "body": "想去海边看看日出。",
+            "photoIds": [],
+            "createdAt": "2026-09-27T03:37:09.351Z",
+            "updatedAt": "2026-09-27T03:37:09.351Z",
+            "stageId": "step-0",
+            "stageDone": true
+          },
+          {
+            "id": "record-79783ed0-4548-4357-b9db-840cb0da0e70",
+            "date": "2026-09-24",
+            "body": "路线和住宿都安排好了，留一点时间随便逛逛。",
+            "photoIds": [],
+            "createdAt": "2026-09-27T03:37:09.351Z",
+            "updatedAt": "2026-09-27T03:37:09.351Z",
+            "stageId": "step-1",
+            "stageDone": true
+          }
+        ],
+        "stages": [
+          {
+            "id": "step-0",
+            "title": "选好目的地"
+          },
+          {
+            "id": "step-1",
+            "title": "安排好行程"
+          },
+          {
+            "id": "step-2",
+            "title": "收拾好行李"
+          },
+          {
+            "id": "step-3",
+            "title": "出发去看看"
+          }
+        ]
+      },
+      {
+        "id": "card-24e40ce2-0cb0-4028-bd43-bfcf430c8480",
+        "kind": "blank",
+        "title": "想把脑海里的画面画出来",
+        "emoji": "🎨",
+        "note": "先画喜欢的东西，不着急找到终点。",
+        "color": "#E799B0",
+        "location": "active",
+        "startDate": "2026-09-20",
+        "createdAt": "2026-09-27T03:37:09.352Z",
+        "updatedAt": "2026-09-27T03:37:09.352Z",
+        "records": [
+          {
+            "id": "record-d165842e-9ea4-4d8d-bf6f-67f8eecb7e46",
+            "date": "2026-09-25",
+            "body": "画了第一张人物速写，眼睛比上次自然一点。",
+            "photoIds": [],
+            "createdAt": "2026-09-27T03:37:09.351Z",
+            "updatedAt": "2026-09-27T03:37:09.351Z"
+          }
+        ]
+      },
+      {
+        "id": "card-33b9966a-ff02-48a0-9a35-493238f5647f",
+        "kind": "blank",
+        "title": "去看一次团线下",
+        "emoji": "[2026乃琳的酒馆动态表情包_蹦蹦跳跳]",
+        "note": "把屏幕里的喜欢变成真实的回忆。",
+        "color": "#E799B0",
+        "location": "later",
+        "startDate": "2026-09-27",
+        "createdAt": "2026-09-27T03:37:09.352Z",
+        "updatedAt": "2026-09-27T03:37:09.352Z",
+        "records": []
+      },
+      {
+        "id": "card-9097f4ef-6113-40ed-a4e3-9944cbd1abf9",
+        "kind": "progress",
+        "title": "读完一本喜欢的书",
+        "emoji": "📚",
+        "note": "每天读一点，真的读完了。",
+        "color": "#E799B0",
+        "location": "memory",
+        "startDate": "2026-08-08",
+        "createdAt": "2026-09-27T03:37:09.353Z",
+        "updatedAt": "2026-09-27T03:37:09.353Z",
+        "records": [
+          {
+            "id": "record-b986f280-8ed9-43cc-b7fe-65e54d187c77",
+            "date": "2026-09-19",
+            "body": "合上书的时候，有一点舍不得。",
+            "photoIds": [],
+            "createdAt": "2026-09-27T03:37:09.351Z",
+            "updatedAt": "2026-09-27T03:37:09.351Z",
+            "delta": 300
+          }
+        ],
+        "progress": {
+          "initial": 0,
+          "total": 300,
+          "unit": "页",
+          "step": 10
+        },
+        "archivedAt": "2026-09-27T03:37:09.351Z",
+        "ending": "achieved",
+        "summary": "原来每天留一点时间，就能看完一个很长的故事。"
+      }
+    ],
+    "companions": [
+      {
+        "id": "companion-welcome",
+        "kind": "quote",
+        "title": "你的梦想是什么？",
+        "note": "把喜欢的事，一点点变成自己的生活。",
+        "emoji": "[嘉然_笔芯]"
+      },
+      {
+        "id": "companion-today",
+        "kind": "quote",
+        "title": "今天也往前走一点",
+        "note": "慢一点也没关系，留下自己的脚印。",
+        "emoji": "[2026乃琳的酒馆动态表情包_爱你]"
+      },
+      {
+        "id": "demo-countdown",
+        "kind": "countdown",
+        "title": "和喜欢的人去看山",
+        "note": "把期待留给那个晴天。",
+        "emoji": "⛰️",
+        "targetDate": "2026-10-09"
+      }
+    ],
+    "settings": {
+      "theme": "wallpaper",
+      "accent": "jiaran",
+      "wallpaper": "/wallpapers/jiaran-1.webp",
+      "haptics": true,
+      "sounds": true,
+      "journalLines": false
+    }
+  },
+  "photos": []
+}

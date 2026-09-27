@@ -1,10 +1,24 @@
 'use client';
-
-import type { CSSProperties } from 'react';
-import { useState, useLayoutEffect, useRef } from 'react';
-import { Candy, IceCreamBowl, RefreshCw, RotateCcw, Star } from 'lucide-react';
+import {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+} from 'react';
+import {
+  Archive,
+  ArrowRight,
+  Clock3,
+  Pencil,
+  Plus,
+  RefreshCw,
+  RotateCcw,
+  Sparkles,
+  Trash2,
+} from 'lucide-react';
+import Link from 'next/link';
 import { createPortal } from 'react-dom';
-
 import {
   AppHeader,
   BottomNav,
@@ -15,32 +29,50 @@ import {
   ConfirmDialog,
   type Confirmation,
 } from '@/components/diary/confirm-dialog';
-import { GrowthDrawer, GrowthView } from '@/components/diary/growth';
-import { JournalView } from '@/components/diary/journal';
+import { CardForm, Sheet } from '@/components/diary/life-form';
+import { CardStarter } from '@/components/diary/card-starter';
+import { CardDetail, ArchiveForm } from '@/components/diary/life-detail';
+import { RecordForm } from '@/components/diary/life-record';
 import {
-  TaskEditDrawer,
-  TodayDrawer,
-  TodayView,
-} from '@/components/diary/today';
+  LifeView,
+  MemoryView,
+  CompanionForm,
+} from '@/components/diary/life-view';
+import { Decoration } from '@/components/diary/decoration';
 import { Button } from '@/components/ui/button';
 import { useAppFeedback } from '@/hooks/use-app-feedback';
 import { useAppUpdate } from '@/hooks/use-app-update';
 import { useDataController } from '@/hooks/use-data-controller';
 import { useDiaryState } from '@/hooks/use-diary-state';
-import { useDiaryWebMcp } from '@/hooks/use-diary-webmcp';
-import { useGrowthController } from '@/hooks/use-growth-controller';
-import { useJournalController } from '@/hooks/use-journal-controller';
-import { useTodayController } from '@/hooks/use-today-controller';
+import { useLifeController } from '@/hooks/use-life-controller';
 import { useToast } from '@/hooks/use-toast';
-import { dateKey } from '@/lib/date';
+import { formatShortDate } from '@/lib/date';
 import { wallpaperAssetUrl } from '@/lib/defaults';
-import type { AppTab } from '@/lib/types';
+import { restartLifeCard } from '@/lib/card-templates';
+import { canRecord, recordEnd, statusRecord } from '@/lib/life';
+import type { AppTab, LifeCard, LifeRecord } from '@/lib/types';
 
-/**
- * Application composition root. Domain mutations live in focused controllers;
- * this component only connects state, screens, drawers, and global feedback.
- */
-export default function DiaryApp() {
+type Panel =
+  | { kind: 'detail' | 'menu' | 'archive'; id: string }
+  | {
+      kind: 'card';
+      draft: LifeCard;
+      returnTo?: string;
+      isNew?: boolean;
+      prefilled?: boolean;
+    }
+  | { kind: 'starter' }
+  | {
+      kind: 'record' | 'status';
+      id: string;
+      date: string;
+      record?: LifeRecord;
+      returnTo?: string;
+    }
+  | { kind: 'companions' }
+  | null;
+
+export default function DiaryApp({ preview = false }: { preview?: boolean }) {
   const { toast, showToast, dismissToast } = useToast();
   const {
     state,
@@ -48,228 +80,371 @@ export default function DiaryApp() {
     stateRef,
     saveStatus,
     todayDate,
-    setTodayDate,
-    isReady,
     flushSave,
     replaceData,
-  } = useDiaryState(showToast);
-  const [activeTab, setActiveTab] = useState<AppTab>('today');
-  const [visitedTabs, setVisitedTabs] = useState<Set<AppTab>>(
-    () => new Set(['today']),
-  );
-  const scrollPositions = useRef<Record<AppTab, number>>({
-    today: 0,
-    growth: 0,
-    journal: 0,
-  });
-  useLayoutEffect(() => {
-    window.scrollTo({
-      top: scrollPositions.current[activeTab],
-      behavior: 'instant',
-    });
-  }, [activeTab]);
-  const [journalDate, setJournalDate] = useState(dateKey());
-  const [settingsOpen, setSettingsOpen] = useState(false);
+  } = useDiaryState(showToast, preview);
+  const [tab, setTab] = useState<AppTab>('life');
+  const [panel, setPanel] = useState<Panel>(null);
+  const [settings, setSettings] = useState(false);
   const [confirmation, setConfirmation] = useState<Confirmation | null>(null);
-
-  function askConfirmation(next: Confirmation) {
-    setConfirmation(next);
-  }
-
+  const positions = useRef<Record<AppTab, number>>({ life: 0, memories: 0 });
   const { haptic, softChime } = useAppFeedback(stateRef);
-  const {
-    waitingServiceWorker,
-    updateNoticeVisible,
-    applyReadyUpdate,
-    installApp,
-  } = useAppUpdate({
-    flushSave,
-    showToast,
-  });
-  useDiaryWebMcp({ isReady, stateRef, setState });
-
-  const today = useTodayController({
-    state,
-    selectedDate: todayDate,
-    setState,
-    showToast,
-    haptic,
-    softChime,
-    askConfirmation,
-  });
-  const growth = useGrowthController({
-    state,
+  const updates = useAppUpdate({ flushSave, showToast, enabled: !preview });
+  const life = useLifeController({
     stateRef,
     setState,
     showToast,
     haptic,
     softChime,
-    askConfirmation,
-  });
-  const journal = useJournalController({
-    stateRef,
-    setState,
-    showToast,
-    askConfirmation,
+    askConfirmation: setConfirmation,
+    preview,
   });
   const data = useDataController({
     state,
     replaceData,
     showToast,
-    askConfirmation,
-    onClear: () => setSettingsOpen(false),
+    askConfirmation: setConfirmation,
+    onClear: () => {
+      setSettings(false);
+      setPanel(null);
+    },
   });
-
-  function changeTab(tab: AppTab) {
-    if (tab === activeTab) return;
-    scrollPositions.current[activeTab] = window.scrollY;
-    (document.activeElement as HTMLElement | null)?.blur();
-    setVisitedTabs((current) => new Set([...current, tab]));
-    setActiveTab(tab);
+  const { celebration, setCelebration } = life;
+  useEffect(() => {
+    if (!celebration) return;
+    const timer = setTimeout(() => setCelebration(null), 2200);
+    return () => clearTimeout(timer);
+  }, [celebration, setCelebration]);
+  useLayoutEffect(() => {
+    window.scrollTo({ top: positions.current[tab], behavior: 'instant' });
+  }, [tab]);
+  function changeTab(next: AppTab) {
+    if (next === tab) return;
+    positions.current[tab] = window.scrollY;
+    setTab(next);
   }
-
-  if (!state) {
-    return (
-      <main className="app-loading">
-        <span className="loading-motifs" aria-hidden="true">
-          <Candy className="loading-jiaran" />
-          <Star className="loading-bella" />
-          <IceCreamBowl className="loading-nailin" />
-        </span>
-        <p>正在翻开今天的一页…</p>
-      </main>
+  function closePanel() {
+    setPanel((p) =>
+      p && 'returnTo' in p && p.returnTo
+        ? { kind: 'detail', id: p.returnTo }
+        : null,
     );
   }
-
+  function openRecord(
+    id: string,
+    date?: string,
+    record?: LifeRecord,
+    returnTo?: string,
+    full = false,
+  ) {
+    const card = stateRef.current?.cards.find((c) => c.id === id);
+    if (!card) return;
+    const end = recordEnd(card);
+    const target =
+      date ??
+      (card.kind === 'record' && end && end < todayDate ? end : todayDate);
+    if (!canRecord(card, target, todayDate)) {
+      showToast('这一天还不能记录，可以先调整卡片的开始日期。');
+      return;
+    }
+    setPanel({
+      kind: card.kind === 'record' && !record && !full ? 'status' : 'record',
+      id,
+      date: target,
+      record:
+        record ??
+        (card.kind === 'record' ? statusRecord(card, target) : undefined),
+      returnTo,
+    });
+  }
+  const previewNotice = () =>
+    showToast('这是可体验的示例页；保存照片、备份和恢复请回到自己的生活页。');
+  if (!state)
+    return (
+      <main className="app-loading">
+        <Sparkles />
+        <p>翻开生活，慢慢来…</p>
+      </main>
+    );
+  const current =
+    panel && 'id' in panel
+      ? state.cards.find((c) => c.id === panel.id)
+      : undefined;
   const wallpaperStyle =
     state.settings.theme === 'wallpaper'
       ? ({
           '--selected-wallpaper': `url("${wallpaperAssetUrl(state.settings.wallpaper)}")`,
         } as CSSProperties)
       : undefined;
-
   return (
     <main
       className={`app-shell theme-${state.settings.accent} ${state.settings.theme === 'wallpaper' ? 'has-wallpaper' : ''}`}
       style={wallpaperStyle}
     >
-      <section className="diary-page" aria-label="Asoul一个魂生活日记">
+      <section className="diary-page" aria-label="一个魂生活">
         <PaperBinding />
         <AppHeader
           saveStatus={saveStatus}
-          updateAvailable={Boolean(waitingServiceWorker)}
-          onOpenSettings={() => setSettingsOpen(true)}
+          preview={preview}
+          updateAvailable={Boolean(updates.waitingServiceWorker)}
+          onOpenSettings={() => setSettings(true)}
         />
-
-        {visitedTabs.has('today') && (
-          <div className="app-tab-panel" hidden={activeTab !== 'today'}>
-            <TodayView
-              key={todayDate}
-              state={state}
-              selectedDate={todayDate}
-              onDateChange={setTodayDate}
-              onAdd={() => {
-                today.setTodayDrawerMode('add');
-                today.setTodayDrawerOpen(true);
-              }}
-              onToggle={today.toggleTodayTask}
-              onEdit={today.setTaskEditing}
-              onReorder={today.reorderTodayTasks}
-            />
+        {preview && (
+          <div className="preview-note">
+            <span>体验示例 · 修改不会保存</span>
+            <Link href="/">
+              回到我的生活
+              <ArrowRight />
+            </Link>
           </div>
         )}
-        {visitedTabs.has('growth') && (
-          <div className="app-tab-panel" hidden={activeTab !== 'growth'}>
-            <GrowthView
-              visible={activeTab === 'growth'}
-              state={state}
-              onAdd={growth.openNewGrowth}
-              onAdjust={growth.adjustProgress}
-              onRecordChallenge={growth.recordChallenge}
-              onDeleteEvent={growth.deleteProgressEvent}
-              onEdit={growth.openEditGrowth}
-              onDelete={growth.deleteGrowth}
-              onArchive={growth.archiveGrowth}
-              onCopy={growth.copyMemory}
-              onRestoreMemory={growth.restoreMemory}
-              onDeleteMemory={growth.deleteMemory}
-              onAddCountdownNote={growth.addCountdownNote}
-              onDeleteCountdownNote={growth.deleteCountdownNote}
-            />
-          </div>
-        )}
-        {visitedTabs.has('journal') && (
-          <div className="app-tab-panel" hidden={activeTab !== 'journal'}>
-            <JournalView
-              state={state}
-              selectedDate={journalDate}
-              onDateChange={setJournalDate}
-              onUpdate={journal.updateDiary}
-              onAddPhotos={journal.addDiaryPhotos}
-              onRemovePhoto={journal.removeDiaryPhoto}
-              onRemoveSnapshot={journal.removeDiarySnapshot}
-              onDelete={journal.deleteDiary}
-              onSetDateMarker={journal.setDateMarker}
-            />
-          </div>
-        )}
-        <BottomNav active={activeTab} onChange={changeTab} />
+        <div className="app-tab-panel" hidden={tab !== 'life'}>
+          <LifeView
+            cards={state.cards}
+            companions={state.companions}
+            today={todayDate}
+            onNew={() => setPanel({ kind: 'starter' })}
+            onOpen={(id) => setPanel({ kind: 'detail', id })}
+            onRecord={openRecord}
+            onStage={life.toggleStage}
+            onMenu={(id) => setPanel({ kind: 'menu', id })}
+            onStart={(id) => life.locate(id, 'active')}
+            onReorder={life.reorder}
+            onCompanions={() => setPanel({ kind: 'companions' })}
+          />
+        </div>
+        <div className="app-tab-panel" hidden={tab !== 'memories'}>
+          <MemoryView
+            cards={state.cards}
+            onOpen={(id) => setPanel({ kind: 'detail', id })}
+          />
+        </div>
       </section>
-
-      <TodayDrawer
-        state={state}
-        selectedDate={todayDate}
-        open={today.todayDrawerOpen}
-        mode={today.todayDrawerMode}
-        onModeChange={today.setTodayDrawerMode}
-        onOpenChange={today.setTodayDrawerOpen}
-        onAddTasks={today.addTodayTasks}
-        onSaveCommon={today.saveCommon}
-        onDeleteCommon={today.deleteCommon}
-        onReorderCommon={today.reorderCommonItems}
-      />
-
-      <TaskEditDrawer
-        task={today.taskEditing}
-        onChange={today.setTaskEditing}
-        onSave={today.saveEditedTask}
-        onDelete={today.deleteTodayTask}
-      />
-
-      <GrowthDrawer
-        open={growth.growthOpen}
-        draft={growth.growthDraft}
-        onOpenChange={growth.setGrowthOpen}
-        onDraftChange={growth.setGrowthDraft}
-        onSave={growth.saveGrowth}
-        onMove={(kind, id, direction) => {
-          const item =
-            kind === 'countdown'
-              ? state.countdowns.find((entry) => entry.id === id)
-              : state.progressGoals.find((entry) => entry.id === id);
-          if (item) growth.moveGrowth(item, direction);
-        }}
-      />
-
+      <BottomNav active={tab} onChange={changeTab} />
+      {panel?.kind === 'starter' && (
+        <CardStarter
+          cards={state.cards}
+          onClose={closePanel}
+          onChoose={(draft, prefilled) =>
+            setPanel({ kind: 'card', draft, prefilled, isNew: true })
+          }
+        />
+      )}
+      {panel?.kind === 'card' && (
+        <CardForm
+          key={panel.draft.id}
+          initial={panel.draft}
+          isNew={panel.isNew}
+          prefilled={panel.prefilled}
+          onBack={
+            panel.isNew && !panel.returnTo
+              ? () => setPanel({ kind: 'starter' })
+              : undefined
+          }
+          onSave={(card) => {
+            life.saveCard(card);
+            if (panel.isNew) {
+              setPanel(null);
+              changeTab('life');
+            }
+          }}
+          onClose={closePanel}
+        />
+      )}
+      {panel?.kind === 'companions' && (
+        <CompanionForm
+          cards={state.companions}
+          onChange={(companions) => setState((s) => s && { ...s, companions })}
+          onClose={closePanel}
+        />
+      )}
+      {current && panel?.kind === 'menu' && (
+        <Sheet
+          title={current.title}
+          description="让这张卡片适合现在的自己。"
+          onClose={closePanel}
+        >
+          <div className="card-menu">
+            <button
+              type="button"
+              onClick={() => setPanel({ kind: 'card', draft: current })}
+            >
+              <Pencil />
+              编辑卡片与记录方式
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                life.locate(
+                  current.id,
+                  current.location === 'active' ? 'later' : 'active',
+                );
+                setPanel(null);
+              }}
+            >
+              <Clock3 />
+              {current.location === 'active' ? '放到以后想做' : '回到正在记录'}
+            </button>
+            <button
+              type="button"
+              onClick={() => setPanel({ kind: 'archive', id: current.id })}
+            >
+              <Archive />
+              收进纪念册
+            </button>
+            <button
+              type="button"
+              className="danger-text"
+              onClick={() => {
+                setPanel(null);
+                life.removeCard(current.id);
+              }}
+            >
+              <Trash2 />
+              删除卡片
+            </button>
+          </div>
+        </Sheet>
+      )}
+      {current && panel?.kind === 'detail' && (
+        <CardDetail
+          key={current.id}
+          card={current}
+          onClose={closePanel}
+          onRecord={(date, record) =>
+            openRecord(current.id, date, record, current.id, Boolean(record))
+          }
+          onEdit={() =>
+            setPanel({ kind: 'card', draft: current, returnTo: current.id })
+          }
+          onDeleteRecord={(id) => life.removeRecord(current.id, id)}
+          onStage={(id) => life.toggleStage(current.id, id)}
+          onArchive={() => setPanel({ kind: 'archive', id: current.id })}
+          onRestore={() => {
+            life.locate(current.id, 'active');
+            setPanel(null);
+            changeTab('life');
+          }}
+          onNewSeason={() => {
+            setPanel({
+              kind: 'card',
+              draft: restartLifeCard(current),
+              isNew: true,
+              prefilled: true,
+              returnTo: current.id,
+            });
+          }}
+          onDelete={() => life.removeCard(current.id)}
+        />
+      )}
+      {current && panel?.kind === 'archive' && (
+        <ArchiveForm
+          card={current}
+          onClose={closePanel}
+          onSave={(summary, ending) =>
+            life.archive(current.id, summary, ending)
+          }
+        />
+      )}
+      {current && panel?.kind === 'record' && (
+        <RecordForm
+          key={current.id + panel.date + (panel.record?.id ?? '')}
+          card={current}
+          date={panel.date}
+          initial={panel.record}
+          ruled={state.settings.journalLines}
+          onSave={(record, files) => life.saveRecord(current.id, record, files)}
+          onClose={closePanel}
+        />
+      )}
+      {current && panel?.kind === 'status' && (
+        <Sheet
+          title={formatShortDate(panel.date) + '，今天怎么样？'}
+          description={current.title}
+          onClose={closePanel}
+        >
+          <div className="quick-status">
+            <div className="status-options">
+              {current.record?.states.map((s) => (
+                <button
+                  key={s.id}
+                  type="button"
+                  className={
+                    statusRecord(current, panel.date)?.statusId === s.id
+                      ? 'selected'
+                      : ''
+                  }
+                  aria-pressed={
+                    statusRecord(current, panel.date)?.statusId === s.id
+                  }
+                  onClick={() => {
+                    life.quickStatus(current.id, panel.date, s.id);
+                    closePanel();
+                  }}
+                >
+                  <Decoration value={s.emoji} className="status-emoji" />
+                  <span>{s.name}</span>
+                </button>
+              ))}
+            </div>
+            <p className="field-hint">
+              再点已选状态，就能撤回。每一天都可以重新开始。
+            </p>
+            <Button
+              variant="outline"
+              onClick={() =>
+                openRecord(
+                  current.id,
+                  panel.date,
+                  undefined,
+                  panel.returnTo,
+                  true,
+                )
+              }
+            >
+              <Plus />
+              写点文字，或放张照片
+            </Button>
+          </div>
+        </Sheet>
+      )}
       <SettingsDrawer
         state={state}
-        open={settingsOpen}
-        onOpenChange={setSettingsOpen}
+        open={settings}
+        onOpenChange={setSettings}
         onStateChange={setState}
-        onExport={data.exportData}
-        onImport={data.importData}
-        onClear={data.clearData}
-        onInstall={installApp}
-        updateAvailable={Boolean(waitingServiceWorker)}
-        onApplyUpdate={() => void applyReadyUpdate()}
+        onExport={preview ? previewNotice : data.exportData}
+        onImport={
+          preview
+            ? (event) => {
+                event.target.value = '';
+                previewNotice();
+              }
+            : data.importData
+        }
+        onClear={preview ? previewNotice : data.clearData}
+        onInstall={updates.installApp}
+        updateAvailable={Boolean(updates.waitingServiceWorker)}
+        onApplyUpdate={() => void updates.applyReadyUpdate()}
       />
-
       <ConfirmDialog
         confirmation={confirmation}
         onClose={() => setConfirmation(null)}
         accent={state.settings.accent}
       />
-
+      {celebration &&
+        createPortal(
+          <output
+            className="life-celebration"
+            key={celebration.id}
+            aria-live="polite"
+          >
+            <Sparkles />
+            <strong>{celebration.title}</strong>
+            <span>给认真生活的自己，一点掌声 ♡</span>
+          </output>,
+          document.body,
+        )}
       {toast &&
         createPortal(
           <output
@@ -286,23 +461,21 @@ export default function DiaryApp() {
                   dismissToast();
                 }}
               >
-                <RotateCcw aria-hidden="true" /> 撤销
+                <RotateCcw />
+                撤销
               </Button>
             )}
           </output>,
           document.body,
         )}
-      {waitingServiceWorker &&
-        updateNoticeVisible &&
+      {updates.waitingServiceWorker &&
+        updates.updateNoticeVisible &&
         !toast &&
         createPortal(
-          <output
-            className={`toast update-toast theme-${state.settings.accent}`}
-            aria-live="polite"
-          >
+          <output className="toast update-toast" aria-live="polite">
             <span>新版本已经准备好</span>
-            <Button size="sm" onClick={() => void applyReadyUpdate()}>
-              <RefreshCw aria-hidden="true" />
+            <Button size="sm" onClick={() => void updates.applyReadyUpdate()}>
+              <RefreshCw />
               立即更新
             </Button>
           </output>,
