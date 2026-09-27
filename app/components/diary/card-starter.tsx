@@ -102,7 +102,7 @@ export function CardStarter({
             <button className="starter-blank" type="button" onClick={onWrite}>
               <Plus />
               <span>
-                <strong>临时写一张</strong>
+                <strong>手动写一张</strong>
                 <small>这次想到的事，直接放进生活</small>
               </span>
               <ChevronRight />

@@ -199,6 +199,7 @@ export function RecordForm({
         if (!busy) onClose();
       }}
       wide
+      composerHost={setHost}
     >
       <form
         className="life-form record-form"
@@ -295,7 +296,7 @@ export function RecordForm({
             )}
           </fieldset>
         )}
-        <div ref={setHost} className="record-editor-host">
+        <div className="record-editor-host">
           <JournalEditor
             value={body}
             onChange={setBody}

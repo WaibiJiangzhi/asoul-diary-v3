@@ -47,7 +47,9 @@ export function JournalEditor({
     const bounds = selection.current?.getBoundingClientRect();
     const top = dock.current?.getBoundingClientRect().top;
     if (bounds?.height && top !== undefined && bounds.bottom > top - 24)
-      window.scrollBy({ top: bounds.bottom - top + 24 });
+      (editor.current?.closest('.drawer-inner') ?? window).scrollBy({
+        top: bounds.bottom - top + 24,
+      });
   }
   function saveSelection() {
     const current = window.getSelection();

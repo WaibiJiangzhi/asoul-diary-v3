@@ -36,12 +36,14 @@ export function Sheet({
   children,
   onClose,
   wide = false,
+  composerHost,
 }: {
   title: string;
   description?: string;
   children: ReactNode;
   onClose: () => void;
   wide?: boolean;
+  composerHost?: (node: HTMLDivElement | null) => void;
 }) {
   return (
     <Drawer
@@ -73,6 +75,9 @@ export function Sheet({
           </DrawerHeader>
           {children}
         </div>
+        {composerHost && (
+          <div ref={composerHost} className="sheet-composer-host" />
+        )}
       </DrawerContent>
     </Drawer>
   );
@@ -330,31 +335,38 @@ export function CardForm({
                         })
                       }
                     />
-                    <select
-                      aria-label={'状态 ' + (i + 1) + ' 颜色'}
-                      value={s.color}
-                      onChange={(e) =>
-                        patch({
-                          record: {
-                            ...draft.record!,
-                            states: draft.record!.states.map((v) =>
-                              v.id === s.id
-                                ? {
-                                    ...v,
-                                    color: e.target.value as LifeCard['color'],
-                                  }
-                                : v,
-                            ),
-                          },
-                        })
-                      }
-                    >
-                      {CARD_COLORS.map((c) => (
-                        <option key={c.value} value={c.value}>
-                          {c.label}
-                        </option>
-                      ))}
-                    </select>
+                    <div className="status-color-control">
+                      <span
+                        aria-hidden="true"
+                        style={{ backgroundColor: s.color }}
+                      />
+                      <select
+                        aria-label={'状态 ' + (i + 1) + ' 颜色'}
+                        value={s.color}
+                        onChange={(e) =>
+                          patch({
+                            record: {
+                              ...draft.record!,
+                              states: draft.record!.states.map((v) =>
+                                v.id === s.id
+                                  ? {
+                                      ...v,
+                                      color: e.target
+                                        .value as LifeCard['color'],
+                                    }
+                                  : v,
+                              ),
+                            },
+                          })
+                        }
+                      >
+                        {CARD_COLORS.map((c) => (
+                          <option key={c.value} value={c.value}>
+                            {c.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
                     <Button
                       type="button"
                       variant="ghost"
@@ -550,7 +562,6 @@ export function CardForm({
           </div>
         </section>
         <section className="form-section">
-          <h3>开始日期、位置与颜色</h3>
           <div className="field-pair">
             <label>
               开始日期
