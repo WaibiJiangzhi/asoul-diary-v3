@@ -2146,6 +2146,7 @@ progress.life-progress::-moz-progress-bar {
   font-size: 13px;
 }
 .upcoming-dates summary {
+  font-weight: 600;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -2156,7 +2157,7 @@ progress.life-progress::-moz-progress-bar {
   color: var(--theme-accent-deep);
 }
 .has-wallpaper .upcoming-dates {
-  border-color: color-mix(in srgb, var(--theme-accent) 28%, transparent);
+  border-color: color-mix(in srgb, var(--theme-accent) 55%, transparent);
 }
 .upcoming-dates summary::-webkit-details-marker {
   display: none;
@@ -2185,11 +2186,13 @@ progress.life-progress::-moz-progress-bar {
   align-items: center;
 }
 .upcoming-dates button + button {
-  border-top: 1px solid color-mix(in srgb, var(--theme-border) 45%, transparent);
+  border-top: 1px solid color-mix(in srgb, var(--theme-accent) 30%, transparent);
 }
 .upcoming-dates button > span {
   min-width: 0;
   overflow-wrap: anywhere;
+  font-weight: 600;
+  color: var(--ink);
 }
 .upcoming-dates small {
   flex-shrink: 0;
@@ -2202,7 +2205,7 @@ progress.life-progress::-moz-progress-bar {
 }
 .upcoming-dates small[data-today='true'] {
   color: var(--theme-accent-deep);
-  background: var(--theme-soft);
+  background: color-mix(in srgb, var(--theme-accent) 18%, var(--theme-soft));
   font-weight: 600;
 }
 
