@@ -177,9 +177,18 @@ export function createDemoState(): AppState {
     targetDays: 20,
   };
   sleep.records = Array.from({ length: 13 }, (_, i) =>
-    record(i - 13, i === 12 ? '今天给自己留了一点余地。' : '', {
-      statusId: i % 4 === 0 ? 'late' : i % 5 === 0 ? 'rest' : 'early',
-    }),
+    record(
+      i - 13,
+      [
+        '睡前把手机放远了一点，早上醒来没有那么累。',
+        '昨晚看直播晚了些，今天慢慢调整。',
+        '给自己做了早餐。 [2026乃琳的酒馆动态表情包_厨艺展示]',
+        '今天给自己留了一点余地。',
+      ][i % 4],
+      {
+        statusId: i % 4 === 0 ? 'late' : i % 5 === 0 ? 'rest' : 'early',
+      },
+    ),
   );
   const run = {
     ...createLifeCard('progress'),
@@ -199,7 +208,12 @@ export function createDemoState(): AppState {
   run.records = Array.from({ length: 15 }, (_, i) =>
     record(
       i - 20,
-      i === 14 ? '河边的风很舒服。[2026乃琳的酒馆动态表情包_爱你]' : '',
+      [
+        '前两公里有点喘，后面找到了舒服的节奏。',
+        '跑完买了一瓶水，绕着河边走了一会儿。',
+        '今天不追速度，能出门就很好。',
+        '河边的风很舒服。[2026乃琳的酒馆动态表情包_爱你]',
+      ][i % 4],
       { delta: 5 },
     ),
   );
@@ -211,15 +225,30 @@ export function createDemoState(): AppState {
     note: '给自己留一段看看世界的时间。',
     color: '#8B78A8' as CardColor,
     startDate: moveDate(today, -19),
-    stages: ['选好目的地', '安排好行程', '收拾好行李', '出发去看看'].map(
-      (title, i) => ({ id: 'step-' + i, title }),
-    ),
+    stages: [
+      '选好目的地',
+      '留出预算',
+      '安排好行程',
+      '订好住宿',
+      '收拾好行李',
+      '出发去看看',
+    ].map((title, i) => ({ id: 'step-' + i, title })),
   };
   trip.records = [
-    record(-15, '想去海边看看日出。', { stageId: 'step-0', stageDone: true }),
-    record(-3, '路线和住宿都安排好了，留一点时间随便逛逛。', {
+    record(-15, '想去海边看看日出。', {
+      stageId: 'step-0',
+      stageDone: true,
+      stageEmoji: '[2026嘉然的画册动态表情包_捏捏]',
+    }),
+    record(-10, '留够路费和住宿费，再给好吃的留一点预算。', {
       stageId: 'step-1',
       stageDone: true,
+      stageEmoji: '✨',
+    }),
+    record(-3, '路线和住宿都安排好了，留一点时间随便逛逛。', {
+      stageId: 'step-2',
+      stageDone: true,
+      stageEmoji: '[2026贝拉的冒险动态表情包_恰！]',
     }),
   ];
   const drawing = {
@@ -228,7 +257,17 @@ export function createDemoState(): AppState {
     emoji: '🎨',
     note: '先画喜欢的东西，不着急找到终点。',
     startDate: moveDate(today, -7),
-    records: [record(-2, '画了第一张人物速写，眼睛比上次自然一点。')],
+    records: [
+      record(-7, '先从桌上的杯子开始，线条歪歪的也没关系。'),
+      record(
+        -4,
+        '试了暖色阴影，发现自己很喜欢这个配色。\n下次想画一张小小的明信片。',
+      ),
+      record(
+        -2,
+        '画了第一张人物速写，眼睛比上次自然一点。 [2026嘉然的画册动态表情包_捏捏]',
+      ),
+    ],
   };
   const travel = {
     ...createLifeCard(),
@@ -244,15 +283,53 @@ export function createDemoState(): AppState {
     note: '每天读一点，真的读完了。',
     location: 'memory' as const,
     startDate: moveDate(today, -50),
-    archivedAt: now,
+    archivedAt: new Date(moveDate(today, -8) + 'T12:00:00').toISOString(),
     ending: 'achieved' as const,
     summary: '原来每天留一点时间，就能看完一个很长的故事。',
     progress: { initial: 0, total: 300, unit: '页', step: 10 },
-    records: [record(-8, '合上书的时候，有一点舍不得。', { delta: 300 })],
+    records: Array.from({ length: 10 }, (_, i) =>
+      record(
+        -44 + i * 4,
+        i === 9
+          ? '合上书的时候，有一点舍不得。'
+          : [
+              '睡前读了两章，记下了一句喜欢的话。',
+              '在咖啡店读了一会儿，故事开始有趣起来。',
+            ][i % 2],
+        { delta: 30 },
+      ),
+    ),
   };
-  state.cards = [sleep, run, trip, drawing, travel, memory];
+  const paused: LifeCard = {
+    ...createLifeCard('blank'),
+    title: '试着做一周手帐',
+    emoji: '📝',
+    note: '试过之后，才知道自己喜欢什么。',
+    color: '#6F9A76',
+    location: 'memory',
+    startDate: moveDate(today, -80),
+    archivedAt: new Date(moveDate(today, -73) + 'T12:00:00').toISOString(),
+    ending: 'closed',
+    summary: '没有每天坚持排版，但发现随手写两句更适合我。换一种方式继续记录。',
+    records: [
+      record(-80, '贴了一张小贴纸，写下今天的天气。'),
+      record(-77, '排版有点花时间，今天只想写一句：晚饭很好吃。'),
+      record(-73, '不勉强自己做满一整本，这一周也值得留下。'),
+    ],
+  };
+  state.cards = [sleep, run, trip, drawing, travel, memory, paused];
+  for (const card of state.cards) {
+    card.createdAt = new Date(card.startDate + 'T12:00:00').toISOString();
+    for (const entry of card.records) {
+      entry.createdAt = new Date(entry.date + 'T20:00:00').toISOString();
+      entry.updatedAt = entry.createdAt;
+    }
+    card.updatedAt =
+      card.archivedAt ?? card.records.at(-1)?.updatedAt ?? card.createdAt;
+  }
   state.companions.push({
     id: 'demo-countdown',
+    color: '#6F9A76',
     kind: 'countdown',
     title: '和喜欢的人去看山',
     note: '把期待留给那个晴天。',

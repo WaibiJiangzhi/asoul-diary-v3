@@ -285,7 +285,7 @@ export function SettingsDrawer({
         </section>
 
         <Link className="settings-preview-link" href="/preview">
-          体验一段已经记录的生活 →
+          体验一段示例生活 →
         </Link>
         <footer className="settings-footer">
           <strong>Asoul一个魂生活日记</strong>
