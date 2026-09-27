@@ -271,7 +271,7 @@ function SmallCard({
       )}
       {!isLater && card.kind === 'stage' && (
         <div className="stage-preview">
-          {card.stages?.slice(0, 4).map((s) => (
+          {card.stages?.map((s) => (
             <button
               type="button"
               key={s.id}
@@ -290,11 +290,6 @@ function SmallCard({
               <span>{s.title}</span>
             </button>
           ))}
-          {(card.stages?.length ?? 0) > 4 && (
-            <button className="more-stages" type="button" onClick={onOpen}>
-              另 {card.stages!.length - 4} 步<ChevronRight />
-            </button>
-          )}
         </div>
       )}
       {!isLater && card.kind === 'blank' && latest && (
@@ -471,12 +466,24 @@ export function MemoryView({
 }) {
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState('all');
+  const [month, setMonth] = useState('all');
+  const [order, setOrder] = useState('newest');
+  const archiveDate = (c: LifeCard) =>
+    dateKey(new Date(c.archivedAt ?? c.updatedAt));
   const memories = cards
     .filter((c) => c.location === 'memory')
-    .sort((a, b) => (b.archivedAt ?? '').localeCompare(a.archivedAt ?? ''));
+    .sort((a, b) =>
+      order === 'oldest'
+        ? archiveDate(a).localeCompare(archiveDate(b))
+        : archiveDate(b).localeCompare(archiveDate(a)),
+    );
+  const months = [...new Set(memories.map((c) => archiveDate(c).slice(0, 7)))]
+    .sort()
+    .reverse();
   const shown = memories.filter(
     (c) =>
       (filter === 'all' || c.ending === filter) &&
+      (month === 'all' || archiveDate(c).startsWith(month)) &&
       (c.title + ' ' + c.note + ' ' + (c.summary ?? '')).includes(query),
   );
   return (
@@ -497,6 +504,26 @@ export function MemoryView({
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
+          <div className="memory-time-controls">
+            <label>
+              收录月份
+              <select value={month} onChange={(e) => setMonth(e.target.value)}>
+                <option value="all">全部月份</option>
+                {months.map((m) => (
+                  <option value={m} key={m}>
+                    {m.replace('-', '年')}月
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              时间排序
+              <select value={order} onChange={(e) => setOrder(e.target.value)}>
+                <option value="newest">最近收录在前</option>
+                <option value="oldest">最早收录在前</option>
+              </select>
+            </label>
+          </div>
           <div className="segmented memory-filters">
             {[
               ['all', '全部'],
@@ -549,7 +576,7 @@ export function MemoryView({
           <h2>{memories.length ? '还没找到这段经历' : '慢慢走，慢慢收藏'}</h2>
           <p>
             {memories.length
-              ? '换个名字试试看。'
+              ? '换个关键词或月份试试看。'
               : '完成一件事，或想给一段经历留个纪念时，就把它收在这里。'}
           </p>
         </div>

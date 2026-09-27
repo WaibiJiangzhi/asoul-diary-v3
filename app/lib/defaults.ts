@@ -84,12 +84,11 @@ export function createDefaultState(): AppState {
       },
     ],
     settings: {
-      theme: 'paper',
+      theme: 'wallpaper',
       accent: 'jiaran',
       wallpaper: WALLPAPERS[0],
       haptics: true,
       sounds: true,
-      journalLines: false,
     },
   };
 }

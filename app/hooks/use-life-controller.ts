@@ -233,6 +233,17 @@ export function useLifeController({
     setState(next);
     showToast('常用卡片已保存');
   }
+  function reorderCommonCards(activeId: string, overId: string) {
+    setState((state) => {
+      if (!state) return state;
+      const cards = [...getCommonCards(state)];
+      const from = cards.findIndex((c) => c.id === activeId);
+      const to = cards.findIndex((c) => c.id === overId);
+      if (from < 0 || to < 0 || from === to) return state;
+      cards.splice(to, 0, cards.splice(from, 1)[0]);
+      return { ...state, commonCards: cards };
+    });
+  }
   function removeCommonCard(id: string) {
     setState(
       (state) =>
@@ -359,6 +370,7 @@ export function useLifeController({
     adjustProgress,
     saveCommonCard,
     removeCommonCard,
+    reorderCommonCards,
     addCommonCards,
     removeRecord,
     removeCard,

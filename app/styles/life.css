@@ -325,8 +325,10 @@
     inset 0 1px 0 rgb(255 255 255 / 25%);
   --soft-ink: #665d69;
 }
-.has-wallpaper .life-card {
-  border-left-color: rgb(255 255 255 / 62%);
+.has-wallpaper .life-card,
+.has-wallpaper .life-memory-card {
+  border: 1.5px solid
+    color-mix(in srgb, var(--card-accent) 65%, rgb(255 255 255 / 70%));
 }
 .life-card-top {
   display: flex;
@@ -532,7 +534,7 @@
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   margin-top: 14px;
-  gap: 0;
+  gap: 14px 0;
 }
 .stage-preview button {
   position: relative;
@@ -554,10 +556,10 @@
   height: 2px;
   background: color-mix(in srgb, var(--card-accent) 27%, white);
 }
-.stage-preview button:first-child::before {
+.stage-preview button:nth-child(4n + 1)::before {
   left: 50%;
 }
-.stage-preview button:nth-child(4)::before,
+.stage-preview button:nth-child(4n)::before,
 .stage-preview button:last-child::before {
   right: 50%;
 }
@@ -1417,10 +1419,10 @@
 }
 .record-text .inline-sticker {
   display: inline-block;
-  width: 2.5em;
-  height: 2.5em;
+  width: 2.65em;
+  height: 2.65em;
   object-fit: contain;
-  vertical-align: middle;
+  vertical-align: -0.35em;
   margin: 0 2px;
 }
 .detail-ending {
@@ -2020,4 +2022,31 @@ progress.life-progress::-moz-progress-bar {
 .quick-progress small {
   font-size: 11px;
   font-weight: 400;
+}
+
+.memory-time-controls {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 12px;
+}
+.memory-time-controls label {
+  min-width: 0;
+  font-size: 12px;
+  color: var(--soft-ink);
+}
+.memory-time-controls select {
+  display: block;
+  width: 100%;
+  min-height: 44px;
+  margin-top: 5px;
+  padding: 8px;
+  border: 1px solid var(--theme-border);
+  border-radius: 12px;
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 13px;
+}
+.common-card-row .drag-handle {
+  flex-shrink: 0;
 }

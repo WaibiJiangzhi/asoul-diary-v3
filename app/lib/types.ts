@@ -80,7 +80,6 @@ export interface AppSettings {
   wallpaper: string;
   haptics: boolean;
   sounds: boolean;
-  journalLines: boolean;
 }
 export interface AppState {
   version: 1;

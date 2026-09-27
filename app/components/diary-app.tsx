@@ -237,6 +237,7 @@ export default function DiaryApp({ preview = false }: { preview?: boolean }) {
           }}
           onEdit={(draft) => setPanel({ kind: 'card', draft, common: true })}
           onRemove={life.removeCommonCard}
+          onReorder={life.reorderCommonCards}
           onWrite={() =>
             setPanel({ kind: 'card', draft: createLifeCard(), isNew: true })
           }
@@ -381,7 +382,6 @@ export default function DiaryApp({ preview = false }: { preview?: boolean }) {
           card={current}
           date={panel.date}
           initial={panel.record}
-          ruled={state.settings.journalLines}
           onSave={(record, files) => life.saveRecord(current.id, record, files)}
           onClose={closePanel}
         />

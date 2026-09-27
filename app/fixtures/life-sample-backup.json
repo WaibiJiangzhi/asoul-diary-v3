@@ -474,8 +474,7 @@
       "accent": "jiaran",
       "wallpaper": "/wallpapers/jiaran-1.webp",
       "haptics": true,
-      "sounds": true,
-      "journalLines": false
+      "sounds": true
     }
   },
   "photos": []

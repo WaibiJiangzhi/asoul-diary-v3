@@ -69,12 +69,6 @@
   padding: max(18px, env(safe-area-inset-top)) 20px
     calc(104px + env(safe-area-inset-bottom)) 38px;
   background-color: var(--paper);
-  background-image: repeating-linear-gradient(
-    to bottom,
-    transparent 0,
-    transparent 43px,
-    var(--rule) 44px
-  );
   box-shadow: 0 0 54px rgb(77 61 55 / 11%);
 }
 
@@ -401,12 +395,8 @@
   height: 54px;
   overflow: hidden;
   border-radius: 12px;
-  background: repeating-linear-gradient(
-    to bottom,
-    var(--paper) 0,
-    var(--paper) 10px,
-    var(--theme-border) 11px
-  );
+  background: var(--paper);
+  border: 1px solid var(--theme-border);
 }
 .paper-theme-card > span i {
   display: block;

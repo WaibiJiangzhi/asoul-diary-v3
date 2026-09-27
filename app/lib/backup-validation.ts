@@ -108,7 +108,6 @@ const stateShape = shape({
     wallpaper: text,
     haptics: flag,
     sounds: flag,
-    journalLines: flag,
   }),
 });
 const unique = (ids: string[]) => new Set(ids).size === ids.length;

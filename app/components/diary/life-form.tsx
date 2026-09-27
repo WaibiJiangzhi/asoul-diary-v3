@@ -244,7 +244,6 @@ export function CardForm({
                       type="number"
                       min="0.0001"
                       step="any"
-                      placeholder="不填也可以一直积累"
                       value={draft.progress.total ?? ''}
                       onChange={(e) =>
                         patch({

@@ -122,6 +122,25 @@ export function SettingsDrawer({
       wide
     >
       <div className="settings-sheet">
+        <section className="settings-section community-section">
+          <h3>去姐仨的 TAG 逛逛</h3>
+          <div className="community-tags">
+            {COMMUNITY_TAGS.map((tag) => (
+              <a
+                key={tag.id}
+                href={`https://www.bilibili.com/v/topic/detail?topic_id=${tag.id}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ color: tag.color }}
+              >
+                <Heart aria-hidden="true" />
+                <span>{tag.name}</span>
+                <ArrowUpRight aria-hidden="true" />
+              </a>
+            ))}
+          </div>
+        </section>
+
         {updateAvailable && (
           <section className="settings-update" aria-live="polite">
             <span>
@@ -161,19 +180,6 @@ export function SettingsDrawer({
 
         <section className="settings-section">
           <h3>纸张与壁纸</h3>
-          <label className="toggle-row">
-            <span>
-              <strong>显示正文横线</strong>
-              <small>让淡淡的横线陪着正文</small>
-            </span>
-            <input
-              type="checkbox"
-              checked={state.settings.journalLines}
-              onChange={(event) =>
-                setSettings({ journalLines: event.target.checked })
-              }
-            />
-          </label>
           <button
             type="button"
             className={`paper-theme-card ${state.settings.theme === 'paper' ? 'active' : ''}`}
@@ -292,24 +298,6 @@ export function SettingsDrawer({
           </Button>
         </section>
 
-        <section className="settings-section community-section">
-          <h3>去姐仨的 TAG 逛逛</h3>
-          <div className="community-tags">
-            {COMMUNITY_TAGS.map((tag) => (
-              <a
-                key={tag.id}
-                href={`https://www.bilibili.com/v/topic/detail?topic_id=${tag.id}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{ color: tag.color }}
-              >
-                <Heart aria-hidden="true" />
-                <span>{tag.name}</span>
-                <ArrowUpRight aria-hidden="true" />
-              </a>
-            ))}
-          </div>
-        </section>
         <Link className="settings-preview-link" href="/preview">
           体验一段已经记录的生活 →
         </Link>

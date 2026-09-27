@@ -23,16 +23,6 @@
   border-radius: 3px;
   user-select: all;
 }
-.rich-journal.is-ruled .journal-editor {
-  background-image: repeating-linear-gradient(
-    to bottom,
-    transparent 0,
-    transparent 31px,
-    color-mix(in srgb, var(--theme-accent), transparent 76%) 31px,
-    color-mix(in srgb, var(--theme-accent), transparent 76%) 32px
-  );
-  background-origin: content-box;
-}
 .journal-editor-footer {
   display: flex;
   justify-content: space-between;

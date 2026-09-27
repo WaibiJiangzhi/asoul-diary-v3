@@ -24,12 +24,10 @@ import { StickerPanel } from './sticker-picker';
 export function JournalEditor({
   value,
   onChange,
-  ruled,
   portalTarget,
 }: {
   value: string;
   onChange: (text: string) => void;
-  ruled: boolean;
   portalTarget?: HTMLElement | null;
 }) {
   const editor = useRef<HTMLDivElement>(null);
@@ -201,7 +199,7 @@ export function JournalEditor({
   const toolbarOpen = focused || panel;
   return (
     <section
-      className={`journal-paper rich-journal ${ruled ? 'is-ruled' : ''} ${panel ? 'has-sticker-panel' : ''}`}
+      className={`journal-paper rich-journal ${panel ? 'has-sticker-panel' : ''}`}
     >
       {/* Contenteditable is needed for inline images; a textarea only displays plain text. */}
       <div

@@ -6,6 +6,7 @@ import { createLifeCard } from '@/lib/defaults';
 import type { LifeCard } from '@/lib/types';
 import { Decoration } from './decoration';
 import { CARD_KINDS, Sheet } from './life-form';
+import { SortableList, SortableGrip } from './sortable-list';
 
 export function CardStarter({
   cards,
@@ -14,6 +15,7 @@ export function CardStarter({
   onAdd,
   onEdit,
   onRemove,
+  onReorder,
   onWrite,
   onClose,
 }: {
@@ -23,6 +25,7 @@ export function CardStarter({
   onAdd: (ids: string[]) => void;
   onEdit: (card: LifeCard) => void;
   onRemove: (id: string) => void;
+  onReorder: (activeId: string, overId: string) => void;
   onWrite: () => void;
   onClose: () => void;
 }) {
@@ -33,59 +36,71 @@ export function CardStarter({
       title={managing ? '管理常用卡片' : '添加常用卡片'}
       description={
         managing
-          ? '把经常想做的事放在这里，之后随时添加。'
+          ? '拖动右侧手柄调整顺序；点击卡片可以编辑。'
           : '选几张放进生活，每张都从新的一段开始。'
       }
       onClose={onClose}
     >
       <div className="card-starter">
-        <div className="common-card-list">
-          {cards.map((card) => (
-            <div className="common-card-row" key={card.id}>
-              <button
-                type="button"
-                className="common-card-choice"
-                aria-pressed={managing ? undefined : selected.includes(card.id)}
-                onClick={() =>
-                  managing
-                    ? onEdit(card)
-                    : setSelected((ids) =>
-                        ids.includes(card.id)
-                          ? ids.filter((id) => id !== card.id)
-                          : [...ids, card.id],
-                      )
-                }
-              >
-                <Decoration value={card.emoji} className="starter-emoji" />
-                <span>
-                  <strong>{card.title}</strong>
-                  <small>
-                    {CARD_KINDS.find((k) => k.id === card.kind)?.name}
-                  </small>
-                </span>
-                {managing ? (
-                  <Pencil />
-                ) : (
-                  <i>{selected.includes(card.id) && <Check />}</i>
-                )}
-              </button>
-              {managing && (
-                <Button
+        <SortableList
+          className="common-card-list"
+          ids={cards.map((c) => c.id)}
+          onReorder={onReorder}
+        >
+          {(id, handle) => {
+            const card = cards.find((c) => c.id === id)!;
+            return (
+              <div className="common-card-row" key={card.id}>
+                <button
                   type="button"
-                  variant="ghost"
-                  size="icon"
-                  aria-label={'移除常用卡片 ' + card.title}
-                  onClick={() => onRemove(card.id)}
+                  className="common-card-choice"
+                  aria-pressed={
+                    managing ? undefined : selected.includes(card.id)
+                  }
+                  onClick={() =>
+                    managing
+                      ? onEdit(card)
+                      : setSelected((ids) =>
+                          ids.includes(card.id)
+                            ? ids.filter((id) => id !== card.id)
+                            : [...ids, card.id],
+                        )
+                  }
                 >
-                  <Trash2 />
-                </Button>
-              )}
-            </div>
-          ))}
-          {!cards.length && (
-            <p className="field-hint">还没有常用卡片，先添加一张喜欢的吧。</p>
-          )}
-        </div>
+                  <Decoration value={card.emoji} className="starter-emoji" />
+                  <span>
+                    <strong>{card.title}</strong>
+                    <small>
+                      {CARD_KINDS.find((k) => k.id === card.kind)?.name}
+                    </small>
+                  </span>
+                  {managing ? (
+                    <Pencil />
+                  ) : (
+                    <i>{selected.includes(card.id) && <Check />}</i>
+                  )}
+                </button>
+                {managing && (
+                  <SortableGrip handle={handle} label={'排序 ' + card.title} />
+                )}
+                {managing && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    aria-label={'移除常用卡片 ' + card.title}
+                    onClick={() => onRemove(card.id)}
+                  >
+                    <Trash2 />
+                  </Button>
+                )}
+              </div>
+            );
+          }}
+        </SortableList>
+        {!cards.length && (
+          <p className="field-hint">还没有常用卡片，先添加一张喜欢的吧。</p>
+        )}
         {managing ? (
           <>
             <Button variant="outline" onClick={() => onEdit(createLifeCard())}>

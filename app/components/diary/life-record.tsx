@@ -115,14 +115,12 @@ export function RecordForm({
   card,
   date,
   initial,
-  ruled,
   onSave,
   onClose,
 }: {
   card: LifeCard;
   date: string;
   initial?: LifeRecord;
-  ruled: boolean;
   onSave: (r: LifeRecord, files: File[]) => Promise<void>;
   onClose: () => void;
 }) {
@@ -297,12 +295,7 @@ export function RecordForm({
           </fieldset>
         )}
         <div className="record-editor-host">
-          <JournalEditor
-            value={body}
-            onChange={setBody}
-            ruled={ruled}
-            portalTarget={host}
-          />
+          <JournalEditor value={body} onChange={setBody} portalTarget={host} />
         </div>
         <PhotoStrip
           ids={photoIds}
