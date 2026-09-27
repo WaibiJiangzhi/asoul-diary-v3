@@ -43,9 +43,12 @@
 .companion-section {
   position: relative;
   margin-top: 18px;
-  border: 1px solid var(--theme-border);
+  border: 1.5px solid color-mix(in srgb, var(--theme-accent) 72%, transparent);
   border-radius: 25px;
-  background: var(--theme-surface);
+  background: linear-gradient(125deg, var(--theme-soft), var(--theme-surface));
+  background-clip: padding-box;
+  box-shadow: 0 6px 20px
+    color-mix(in srgb, var(--theme-accent) 12%, transparent);
   overflow: hidden;
 }
 .companion-rail {
@@ -64,7 +67,7 @@
   display: flex;
   align-items: center;
   gap: 14px;
-  padding: 14px 18px 2px;
+  padding: 20px 20px 8px;
   scroll-snap-align: start;
 }
 .companion-card > div {
@@ -73,10 +76,10 @@
 }
 .companion-card h2 {
   font-family: var(--serif);
-  font-weight: 650;
+  font-weight: 700;
   font-size: 20px;
   line-height: 1.5;
-  color: var(--theme-accent-deep);
+  color: color-mix(in srgb, var(--ink) 76%, var(--theme-accent-deep));
   overflow-wrap: anywhere;
 }
 .companion-card p {
@@ -302,14 +305,14 @@
 .life-card {
   min-width: 0;
   padding: 14px 15px 4px;
-  border: 1px solid color-mix(in srgb, var(--card-accent) 32%, transparent);
+  border: 1.5px solid color-mix(in srgb, var(--card-accent) 65%, transparent);
+  background-clip: padding-box;
   border-radius: 24px;
   background: var(--theme-surface);
   box-shadow: 0 3px 12px rgb(60 40 50 / 3%);
   transition: border-color 0.2s;
 }
 .has-wallpaper .life-card,
-.has-wallpaper .companion-section,
 .has-wallpaper .life-memory-card,
 .has-wallpaper .life-empty {
   background: linear-gradient(
@@ -320,15 +323,13 @@
   backdrop-filter: blur(6px) saturate(1.06);
   -webkit-backdrop-filter: blur(6px) saturate(1.06);
   border-color: rgb(255 255 255 / 62%);
-  box-shadow:
-    0 3px 12px rgb(35 20 50 / 5%),
-    inset 0 1px 0 rgb(255 255 255 / 25%);
+  box-shadow: 0 5px 18px rgb(35 20 50 / 6%);
   --soft-ink: #665d69;
 }
 .has-wallpaper .life-card,
 .has-wallpaper .life-memory-card {
-  border: 1.5px solid
-    color-mix(in srgb, var(--card-accent) 65%, rgb(255 255 255 / 70%));
+  border: 1.5px solid color-mix(in srgb, var(--card-accent) 72%, transparent);
+  background-clip: padding-box;
 }
 .life-card-top {
   display: flex;
@@ -2049,4 +2050,29 @@ progress.life-progress::-moz-progress-bar {
 }
 .common-card-row .drag-handle {
   flex-shrink: 0;
+}
+
+.has-wallpaper .companion-section {
+  background: linear-gradient(
+    125deg,
+    color-mix(in srgb, var(--theme-accent) 24%, rgb(255 250 249 / 85%)),
+    color-mix(in srgb, var(--theme-accent) 10%, rgb(255 250 249 / 64%))
+  );
+  background-clip: padding-box;
+  backdrop-filter: blur(9px) saturate(1.08);
+  -webkit-backdrop-filter: blur(9px) saturate(1.08);
+}
+.companion-emoji {
+  border-radius: 24px;
+  background: radial-gradient(
+    ellipse,
+    color-mix(in srgb, var(--theme-accent) 18%, transparent),
+    transparent 72%
+  );
+}
+.companion-navigation {
+  margin: 0 14px 6px;
+}
+.companion-navigation > button:last-child {
+  bottom: 6px;
 }
