@@ -11,6 +11,7 @@ import {
   Pencil,
   Trash2,
 } from 'lucide-react';
+import { arrayMove } from '@dnd-kit/sortable';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Decoration } from './decoration';
@@ -746,68 +747,68 @@ export function CompanionForm({
   return (
     <Sheet
       title="陪着你的话与日子"
-      description="打开应用时随机翻开一张，之后可以左右切换。"
+      description="拖动右侧手柄调整顺序，首页按此顺序左右切换。"
       onClose={onClose}
       wide
     >
-      <div className="companion-manage-list">
-        {cards.map((c) => (
-          <div key={c.id}>
-            <button type="button" onClick={() => setDraft({ ...c })}>
-              <Decoration value={c.emoji} className="status-emoji" />
-              <span>{c.title}</span>
-              <Pencil />
-            </button>
-            <Button
-              variant="ghost"
-              size="icon"
-              aria-label={'删除陪伴卡 ' + c.title}
-              onClick={() => {
-                onChange(cards.filter((v) => v.id !== c.id));
-                if (draft.id === c.id) setDraft(blank());
-              }}
-            >
-              <Trash2 />
-            </Button>
-          </div>
-        ))}
-      </div>
+      <SortableList
+        className="companion-manage-list"
+        ids={cards.map((c) => c.id)}
+        onReorder={(activeId, overId) => {
+          const from = cards.findIndex((c) => c.id === activeId);
+          const to = cards.findIndex((c) => c.id === overId);
+          if (from >= 0 && to >= 0) onChange(arrayMove(cards, from, to));
+        }}
+      >
+        {(id, handle) => {
+          const c = cards.find((card) => card.id === id)!;
+          return (
+            <div className="companion-manage-row">
+              <button type="button" onClick={() => setDraft({ ...c })}>
+                <Decoration value={c.emoji} className="status-emoji" />
+                <span>{c.title}</span>
+                <Pencil />
+              </button>
+              {cards.length > 1 && (
+                <SortableGrip handle={handle} label={'排序陪伴卡 ' + c.title} />
+              )}
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label={'删除陪伴卡 ' + c.title}
+                onClick={() => {
+                  onChange(cards.filter((v) => v.id !== c.id));
+                  if (draft.id === c.id) setDraft(blank());
+                }}
+              >
+                <Trash2 />
+              </Button>
+            </div>
+          );
+        }}
+      </SortableList>
       <form
         className="life-form"
         onSubmit={(e) => {
           e.preventDefault();
-          if (
-            !draft.title.trim() ||
-            (draft.kind === 'countdown' && !draft.targetDate)
-          ) {
-            setError('请填写标题和有效日期');
+          if (!draft.title.trim()) {
+            setError('请填写标题');
             return;
           }
+          const saved: CompanionCard = {
+            ...draft,
+            kind: draft.targetDate ? 'countdown' : 'quote',
+            targetDate: draft.targetDate || undefined,
+          };
           onChange(
             cards.some((c) => c.id === draft.id)
-              ? cards.map((c) => (c.id === draft.id ? draft : c))
-              : [...cards, draft],
+              ? cards.map((c) => (c.id === draft.id ? saved : c))
+              : [...cards, saved],
           );
           setDraft(blank());
           setError('');
         }}
       >
-        <div className="segmented">
-          <button
-            type="button"
-            aria-pressed={draft.kind === 'quote'}
-            onClick={() => setDraft((c) => ({ ...c, kind: 'quote' }))}
-          >
-            一句话
-          </button>
-          <button
-            type="button"
-            aria-pressed={draft.kind === 'countdown'}
-            onClick={() => setDraft((c) => ({ ...c, kind: 'countdown' }))}
-          >
-            倒计时
-          </button>
-        </div>
         <DecorationPicker
           value={draft.emoji}
           onChange={(emoji) => setDraft((c) => ({ ...c, emoji }))}
@@ -845,19 +846,16 @@ export function CompanionForm({
             onChange={(e) => setDraft((c) => ({ ...c, title: e.target.value }))}
           />
         </label>
-        {draft.kind === 'countdown' && (
-          <label>
-            期待的日子
-            <Input
-              required
-              type="date"
-              value={draft.targetDate ?? ''}
-              onChange={(e) =>
-                setDraft((c) => ({ ...c, targetDate: e.target.value }))
-              }
-            />
-          </label>
-        )}
+        <label>
+          期待的日子 <small>可选，填写后显示倒计时</small>
+          <Input
+            type="date"
+            value={draft.targetDate ?? ''}
+            onChange={(e) =>
+              setDraft((c) => ({ ...c, targetDate: e.target.value }))
+            }
+          />
+        </label>
         <label>
           再写一句 <small>可选</small>
           <textarea
