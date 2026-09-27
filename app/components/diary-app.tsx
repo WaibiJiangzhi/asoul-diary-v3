@@ -9,6 +9,7 @@ import {
 import {
   Archive,
   Candy,
+  IceCreamBowl,
   Star,
   ArrowRight,
   Clock3,
@@ -173,24 +174,7 @@ export default function DiaryApp({ preview = false }: { preview?: boolean }) {
         <div className="loading-motifs" aria-hidden="true">
           <Candy className="loading-jiaran" />
           <Star className="loading-bella" />
-          <svg
-            className="loading-nailin"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.8"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <g transform="rotate(-14 12 12)">
-              <path
-                d="M6 12C5.3 10.9 5 9.8 5 8.6A7 7 0 0 1 19 8.6C19 9.8 18.7 10.9 18 12Z"
-                fill="currentColor"
-                fillOpacity="0.12"
-              />
-              <path d="M7 12 11.2 21.1Q12 22.8 12.8 21.1L17 12M9 16.3l4.8 1.8M14.7 15.7l-4.2 3" />
-            </g>
-          </svg>
+          <IceCreamBowl className="loading-nailin" />
         </div>
         <p>翻开生活，慢慢来…</p>
       </main>
