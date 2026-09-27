@@ -45,7 +45,7 @@
   margin-top: 18px;
   border: 1.5px solid color-mix(in srgb, var(--theme-accent) 72%, transparent);
   border-radius: 25px;
-  background: linear-gradient(125deg, var(--theme-soft), var(--theme-surface));
+  background: var(--theme-surface);
   background-clip: padding-box;
   box-shadow: 0 6px 20px
     color-mix(in srgb, var(--theme-accent) 12%, transparent);
@@ -63,11 +63,11 @@
 .companion-card {
   flex: 0 0 100%;
   min-width: 0;
-  min-height: 104px;
+  min-height: 96px;
   display: flex;
   align-items: center;
   gap: 14px;
-  padding: 20px 20px 8px;
+  padding: 14px 18px 0;
   scroll-snap-align: start;
 }
 .companion-card > div {
@@ -75,11 +75,11 @@
   min-width: 0;
 }
 .companion-card h2 {
-  font-family: var(--serif);
+  font-family: inherit;
   font-weight: 700;
   font-size: 20px;
   line-height: 1.5;
-  color: color-mix(in srgb, var(--ink) 76%, var(--theme-accent-deep));
+  color: var(--ink);
   overflow-wrap: anywhere;
 }
 .companion-card p {
@@ -1685,7 +1685,7 @@
 }
 @media (max-width: 360px) {
   .diary-page {
-    padding-left: 28px;
+    padding-left: 12px;
     padding-right: 12px;
   }
   .life-card {
@@ -2054,22 +2054,16 @@ progress.life-progress::-moz-progress-bar {
 
 .has-wallpaper .companion-section {
   background: linear-gradient(
-    125deg,
-    color-mix(in srgb, var(--theme-accent) 24%, rgb(255 250 249 / 85%)),
-    color-mix(in srgb, var(--theme-accent) 10%, rgb(255 250 249 / 64%))
+    135deg,
+    rgb(255 250 249 / 64%),
+    rgb(255 250 249 / 44%)
   );
   background-clip: padding-box;
-  backdrop-filter: blur(9px) saturate(1.08);
-  -webkit-backdrop-filter: blur(9px) saturate(1.08);
+  backdrop-filter: blur(6px) saturate(1.06);
+  -webkit-backdrop-filter: blur(6px) saturate(1.06);
+  --soft-ink: #665d69;
 }
-.companion-emoji {
-  border-radius: 24px;
-  background: radial-gradient(
-    ellipse,
-    color-mix(in srgb, var(--theme-accent) 18%, transparent),
-    transparent 72%
-  );
-}
+
 .companion-navigation {
   margin: 0 14px 6px;
 }

@@ -163,7 +163,7 @@ export function CardForm({
             <Input
               required
               maxLength={80}
-              placeholder="比如，重新成为一个能跑的人"
+              placeholder="比如，每天做一点喜欢的事"
               value={draft.title}
               onChange={(e) => patch({ title: e.target.value })}
             />

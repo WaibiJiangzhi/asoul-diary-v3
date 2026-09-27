@@ -22,7 +22,6 @@ import { createPortal } from 'react-dom';
 import {
   AppHeader,
   BottomNav,
-  PaperBinding,
   SettingsDrawer,
 } from '@/components/diary/chrome';
 import {
@@ -185,7 +184,6 @@ export default function DiaryApp({ preview = false }: { preview?: boolean }) {
       style={wallpaperStyle}
     >
       <section className="diary-page" aria-label="一个魂生活">
-        <PaperBinding />
         <AppHeader
           saveStatus={saveStatus}
           preview={preview}

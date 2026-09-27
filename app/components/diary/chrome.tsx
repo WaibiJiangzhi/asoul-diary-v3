@@ -30,16 +30,6 @@ const COMMUNITY_TAGS = [
   { name: '乃琳夸夸群', id: '9825', color: '#576690' },
 ];
 
-export function PaperBinding() {
-  return (
-    <div className="binding-holes" aria-hidden="true">
-      {Array.from({ length: 8 }, (_, index) => (
-        <i key={index} />
-      ))}
-    </div>
-  );
-}
-
 export function AppHeader({
   saveStatus,
   preview = false,
@@ -185,14 +175,10 @@ export function SettingsDrawer({
             className={`paper-theme-card ${state.settings.theme === 'paper' ? 'active' : ''}`}
             onClick={() => setSettings({ theme: 'paper' })}
           >
-            <span>
-              <i />
-              <i />
-              <i />
-            </span>
+            <span aria-hidden="true" />
             <div>
               <strong>温馨纸张</strong>
-              <small>温馨纸张和装订孔陪着你写</small>
+              <small>柔和的纯色纸面，安心记录</small>
             </div>
             {state.settings.theme === 'paper' && <Check />}
           </button>
