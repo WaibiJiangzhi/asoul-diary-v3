@@ -212,7 +212,7 @@ await test('fully recording a cycle celebrates even when its target state was no
     reachedMilestone(undo, save(undo, entry({ statusId: 'rest' }))),
     true,
   );
-  assert.equal(canRecord(full, '2026-09-28', '2026-09-30'), false);
+  assert.equal(canRecord(full, '2026-09-28', '2026-09-30'), true);
 });
 await test('stage backfills follow recorded dates, with independent milestones and reversible completion', () => {
   let c = card('stage');
@@ -312,4 +312,31 @@ await test('seven-day strip crosses month/year boundaries; example covers all fo
   assert.equal(new Set(demo.cards.map((c) => c.kind)).size, 4);
   assert.equal(new Set(demo.cards.map((c) => c.location)).size, 3);
   assert.equal(new Set(demo.companions.map((c) => c.kind)).size, 2);
+});
+
+await test('deadlines respect card type and countdown priority uses today before tomorrow', () => {
+  const c = createLifeCard('record');
+  c.startDate = '2026-12-30';
+  c.record.periodDays = 4;
+  assert.equal(lib.cardDeadline(c), '2027-01-02');
+  assert.equal(lib.deadlineDistance('2027-01-01', '2026-12-31'), 1);
+  const stage = createLifeCard('stage');
+  stage.expectedDate = '2026-10-10';
+  assert.equal(lib.cardDeadline(stage), '2026-10-10');
+  assert.equal(lib.restartLifeCard(stage).expectedDate, undefined);
+  const cards = [
+    { kind: 'quote' },
+    { kind: 'countdown', targetDate: '2026-10-11' },
+    { kind: 'countdown', targetDate: '2026-10-10' },
+    { kind: 'countdown', targetDate: '2026-10-10' },
+  ];
+  assert.deepEqual(lib.priorityCompanions(cards, '2026-10-10'), cards.slice(2));
+  assert.deepEqual(lib.priorityCompanions(cards, '2026-10-09'), cards.slice(2));
+  assert.deepEqual(lib.priorityCompanions(cards, '2026-10-01'), cards);
+  const state = createDefaultState();
+  stage.title = '测试日期';
+  state.cards = [stage];
+  validateState(state);
+  stage.expectedDate = '2026-13-42';
+  assert.throws(() => validateState(state));
 });

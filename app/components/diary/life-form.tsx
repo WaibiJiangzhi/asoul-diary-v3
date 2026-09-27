@@ -22,6 +22,7 @@ import { Input } from '@/components/ui/input';
 import { DecorationPicker } from './sticker-picker';
 import { CARD_COLORS } from './constants';
 import { createId, createLifeCard } from '@/lib/defaults';
+import { recordEnd, elapsedDays } from '@/lib/life';
 
 import type { CardKind, LifeCard } from '@/lib/types';
 export const CARD_KINDS = [
@@ -447,6 +448,24 @@ export function CardForm({
                       }
                     />
                   </label>
+                  <label>
+                    希望结束的日期 <small>可选，和天数同步</small>
+                    <Input
+                      type="date"
+                      min={draft.startDate}
+                      value={recordEnd(draft) ?? ''}
+                      onChange={(e) =>
+                        patch({
+                          record: {
+                            ...draft.record!,
+                            periodDays: e.target.value
+                              ? elapsedDays(draft.startDate, e.target.value)
+                              : undefined,
+                          },
+                        })
+                      }
+                    />
+                  </label>
                   <div className="field-pair">
                     <label>
                       期待的状态
@@ -561,6 +580,20 @@ export function CardForm({
           </div>
         </section>
         <section className="form-section">
+          {(draft.kind === 'stage' || draft.kind === 'blank') && (
+            <label>
+              {draft.kind === 'blank' ? '期待的日期' : '希望完成的日期'}{' '}
+              <small>可选</small>
+              <Input
+                type="date"
+                min={draft.startDate}
+                value={draft.expectedDate ?? ''}
+                onChange={(e) =>
+                  patch({ expectedDate: e.target.value || undefined })
+                }
+              />
+            </label>
+          )}
           <div className="field-pair">
             <label>
               开始日期

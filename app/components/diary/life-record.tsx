@@ -12,7 +12,7 @@ import { DecorationPicker } from './sticker-picker';
 import { getPhotos } from '@/lib/db';
 import { createId } from '@/lib/defaults';
 import { dateKey } from '@/lib/date';
-import { canRecord, recordEnd, stageComplete, stageEmoji } from '@/lib/life';
+import { canRecord, stageComplete, stageEmoji } from '@/lib/life';
 import type { LifeCard, LifeRecord } from '@/lib/types';
 export function usePhotoUrls(ids: string[]) {
   const key = ids.join('|');
@@ -141,9 +141,7 @@ export function RecordForm({
   const [error, setError] = useState('');
   const [host, setHost] = useState<HTMLDivElement | null>(null);
   const now = new Date().toISOString();
-  const end = recordEnd(card);
-  const max =
-    end && card.kind === 'record' && end < dateKey() ? end : dateKey();
+  const max = dateKey();
   async function save() {
     setError('');
     if (

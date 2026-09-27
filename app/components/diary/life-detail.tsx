@@ -103,7 +103,8 @@ export function RecordRing({ card }: { card: LifeCard }) {
     : card.startDate > moveDate(today, -29)
       ? card.startDate
       : moveDate(today, -29);
-  const end = recordEnd(card) ?? today;
+  const plannedEnd = recordEnd(card);
+  const end = plannedEnd && plannedEnd > today ? plannedEnd : today;
   const days = elapsedDays(start, end);
   const dates = Array.from({ length: days }, (_, i) => moveDate(start, i));
   const states = card.record?.states ?? [];

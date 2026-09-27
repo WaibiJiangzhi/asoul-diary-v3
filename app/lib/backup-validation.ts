@@ -1,5 +1,5 @@
 import type { AppState, DiaryBackup } from './types';
-import { isDateKey, recordEnd } from './life';
+import { isDateKey } from './life';
 type Rule = (value: unknown) => boolean;
 const text: Rule = (v) => typeof v === 'string';
 const nonempty: Rule = (v) => text(v) && !!(v as string).trim();
@@ -63,6 +63,7 @@ const card = shape({
   color,
   location: oneOf('active', 'later', 'memory'),
   startDate: date,
+  expectedDate: optional(date),
   createdAt: text,
   updatedAt: text,
   archivedAt: optional(text),
@@ -146,8 +147,7 @@ export function validateState(value: unknown): asserts value is AppState {
           r.photoIds.length > 9 ||
           (r.delta !== undefined && !c.progress) ||
           (r.stageId && typeof r.stageDone !== 'boolean') ||
-          (r.stageEmoji && (!r.stageId || !r.stageDone)) ||
-          (r.statusId && recordEnd(c) && r.date > recordEnd(c)!),
+          (r.stageEmoji && (!r.stageId || !r.stageDone)),
       )
     )
       throw new Error('记录日期或内容超出卡片配置');

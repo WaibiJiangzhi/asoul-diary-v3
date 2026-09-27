@@ -51,7 +51,7 @@ import { useToast } from '@/hooks/use-toast';
 import { formatShortDate } from '@/lib/date';
 import { createLifeCard, wallpaperAssetUrl } from '@/lib/defaults';
 import { getCommonCards, restartLifeCard } from '@/lib/card-templates';
-import { canRecord, recordEnd, statusRecord } from '@/lib/life';
+import { canRecord, statusRecord } from '@/lib/life';
 import type { AppTab, LifeCard, LifeRecord } from '@/lib/types';
 
 type Panel =
@@ -144,10 +144,7 @@ export default function DiaryApp({ preview = false }: { preview?: boolean }) {
   ) {
     const card = stateRef.current?.cards.find((c) => c.id === id);
     if (!card) return;
-    const end = recordEnd(card);
-    const target =
-      date ??
-      (card.kind === 'record' && end && end < todayDate ? end : todayDate);
+    const target = date ?? todayDate;
     if (!canRecord(card, target, todayDate)) {
       showToast('这一天还不能记录，可以先调整卡片的开始日期。');
       return;

@@ -2126,3 +2126,41 @@ progress.life-progress::-moz-progress-bar {
   outline: 1px solid var(--theme-accent);
   outline-offset: 1px;
 }
+
+.card-deadline {
+  display: block;
+  width: 100%;
+  text-align: center;
+  padding: 10px 0 4px;
+  font-size: 12px;
+  color: color-mix(in srgb, var(--card-accent) 65%, var(--ink));
+}
+.upcoming-dates {
+  margin-top: 10px;
+  padding: 12px 14px;
+  border: 1px solid var(--theme-border);
+  border-radius: 16px;
+  background: var(--theme-surface);
+  font-size: 13px;
+}
+.upcoming-dates summary {
+  cursor: pointer;
+  color: var(--theme-accent-deep);
+}
+.upcoming-dates button {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  min-height: 44px;
+  text-align: left;
+  align-items: center;
+}
+.upcoming-dates small {
+  white-space: nowrap;
+  color: var(--soft-ink);
+}
+
+.card-deadline[data-urgent='true'] {
+  font-weight: 700;
+}

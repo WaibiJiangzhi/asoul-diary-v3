@@ -26,6 +26,9 @@ import {
 } from './sortable-list';
 import { createId } from '@/lib/defaults';
 import {
+  cardDeadline,
+  deadlineDistance,
+  priorityCompanions,
   canRecord,
   completed,
   elapsedDays,
@@ -41,7 +44,11 @@ import type { CompanionCard, LifeCard } from '@/lib/types';
 export function CompanionShelf({
   cards,
   onEdit,
+  today,
+  selectedId,
 }: {
+  today: string;
+  selectedId?: string;
   cards: CompanionCard[];
   onEdit: () => void;
 }) {
@@ -55,11 +62,24 @@ export function CompanionShelf({
     if (!node || !cards.length) return;
     const next = initialized.current
       ? Math.min(lastIndex.current, cards.length - 1)
-      : Math.floor(Math.random() * cards.length);
+      : cards.indexOf(
+          priorityCompanions(cards, today)[
+            Math.floor(Math.random() * priorityCompanions(cards, today).length)
+          ],
+        );
     initialized.current = true;
     node.scrollTo({ left: next * node.clientWidth, behavior: 'instant' });
     setIndex(next);
-  }, [ids, cards.length]); // Keep the chosen card until a fresh app session.
+  }, [ids, cards, today]); // Keep the chosen card until a fresh app session.
+  useEffect(() => {
+    const i = cards.findIndex((c) => c.id === selectedId);
+    if (i >= 0 && rail.current) {
+      rail.current.scrollTo({
+        left: i * rail.current.clientWidth,
+        behavior: 'smooth',
+      });
+    }
+  }, [selectedId, cards]);
   function move(i: number) {
     const node = rail.current;
     if (node)
@@ -306,6 +326,29 @@ function SmallCard({
           <RecordText text={latest.body || '留下了一次记录'} />
         </p>
       )}
+      {cardDeadline(card) && !completed(card) && (
+        <button
+          type="button"
+          className="card-deadline"
+          data-urgent={[0, 1].includes(
+            deadlineDistance(cardDeadline(card)!, today),
+          )}
+          onClick={onMenu}
+        >
+          {deadlineDistance(cardDeadline(card)!, today) < 0
+            ? '原定 ' + formatShortDate(cardDeadline(card)!) + ' · 可调整日期'
+            : deadlineDistance(cardDeadline(card)!, today) === 0
+              ? '今天是期待的日子'
+              : deadlineDistance(cardDeadline(card)!, today) === 1
+                ? '明天就是期待的日子'
+                : (card.kind === 'blank' ? '期待 ' : '希望在 ') +
+                  formatShortDate(cardDeadline(card)!) +
+                  (card.kind === 'blank' ? '' : ' 完成') +
+                  ' · 还有 ' +
+                  deadlineDistance(cardDeadline(card)!, today) +
+                  ' 天'}
+        </button>
+      )}
       <div className="life-card-footer">
         <button type="button" className="card-history-link" onClick={onOpen}>
           {isLater
@@ -365,6 +408,29 @@ export function LifeView({
   onCompanions: () => void;
 }) {
   const [sorting, setSorting] = useState(false);
+  const [selectedCompanion, setSelectedCompanion] = useState<string>();
+  const upcoming = [
+    ...companions
+      .filter((c) => c.kind === 'countdown' && c.targetDate)
+      .map((c) => ({
+        id: c.id,
+        title: c.title,
+        date: c.targetDate!,
+        companion: true,
+      })),
+    ...cards
+      .filter(
+        (c) => c.location === 'active' && !completed(c) && cardDeadline(c),
+      )
+      .map((c) => ({
+        id: c.id,
+        title: c.title,
+        date: cardDeadline(c)!,
+        companion: false,
+      })),
+  ]
+    .filter((c) => [0, 1].includes(deadlineDistance(c.date, today)))
+    .sort((a, b) => a.date.localeCompare(b.date));
   const active = cards.filter((c) => c.location === 'active');
   const later = cards.filter((c) => c.location === 'later');
   const show = (card: LifeCard, handle?: SortableHandle) => (
@@ -383,7 +449,33 @@ export function LifeView({
   );
   return (
     <div className="life-view">
-      <CompanionShelf cards={companions} onEdit={onCompanions} />
+      <CompanionShelf
+        cards={companions}
+        onEdit={onCompanions}
+        today={today}
+        selectedId={selectedCompanion}
+      />
+      {!!upcoming.length && (
+        <details className="upcoming-dates" key={today}>
+          <summary>
+            今天有 {upcoming.filter((c) => c.date === today).length}{' '}
+            件期待，明天还有 {upcoming.filter((c) => c.date !== today).length}{' '}
+            件
+          </summary>
+          {upcoming.map((c) => (
+            <button
+              type="button"
+              key={c.id}
+              onClick={() =>
+                c.companion ? setSelectedCompanion(c.id) : onOpen(c.id)
+              }
+            >
+              <span>{c.title}</span>
+              <small>{c.date === today ? '就是今天' : '还有 1 天'}</small>
+            </button>
+          ))}
+        </details>
+      )}
       <div className="life-section-heading">
         <div>
           <p>MY LITTLE STEPS</p>

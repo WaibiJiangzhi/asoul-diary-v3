@@ -52,8 +52,7 @@ export function canRecord(card: LifeCard, date: string, today = dateKey()) {
     card.location !== 'memory' &&
     isDateKey(date) &&
     date <= today &&
-    date >= card.startDate &&
-    (!recordEnd(card) || card.kind !== 'record' || date <= recordEnd(card)!)
+    date >= card.startDate
   );
 }
 export function completed(card: LifeCard) {
@@ -76,8 +75,11 @@ export function cycleFilled(card: LifeCard) {
   return (
     card.kind === 'record' &&
     !!card.record?.periodDays &&
-    new Set(card.records.filter((r) => r.statusId).map((r) => r.date)).size >=
-      card.record.periodDays
+    new Set(
+      card.records
+        .filter((r) => r.statusId && r.date <= recordEnd(card)!)
+        .map((r) => r.date),
+    ).size >= card.record.periodDays
   );
 }
 export function reachedMilestone(before: LifeCard, after: LifeCard) {
@@ -169,4 +171,33 @@ export function saveLifeRecord(
 }
 export function allPhotoIds(state: { cards: LifeCard[] }) {
   return state.cards.flatMap((c) => c.records.flatMap((r) => r.photoIds));
+}
+
+export function cardDeadline(card: LifeCard) {
+  if (card.kind === 'record') return recordEnd(card);
+  if (card.kind === 'progress') return card.progress?.expectedDate;
+  return card.expectedDate;
+}
+export function deadlineDistance(date: string, today = dateKey()) {
+  return Math.round(
+    (Date.parse(date + 'T12:00:00Z') - Date.parse(today + 'T12:00:00Z')) /
+      86400000,
+  );
+}
+export function priorityCompanions<
+  T extends { kind: string; targetDate?: string },
+>(cards: T[], today = dateKey()) {
+  const due = cards.filter(
+    (c) =>
+      c.kind === 'countdown' &&
+      c.targetDate &&
+      deadlineDistance(c.targetDate, today) === 0,
+  );
+  const tomorrow = cards.filter(
+    (c) =>
+      c.kind === 'countdown' &&
+      c.targetDate &&
+      deadlineDistance(c.targetDate, today) === 1,
+  );
+  return due.length ? due : tomorrow.length ? tomorrow : cards;
 }

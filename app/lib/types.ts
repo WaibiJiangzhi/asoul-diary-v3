@@ -44,6 +44,7 @@ export interface LifeCard {
   color: CardColor;
   location: 'active' | 'later' | 'memory';
   startDate: string;
+  expectedDate?: string;
   createdAt: string;
   updatedAt: string;
   archivedAt?: string;
