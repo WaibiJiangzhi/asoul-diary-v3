@@ -52,9 +52,11 @@ export function CompanionShelf({
   onEdit,
   today,
   selection,
+  startWithFirst = false,
 }: {
   today: string;
   selection?: { id: string };
+  startWithFirst?: boolean;
   cards: CompanionCard[];
   onEdit: () => void;
 }) {
@@ -70,12 +72,16 @@ export function CompanionShelf({
     const next =
       initializedDay.current === today
         ? Math.min(lastIndex.current, cards.length - 1)
-        : cards.indexOf(priority[Math.floor(Math.random() * priority.length)]);
+        : startWithFirst
+          ? 0
+          : cards.indexOf(
+              priority[Math.floor(Math.random() * priority.length)],
+            );
     initializedDay.current = today;
     lastIndex.current = next;
     node.scrollTo({ left: next * node.clientWidth, behavior: 'instant' });
     setIndex(next);
-  }, [ids, cards, today]); // Keep the choice during the day; reconsider priority after midnight.
+  }, [ids, cards, today, startWithFirst]); // Keep the choice during the day; reconsider priority after midnight.
   useEffect(() => {
     const i = cards.findIndex((c) => c.id === selection?.id);
     if (!selection) return;
@@ -434,6 +440,7 @@ function SmallCard({
 export function LifeView({
   cards,
   companions,
+  preview = false,
   today,
   onNew,
   onOpen,
@@ -449,6 +456,7 @@ export function LifeView({
 }: {
   cards: LifeCard[];
   companions: CompanionCard[];
+  preview?: boolean;
   group?: string;
   groupControls: (actions: ReactNode) => ReactNode;
   today: string;
@@ -516,6 +524,7 @@ export function LifeView({
         onEdit={onCompanions}
         today={today}
         selection={selectedCompanion}
+        startWithFirst={preview}
       />
       {!!upcoming.length && (
         <details className="upcoming-dates" key={today}>

@@ -358,14 +358,14 @@ export function createDemoState(today = dateKey()): AppState {
     emoji: '⛰️',
     targetDate: moveDate(today, 12),
   });
-  state.companions.push({
+  state.companions.unshift({
     id: 'demo-today',
     color: '#E799B0',
     kind: 'countdown',
     title: '然糖之约 100 天',
     note: '把这份喜欢，好好留在今天。',
     emoji: '[2026嘉然的画册动态表情包_捏捏]',
-    targetDate: today,
+    targetDate: '2026-12-24',
   });
   state.settings.theme = 'wallpaper';
   return state;

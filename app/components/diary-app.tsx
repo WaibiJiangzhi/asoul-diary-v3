@@ -268,6 +268,7 @@ export default function DiaryApp({ preview = false }: { preview?: boolean }) {
         )}
         <div className="app-tab-panel" hidden={tab !== 'life'}>
           <LifeView
+            preview={preview}
             cards={state.cards}
             companions={state.companions}
             group={group}

@@ -500,14 +500,12 @@ await test('monthly reminder respects 30 days and session dismissal when persist
   assert.equal(lib.backupReminderSince(now + 1000, null, now), now);
   assert.equal(lib.backupReminderSince(now, since, now), now);
 });
-await test('example dates remain relative, contain today/tomorrow/future and resolve every illustration', () => {
+await test('example leads with the December 24 anniversary and resolves relative dates and illustrations', () => {
   const demo = createDemoState('2027-01-01');
   validateState(demo);
   assert.equal(demo.cards.filter((c) => c.location === 'active').length, 4);
-  assert.equal(
-    lib.priorityCompanions(demo.companions, '2027-01-01')[0].targetDate,
-    '2027-01-01',
-  );
+  assert.equal(demo.companions[0].targetDate, '2026-12-24');
+  assert.equal(demo.companions[0].title, '然糖之约 100 天');
   assert.ok(demo.cards.some((c) => lib.cardDeadline(c) === '2027-01-02'));
   assert.ok(demo.companions.some((c) => c.targetDate === '2027-01-13'));
   const photoIds = lib.allPhotoIds(demo);
