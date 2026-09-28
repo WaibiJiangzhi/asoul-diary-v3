@@ -1,4 +1,4 @@
-# 安卓测试版
+# 安卓工程
 
 应用使用 Capacitor 8，将静态页面、壁纸和表情资源打包到 APK；不依赖开发服务器。应用 ID 为 `com.yizhijiangzhi.asouldiary`，名称为「一个魂日记」。Android 7.0（API 24）起可安装，建议使用更新的 Android System WebView。
 
@@ -6,7 +6,7 @@
 
 在 `app` 目录执行 `npm run android:apk`。需要 JDK 21、Android SDK Platform 36、Build Tools 36.0.0，并已接受 SDK 许可。设置 `JAVA_HOME` 和 `ANDROID_HOME`；也可使用项目忽略目录 `app/work/android-tools` 内的本机工具。
 
-脚本执行静态构建、Capacitor 同步和 Gradle `assembleDebug`，生成 `app/outputs/android/asoul-diary-3.0.0-alpha.2.apk`。这是调试签名测试包，不是应用商店发布包。后续覆盖安装需要保持签名和应用 ID 一致；不要删除本机调试签名。正式分发前应配置独立发布签名。
+脚本执行静态构建、Capacitor 同步和 Gradle `assembleDebug`，生成 `app/outputs/android/asoul-diary-3.0.0.apk`。这是调试签名验证包，不是应用商店发布包；网页正式版本命名不改变 APK 的签名性质。后续覆盖安装需要保持签名和应用 ID 一致；不要删除本机调试签名。面向应用商店分发前应配置独立发布签名，并规划原调试包用户的数据迁移。
 
 `npm run android:sync` 更新安卓工程中的网页资源；`npm run android:open` 用已安装的 Android Studio 打开工程。原有 Pages、Workers 构建继续保留。
 

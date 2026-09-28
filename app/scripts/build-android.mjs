@@ -65,6 +65,6 @@ run(
   resolve('android'),
 );
 mkdirSync('outputs/android', { recursive: true });
-const target = resolve('outputs/android/asoul-diary-3.0.0-alpha.2.apk');
+const target = resolve('outputs/android/asoul-diary-3.0.0.apk');
 copyFileSync('android/app/build/outputs/apk/debug/app-debug.apk', target);
 console.log(`\nAndroid test APK: ${target}`);

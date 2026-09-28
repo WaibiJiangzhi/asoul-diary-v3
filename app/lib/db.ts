@@ -3,6 +3,7 @@ import type { AppState, DiaryBackup, StoredPhoto } from './types';
 import { validateBackup, validateState } from './backup-validation';
 import { allPhotoIds } from './life';
 
+// Keep the original V3 name: renaming would hide existing users' records.
 const DB_NAME = 'asoul-life-v3-preview';
 const DB_VERSION = 1;
 const STATE_KEY = 'main';

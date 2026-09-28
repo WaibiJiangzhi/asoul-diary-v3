@@ -301,7 +301,7 @@ export function SettingsDrawer({
         <footer className="settings-footer">
           <strong>一个魂日记</strong>
           <span>作者：就一枝匠纸 · AI 生成</span>
-          <span>V3.0 · 预览版</span>
+          <span>V3.0</span>
         </footer>
       </div>
     </Sheet>

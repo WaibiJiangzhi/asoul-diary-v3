@@ -248,6 +248,70 @@ await test('photo removal commits atomically with diary references and survives 
   assert.deepEqual((await db.loadState()).cards[0].records[0].photoIds, []);
 });
 
+await test('V3 release opens the existing database and preserves records, photos and drafts', async () => {
+  globalThis.indexedDB = new IDBFactory();
+  const fixture = JSON.parse(
+    readFileSync(
+      new URL('../fixtures/v3-compat-baseline.json', import.meta.url),
+      'utf8',
+    ),
+  );
+  const draft = {
+    body: '升级前没有写完的内容',
+    files: [image()],
+    photoIds: [],
+  };
+  // Seed the old schema directly, without calling the current restore code.
+  await new Promise((resolve, reject) => {
+    const open = indexedDB.open('asoul-life-v3-preview', 1);
+    open.onupgradeneeded = () => {
+      open.result.createObjectStore('state');
+      open.result.createObjectStore('photos', { keyPath: 'id' });
+    };
+    open.onerror = () => reject(open.error);
+    open.onsuccess = () => {
+      const database = open.result;
+      const tx = database.transaction(['state', 'photos'], 'readwrite');
+      tx.objectStore('state').put(fixture.state, 'main');
+      tx.objectStore('state').put('old-v3-revision', 'revision');
+      tx.objectStore('state').put(draft, 'draft:compat');
+      for (const photo of fixture.photos) {
+        const [header, data] = photo.dataUrl.split(',');
+        tx.objectStore('photos').put({
+          id: photo.id,
+          name: photo.name,
+          createdAt: photo.createdAt,
+          blob: new Blob([Buffer.from(data, 'base64')], {
+            type: header.slice(5).split(';')[0],
+          }),
+        });
+      }
+      tx.oncomplete = () => {
+        database.close();
+        resolve();
+      };
+      tx.onabort = () => {
+        database.close();
+        reject(tx.error);
+      };
+    };
+  });
+  const db = await page();
+  const loaded = await db.loadState();
+  assert.deepEqual(loaded, fixture.state);
+  const loadedDraft = await db.readRecordDraft('compat');
+  assert.equal(loadedDraft.body, draft.body);
+  assert.equal(await loadedDraft.files[0].text(), await draft.files[0].text());
+  const exported = await db.createBackup(loaded);
+  const byId = (a, b) => a.id.localeCompare(b.id);
+  assert.deepEqual(exported.photos.sort(byId), fixture.photos.sort(byId));
+  await db.saveState(loaded);
+  const reopened = await page();
+  assert.deepEqual(await reopened.loadState(), fixture.state);
+  // The same frozen pre-release backup must also remain importable.
+  assert.deepEqual(await reopened.restoreBackup(fixture), fixture.state);
+});
+
 await test('the complete sample backup round-trips with every diary and embedded photo', async () => {
   const { db } = await setup();
   const fixture = JSON.parse(
