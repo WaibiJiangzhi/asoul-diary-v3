@@ -66,8 +66,9 @@
   min-height: 100dvh;
   margin: 0 auto;
   overflow: hidden;
-  padding: max(18px, env(safe-area-inset-top)) 20px
-    calc(104px + env(safe-area-inset-bottom)) 20px;
+  padding: max(18px, var(--safe-area-inset-top, env(safe-area-inset-top))) 20px
+    calc(104px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom)))
+    20px;
   background-color: var(--paper);
   box-shadow: 0 0 54px rgb(77 61 55 / 11%);
 }
@@ -187,7 +188,7 @@
   position: fixed;
   z-index: 30;
   right: 12px;
-  bottom: max(10px, env(safe-area-inset-bottom));
+  bottom: max(10px, var(--safe-area-inset-bottom, env(safe-area-inset-bottom)));
   left: 12px;
   display: flex;
   width: min(calc(100% - 24px), 536px);
@@ -238,7 +239,8 @@
   width: min(100%, 560px);
   max-height: calc(88dvh - 28px);
   margin: 0 auto;
-  padding: 4px 18px max(26px, env(safe-area-inset-bottom));
+  padding: 4px 18px
+    max(26px, var(--safe-area-inset-bottom, env(safe-area-inset-bottom)));
   overflow-y: auto;
   overscroll-behavior: contain;
 }
@@ -262,7 +264,9 @@
   position: fixed;
   z-index: 80;
   right: 18px;
-  bottom: calc(92px + env(safe-area-inset-bottom));
+  bottom: calc(
+    92px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom))
+  );
   left: 18px;
   display: flex;
   width: min(calc(100% - 36px), 500px);
@@ -309,7 +313,8 @@
 .settings-sheet {
   display: grid;
   gap: 15px;
-  padding: 0 16px max(28px, env(safe-area-inset-bottom));
+  padding: 0 16px
+    max(28px, var(--safe-area-inset-bottom, env(safe-area-inset-bottom)));
 }
 .settings-update {
   display: flex;

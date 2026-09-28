@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ShowToast } from '@/hooks/use-toast';
+import { isNativeApp } from '@/lib/native';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -39,6 +40,7 @@ export function useAppUpdate({
   useEffect(() => {
     if (
       !enabled ||
+      isNativeApp() ||
       !('serviceWorker' in navigator) ||
       process.env.NODE_ENV !== 'production'
     ) {

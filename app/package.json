@@ -19,10 +19,18 @@
     "test:records": "node scripts/life.test.mjs && node scripts/stickers.test.mjs",
     "test:storage": "node scripts/storage.test.mjs && node scripts/service-worker.test.mjs",
     "wallpapers:optimize": "node scripts/optimize-wallpapers.mjs",
-    "fixture:sample": "node scripts/generate-sample.mjs"
+    "fixture:sample": "node scripts/generate-sample.mjs",
+    "android:sync": "npm run build:pages && cap sync android",
+    "android:open": "cap open android",
+    "android:apk": "node scripts/build-android.mjs"
   },
   "dependencies": {
     "@base-ui/react": "1.7.0",
+    "@capacitor/android": "^8.5.2",
+    "@capacitor/app": "^8.1.1",
+    "@capacitor/core": "^8.5.2",
+    "@capacitor/filesystem": "^8.1.3",
+    "@capacitor/share": "^8.0.2",
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
@@ -40,6 +48,7 @@
     "vinext": "1.0.0-beta.9"
   },
   "devDependencies": {
+    "@capacitor/cli": "^8.5.2",
     "@cloudflare/vite-plugin": "1.54.7",
     "@cloudflare/workers-types": "5.20260910.1",
     "@openai/sites-vite-plugin": "0.2.0",
@@ -54,11 +63,11 @@
     "oxfmt": "0.61.0",
     "oxlint": "1.76.0",
     "oxlint-tsgolint": "7.0.2001",
+    "sharp": "0.35.4",
     "tailwindcss": "4.2.1",
     "typescript": "5.9.3",
     "vite": "8.3.0",
-    "wrangler": "4.131.0",
-    "sharp": "0.35.4"
+    "wrangler": "4.131.0"
   },
   "type": "module"
 }

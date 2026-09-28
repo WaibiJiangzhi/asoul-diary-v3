@@ -55,6 +55,7 @@ const record = shape({
   stageEmoji: optional(text),
 });
 const card = shape({
+  daily: optional(flag),
   groupId: optional(nonempty),
   id: nonempty,
   kind: oneOf('record', 'progress', 'stage', 'blank'),

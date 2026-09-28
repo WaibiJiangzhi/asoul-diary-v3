@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { Plus, Trash2, Settings2, Inbox, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,11 +11,13 @@ export function GroupFilter({
   value,
   onChange,
   onManage,
+  actions,
 }: {
   groups: CardGroup[];
   value: string;
   onChange: (id: string) => void;
   onManage?: () => void;
+  actions?: ReactNode;
 }) {
   return (
     <div className="group-filter">
@@ -39,6 +41,7 @@ export function GroupFilter({
           ))}
         </fieldset>
       )}
+      {actions}
       {onManage && (
         <Button
           variant="ghost"

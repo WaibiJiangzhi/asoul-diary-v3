@@ -793,7 +793,8 @@
 
 /* One shared sheet for all card kinds and record actions. */
 .life-sheet .drawer-inner {
-  padding: 18px 22px calc(22px + env(safe-area-inset-bottom));
+  padding: 18px 22px
+    calc(22px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom)));
 }
 .life-sheet [data-slot='drawer-header'] {
   padding: 0 0 18px;
@@ -1143,7 +1144,9 @@
   margin-bottom: 0;
 }
 .life-sheet:has(.sheet-composer-host .journal-composer-dock) .drawer-inner {
-  padding-bottom: calc(84px + env(safe-area-inset-bottom));
+  padding-bottom: calc(
+    84px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom))
+  );
 }
 .life-sheet:has(.sheet-composer-host .is-expanded) .drawer-inner {
   padding-bottom: calc(min(340px, 45dvh) + 84px);
@@ -2476,4 +2479,44 @@ progress.life-progress::-moz-progress-bar {
 }
 .draft-notice button {
   flex-shrink: 0;
+}
+.daily-filter-summary {
+  display: block;
+  margin: -4px 0 16px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--theme-accent-deep);
+  text-shadow:
+    0 1px 3px white,
+    0 0 6px white;
+}
+.group-filter > .daily-filter-toggle {
+  display: grid;
+  place-items: center;
+  margin-left: auto;
+}
+.life-form .daily-card-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 18px;
+}
+.daily-card-option > span {
+  display: grid;
+  gap: 6px;
+}
+.daily-card-option strong {
+  font-size: 14px;
+}
+.daily-card-option small {
+  font-size: 12px;
+  font-weight: 400;
+}
+.life-form .daily-card-option input {
+  flex: 0 0 22px;
+  width: 22px;
+  height: 22px;
+  min-height: 0;
+  accent-color: var(--theme-accent);
 }

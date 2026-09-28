@@ -2,6 +2,7 @@ import type { ChangeEvent } from 'react';
 
 import type { Confirmation } from '@/components/diary/confirm-dialog';
 import { dateKey } from '@/lib/date';
+import { isNativeApp, shareNativeBackup } from '@/lib/native';
 import { clearAllData, createBackup, restoreBackup } from '@/lib/db';
 import type { AppState, DiaryBackup } from '@/lib/types';
 import type { ShowToast } from '@/hooks/use-toast';
@@ -26,6 +27,14 @@ export function useDataController({
     showToast('正在整理本地备份…');
     try {
       const backup = await createBackup(state);
+      if (isNativeApp()) {
+        await shareNativeBackup(
+          JSON.stringify(backup),
+          `asoul-life-v3-${dateKey()}.json`,
+        );
+        showToast('请将备份保存到应用之外，或发送给自己留存');
+        return;
+      }
       const url = URL.createObjectURL(
         new Blob([JSON.stringify(backup)], { type: 'application/json' }),
       );

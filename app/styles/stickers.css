@@ -151,7 +151,8 @@
   gap: 5px;
   overflow-x: auto;
   overscroll-behavior: contain;
-  padding: 8px 10px max(10px, env(safe-area-inset-bottom));
+  padding: 8px 10px
+    max(10px, var(--safe-area-inset-bottom, env(safe-area-inset-bottom)));
   border-top: 1px solid var(--theme-border);
   scrollbar-width: none;
 }

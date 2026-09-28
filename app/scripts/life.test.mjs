@@ -4,7 +4,7 @@ import { build } from 'esbuild';
 const { outputFiles } = await build({
   stdin: {
     contents:
-      "export * from './lib/life'; export * from './lib/defaults'; export * from './lib/backup-validation'; export * from './lib/card-templates'; export * from './lib/card-edit'; export * from './lib/backup-reminder'; export * from './lib/demo-photos'; export * from './lib/card-groups';",
+      "export * from './lib/life'; export * from './lib/defaults'; export * from './lib/backup-validation'; export * from './lib/card-templates'; export * from './lib/card-edit'; export * from './lib/backup-reminder'; export * from './lib/demo-photos'; export * from './lib/card-groups'; export * from './lib/daily-cards';",
     resolveDir: process.cwd(),
   },
   bundle: true,
@@ -55,6 +55,47 @@ const entry = (extra = {}) => ({
   ...extra,
 });
 const save = (c, r) => saveLifeRecord(c, r, today);
+await test('daily membership defaults, explicit choices and backup validation', () => {
+  for (const kind of ['record', 'progress', 'stage', 'blank']) {
+    assert.equal(lib.isDailyCard(card(kind)), kind === 'record');
+    assert.equal(lib.isDailyCard({ ...card(kind), daily: true }), true);
+    assert.equal(lib.isDailyCard({ ...card(kind), daily: false }), false);
+  }
+  const state = {
+    ...createDefaultState(),
+    cards: [card('record'), { ...card('stage'), daily: true }],
+  };
+  validateState(JSON.parse(JSON.stringify(state)));
+  assert.throws(() =>
+    validateState({ ...state, cards: [{ ...card('record'), daily: 'true' }] }),
+  );
+});
+await test('daily list keeps recorded cards, sorts pending first and respects dates and groups', () => {
+  const done = { ...card('record'), records: [entry()] };
+  const pending = {
+    ...card('stage'),
+    daily: true,
+    groupId: 'sport',
+    records: [entry({ date: '2026-09-26' })],
+  };
+  const skipped = [
+    { ...card('record'), daily: false },
+    { ...card('record'), location: 'later' },
+    { ...card('record'), location: 'memory' },
+    { ...card('record'), startDate: '2026-09-28' },
+  ];
+  assert.deepEqual(lib.dailyCards([done, ...skipped, pending], today), [
+    pending,
+    done,
+  ]);
+  assert.deepEqual(lib.dailyCards([done, pending], today, 'sport'), [pending]);
+  assert.equal(lib.hasRecordToday(pending, today), false);
+  assert.equal(lib.hasRecordToday(done, '2026-09-28'), false);
+  assert.deepEqual(
+    lib.dailyCards([{ ...done, records: [] }, pending], today).map((c) => c.id),
+    [done.id, pending.id],
+  );
+});
 await test('common cards are independent of living cards and an empty saved list stays empty', () => {
   const state = createDefaultState();
   const common = getCommonCards(state);

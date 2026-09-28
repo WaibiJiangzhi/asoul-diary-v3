@@ -40,6 +40,7 @@ export interface CardGroup {
   name: string;
 }
 export interface LifeCard {
+  daily?: boolean;
   groupId?: string;
   id: string;
   kind: CardKind;

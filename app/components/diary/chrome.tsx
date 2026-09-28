@@ -23,6 +23,7 @@ import { Sheet } from './life-form';
 import { Button } from '@/components/ui/button';
 import { ACCENT_THEMES, WALLPAPERS, wallpaperAssetUrl } from '@/lib/defaults';
 import type { AppState, AppTab } from '@/lib/types';
+import { isNativeApp } from '@/lib/native';
 
 const COMMUNITY_TAGS = [
   { name: '嘉心糖的手帐本', id: '36443', color: '#AF4F70' },
@@ -257,12 +258,15 @@ export function SettingsDrawer({
         <section className="settings-section">
           <h3>数据与备份</h3>
           <p className="setting-note">
-            记录和照片保存在当前浏览器，不会自动同步。清空浏览器数据或更换设备前，记得下载完整备份。备份包含已确认的记录和照片，未提交草稿仅保留在本机。
+            {isNativeApp()
+              ? '记录和照片保存在本机 App，不会自动同步。卸载、清除应用数据或更换设备前，记得导出完整备份，并保存到应用之外。'
+              : '记录和照片保存在当前浏览器，不会自动同步。清空浏览器数据或更换设备前，记得下载完整备份。'}
+            备份包含已确认的记录和照片，未提交草稿仅保留在本机。
           </p>
           <div className="settings-buttons">
             <Button onClick={onExport}>
               <Download />
-              下载完整备份
+              {isNativeApp() ? '导出完整备份' : '下载完整备份'}
             </Button>
             <label className="import-button">
               <FileUp />

@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">一个魂日记</string>
+    <string name="title_activity_main">一个魂日记</string>
+    <string name="package_name">com.yizhijiangzhi.asouldiary</string>
+    <string name="custom_url_scheme">com.yizhijiangzhi.asouldiary</string>
+</resources>

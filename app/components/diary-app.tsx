@@ -34,6 +34,8 @@ import {
 import { CardForm, Sheet } from '@/components/diary/life-form';
 import { GroupFilter, GroupManager } from './diary/card-groups';
 import { saveGroup, removeGroup, reorderGroups } from '@/lib/card-groups';
+import { useNativeApp } from '@/hooks/use-native-app';
+import { isNativeApp } from '@/lib/native';
 import { CardStarter } from '@/components/diary/card-starter';
 import { CardDetail, ArchiveForm } from '@/components/diary/life-detail';
 import { RecordForm, StageCompletion } from '@/components/diary/life-record';
@@ -146,6 +148,25 @@ export default function DiaryApp({ preview = false }: { preview?: boolean }) {
           : null,
     );
   }
+  useNativeApp(() => {
+    if (confirmation) {
+      setConfirmation(null);
+      return true;
+    }
+    if (settings) {
+      setSettings(false);
+      return true;
+    }
+    if (panel) {
+      closePanel();
+      return true;
+    }
+    if (tab !== 'life') {
+      changeTab('life');
+      return true;
+    }
+    return false;
+  }, flushSave);
   function openRecord(
     id: string,
     date?: string,
@@ -222,7 +243,11 @@ export default function DiaryApp({ preview = false }: { preview?: boolean }) {
         />
         {backupReminder.visible && (
           <div className="backup-reminder">
-            <span>清空浏览器数据前，记得存一份数据备份~</span>
+            <span>
+              {isNativeApp()
+                ? '卸载或清除应用数据前，记得存一份数据备份~'
+                : '清空浏览器数据前，记得存一份数据备份~'}
+            </span>
             <Button
               size="sm"
               variant="ghost"
@@ -246,14 +271,15 @@ export default function DiaryApp({ preview = false }: { preview?: boolean }) {
             cards={state.cards}
             companions={state.companions}
             group={group}
-            groupControls={
+            groupControls={(actions) => (
               <GroupFilter
+                actions={actions}
                 groups={state.groups ?? []}
                 value={group}
                 onChange={setSelectedGroup}
                 onManage={() => setPanel({ kind: 'groups' })}
               />
-            }
+            )}
             today={todayDate}
             onNew={() => setPanel({ kind: 'starter' })}
             onOpen={(id) => setPanel({ kind: 'detail', id })}

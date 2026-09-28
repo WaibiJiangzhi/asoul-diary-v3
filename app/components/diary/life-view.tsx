@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import {
   ArrowLeft,
+  CalendarCheck,
   ArrowRight,
   Check,
   ChevronDown,
@@ -21,6 +22,7 @@ import { CARD_COLORS } from './constants';
 import { usePhotoUrls } from '@/hooks/use-photo-urls';
 import Image from 'next/image';
 import { inGroup } from '@/lib/card-groups';
+import { dailyCards, hasRecordToday } from '@/lib/daily-cards';
 import type { ReactNode } from 'react';
 import { ProgressSummary, RecordText } from './life-detail';
 import {
@@ -438,7 +440,7 @@ export function LifeView({
   cards: LifeCard[];
   companions: CompanionCard[];
   group?: string;
-  groupControls?: ReactNode;
+  groupControls: (actions: ReactNode) => ReactNode;
   today: string;
   onNew: () => void;
   onOpen: (id: string) => void;
@@ -451,6 +453,7 @@ export function LifeView({
   onCompanions: () => void;
 }) {
   const [sorting, setSorting] = useState(false);
+  const [dailyOnly, setDailyOnly] = useState(false);
   const [selectedCompanion, setSelectedCompanion] = useState<{ id: string }>();
   const upcoming = [
     ...companions
@@ -474,9 +477,11 @@ export function LifeView({
   ]
     .filter((c) => [0, 1].includes(deadlineDistance(c.date, today)))
     .sort((a, b) => a.date.localeCompare(b.date));
-  const active = cards.filter(
-    (c) => c.location === 'active' && inGroup(c, group),
-  );
+  const daily = dailyCards(cards, today, group);
+  const remaining = daily.filter((card) => !hasRecordToday(card, today)).length;
+  const active = dailyOnly
+    ? daily
+    : cards.filter((c) => c.location === 'active' && inGroup(c, group));
   const later = cards.filter(
     (c) => c.location === 'later' && inGroup(c, group),
   );
@@ -534,7 +539,7 @@ export function LifeView({
           <h1>生活，慢慢来</h1>
         </div>
         <div className="life-section-tools">
-          {active.length > 1 && (
+          {!dailyOnly && active.length > 1 && (
             <Button
               variant="ghost"
               size="sm"
@@ -555,7 +560,28 @@ export function LifeView({
           )}
         </div>
       </div>
-      {groupControls}
+      {groupControls(
+        <button
+          className="daily-filter-toggle"
+          type="button"
+          aria-label="每日记录"
+          title="每日记录"
+          aria-pressed={dailyOnly}
+          onClick={() => {
+            setDailyOnly((value) => !value);
+            setSorting(false);
+          }}
+        >
+          <CalendarCheck size={20} aria-hidden="true" />
+        </button>,
+      )}
+      {dailyOnly && daily.length > 0 && (
+        <output className="daily-filter-summary">
+          {remaining
+            ? `今天还有 ${remaining} 张没记`
+            : '今天想记的，都留下啦 ✨'}
+        </output>
+      )}
       {active.length ? (
         <SortableList
           className="life-card-list"
@@ -575,15 +601,19 @@ export function LifeView({
             value="[2026乃琳的酒馆动态表情包_爱你]"
             className="empty-sticker"
           />
-          <h2>想从哪件事开始？</h2>
-          <p>想做的事、日常的小事，都可以从一张卡片开始。</p>
+          <h2>{dailyOnly ? '这里还没有每日记录的卡片' : '想从哪件事开始？'}</h2>
+          <p>
+            {dailyOnly
+              ? '在卡片编辑里开启「加入每日记录」，开始后就会出现在这里。也可以切换分组看看。'
+              : '想做的事、日常的小事，都可以从一张卡片开始。'}
+          </p>
         </div>
       )}
       <Button className="new-life-card" onClick={onNew}>
         <Plus />
         添加卡片
       </Button>
-      {later.length > 0 && (
+      {!dailyOnly && later.length > 0 && (
         <details className="later-section">
           <summary>
             以后想做 <span>{later.length}</span>

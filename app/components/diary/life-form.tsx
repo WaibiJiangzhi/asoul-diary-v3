@@ -23,6 +23,7 @@ import { DecorationPicker } from './sticker-picker';
 import { CARD_COLORS } from './constants';
 import { createId, createLifeCard } from '@/lib/defaults';
 import { recordEnd, elapsedDays } from '@/lib/life';
+import { isDailyCard } from '@/lib/daily-cards';
 
 import type { CardGroup, CardKind, LifeCard } from '@/lib/types';
 export const CARD_KINDS = [
@@ -285,6 +286,17 @@ export function CardForm({
         </label>
         {!memory && (
           <section className="form-section card-configuration">
+            <label className="daily-card-option">
+              <span>
+                <strong>加入每日记录</strong>
+                <small>放在一起，方便每天记一记。</small>
+              </span>
+              <input
+                type="checkbox"
+                checked={isDailyCard(draft)}
+                onChange={(e) => patch({ daily: e.target.checked })}
+              />
+            </label>
             <div className="card-config-content">
               <fieldset>
                 <legend>怎么记录</legend>

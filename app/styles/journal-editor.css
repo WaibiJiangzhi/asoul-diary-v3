@@ -55,7 +55,8 @@
   display: flex;
   gap: 5px;
   align-items: center;
-  padding: 5px 10px max(5px, env(safe-area-inset-bottom));
+  padding: 5px 10px
+    max(5px, var(--safe-area-inset-bottom, env(safe-area-inset-bottom)));
 }
 .journal-composer-toolbar > span {
   flex: 1;
