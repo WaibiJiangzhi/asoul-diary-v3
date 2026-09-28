@@ -1,5 +1,5 @@
 'use client';
-import { useState, type ReactNode, type CSSProperties } from 'react';
+import { useState, useRef, type ReactNode, type CSSProperties } from 'react';
 import {
   X,
   Plus,
@@ -46,6 +46,7 @@ export function Sheet({
   wide?: boolean;
   composerHost?: (node: HTMLDivElement | null) => void;
 }) {
+  const keyboardClose = useRef(false);
   return (
     <Drawer
       open
@@ -56,6 +57,14 @@ export function Sheet({
       <DrawerContent
         className={'sheet-drawer life-sheet ' + (wide ? 'tall' : '')}
         initialFocus={false}
+        finalFocus={() => keyboardClose.current}
+        onPointerDownCapture={() => {
+          keyboardClose.current = false;
+        }}
+        onKeyDownCapture={(event) => {
+          if (['Tab', 'Escape', 'Enter', ' '].includes(event.key))
+            keyboardClose.current = true;
+        }}
       >
         <div className="drawer-inner">
           <DrawerHeader>

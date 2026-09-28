@@ -285,6 +285,7 @@ export default function DiaryApp({ preview = false }: { preview?: boolean }) {
                       : 'all'
                   }
                   onChange={setMemoryGroup}
+                  onManage={() => setPanel({ kind: 'groups' })}
                 />
               )
             }
@@ -351,6 +352,11 @@ export default function DiaryApp({ preview = false }: { preview?: boolean }) {
         <GroupManager
           groups={state.groups ?? []}
           onClose={closePanel}
+          onViewUngrouped={() => {
+            if (tab === 'memories') setMemoryGroup('ungrouped');
+            else setSelectedGroup('ungrouped');
+            closePanel();
+          }}
           onSave={(name, id) => {
             const s = stateRef.current;
             if (s) setState(saveGroup(s, name, id));

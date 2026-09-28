@@ -1,6 +1,6 @@
 'use client';
 import { useState } from 'react';
-import { Plus, Trash2, Settings2 } from 'lucide-react';
+import { Plus, Trash2, Settings2, Inbox, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Sheet } from './life-form';
@@ -19,30 +19,36 @@ export function GroupFilter({
 }) {
   return (
     <div className="group-filter">
-      <fieldset aria-label="按分组查看">
-        {[
-          { id: 'all', name: '全部' },
-          ...groups,
-          { id: 'ungrouped', name: '未分组' },
-        ].map((g) => (
-          <button
-            type="button"
-            key={g.id}
-            aria-pressed={value === g.id}
-            onClick={() => onChange(g.id)}
-          >
-            {g.name}
-          </button>
-        ))}
-      </fieldset>
+      {(groups.length > 0 || value === 'ungrouped') && (
+        <fieldset aria-label="按分组查看">
+          {[
+            { id: 'all', name: '全部' },
+            ...groups,
+            ...(value === 'ungrouped'
+              ? [{ id: 'ungrouped', name: '未分组' }]
+              : []),
+          ].map((g) => (
+            <button
+              type="button"
+              key={g.id}
+              aria-pressed={value === g.id}
+              onClick={() => onChange(g.id)}
+            >
+              {g.name}
+            </button>
+          ))}
+        </fieldset>
+      )}
       {onManage && (
         <Button
           variant="ghost"
-          size="icon"
+          size={groups.length ? 'icon' : 'default'}
+          className={!groups.length ? 'group-entry' : undefined}
           aria-label="管理分组"
           onClick={onManage}
         >
           <Settings2 />
+          {!groups.length && '分组'}
         </Button>
       )}
     </div>
@@ -54,12 +60,14 @@ export function GroupManager({
   onRemove,
   onReorder,
   onClose,
+  onViewUngrouped,
 }: {
   groups: CardGroup[];
   onSave: (name: string, id?: string) => void;
   onRemove: (id: string) => void;
   onReorder: (a: string, b: string) => void;
   onClose: () => void;
+  onViewUngrouped: () => void;
 }) {
   const [name, setName] = useState('');
   const [id, setId] = useState<string>();
@@ -70,6 +78,21 @@ export function GroupManager({
       description="把相关的愿望放在一起；拖动手柄调整顺序。"
       onClose={onClose}
     >
+      <Button
+        variant="ghost"
+        className="ungrouped-entry"
+        aria-label="查看未分组卡片"
+        onClick={onViewUngrouped}
+      >
+        <span className="ungrouped-entry-icon">
+          <Inbox />
+        </span>
+        <span className="ungrouped-entry-copy">
+          <strong>未分组卡片</strong>
+          <small>看看还没归类的愿望</small>
+        </span>
+        <ChevronRight className="ungrouped-entry-arrow" />
+      </Button>
       <SortableList
         className="group-manage-list"
         ids={groups.map((g) => g.id)}
@@ -128,7 +151,7 @@ export function GroupManager({
           <Input
             required
             maxLength={30}
-            placeholder="比如：日常、钢琴、运动"
+            placeholder="比如：日常、运动"
             value={name}
             onChange={(e) => setName(e.target.value)}
           />
