@@ -6,7 +6,7 @@
 
 在 `app` 目录执行 `npm run android:apk`。需要 JDK 21、Android SDK Platform 36、Build Tools 36.0.0，并已接受 SDK 许可。设置 `JAVA_HOME` 和 `ANDROID_HOME`；也可使用项目忽略目录 `app/work/android-tools` 内的本机工具。
 
-脚本执行静态构建、Capacitor 同步和 Gradle `assembleDebug`，生成 `app/outputs/android/asoul-diary-3.0.0-alpha.1.apk`。这是调试签名测试包，不是应用商店发布包。后续覆盖安装需要保持签名和应用 ID 一致；不要删除本机调试签名。正式分发前应配置独立发布签名。
+脚本执行静态构建、Capacitor 同步和 Gradle `assembleDebug`，生成 `app/outputs/android/asoul-diary-3.0.0-alpha.2.apk`。这是调试签名测试包，不是应用商店发布包。后续覆盖安装需要保持签名和应用 ID 一致；不要删除本机调试签名。正式分发前应配置独立发布签名。
 
 `npm run android:sync` 更新安卓工程中的网页资源；`npm run android:open` 用已安装的 Android Studio 打开工程。原有 Pages、Workers 构建继续保留。
 
