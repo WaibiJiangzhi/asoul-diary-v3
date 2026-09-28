@@ -64,7 +64,7 @@ export function GroupManager({
 }: {
   groups: CardGroup[];
   onSave: (name: string, id?: string) => void;
-  onRemove: (id: string) => void;
+  onRemove: (id: string, onRemoved: () => void) => void;
   onReorder: (a: string, b: string) => void;
   onClose: () => void;
   onViewUngrouped: () => void;
@@ -75,7 +75,7 @@ export function GroupManager({
   return (
     <Sheet
       title="管理分组"
-      description="把相关的愿望放在一起；拖动手柄调整顺序。"
+      description="把相关的卡片放在一起；拖动手柄调整顺序。"
       onClose={onClose}
     >
       <Button
@@ -89,7 +89,7 @@ export function GroupManager({
         </span>
         <span className="ungrouped-entry-copy">
           <strong>未分组卡片</strong>
-          <small>看看还没归类的愿望</small>
+          <small>查看尚未分组的卡片</small>
         </span>
         <ChevronRight className="ungrouped-entry-arrow" />
       </Button>
@@ -118,11 +118,12 @@ export function GroupManager({
                 size="icon"
                 aria-label={'删除分组 ' + g.name}
                 onClick={() => {
-                  onRemove(g.id);
-                  if (id === g.id) {
-                    setId(undefined);
-                    setName('');
-                  }
+                  onRemove(g.id, () => {
+                    if (id === g.id) {
+                      setId(undefined);
+                      setName('');
+                    }
+                  });
                 }}
               >
                 <Trash2 />

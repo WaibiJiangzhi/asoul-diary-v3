@@ -99,6 +99,7 @@ export function CardForm({
   isNew = false,
   common = false,
   groups = [],
+  onCreateGroup,
   onBack,
 }: {
   initial: LifeCard;
@@ -107,10 +108,25 @@ export function CardForm({
   isNew?: boolean;
   common?: boolean;
   groups?: CardGroup[];
+  onCreateGroup: (name: string) => string;
   onBack?: () => void;
 }) {
   const [draft, setDraft] = useState(() => structuredClone(initial));
   const [error, setError] = useState('');
+  const [creatingGroup, setCreatingGroup] = useState(false);
+  const [groupName, setGroupName] = useState('');
+  const [groupError, setGroupError] = useState('');
+  function createGroup() {
+    try {
+      const groupId = onCreateGroup(groupName);
+      patch({ groupId });
+      setCreatingGroup(false);
+      setGroupName('');
+      setGroupError('');
+    } catch (err) {
+      setGroupError((err as Error).message);
+    }
+  }
   const memory = initial.location === 'memory' && !isNew && !common;
   const patch = (part: Partial<LifeCard>) =>
     setDraft((c) => ({ ...c, ...part }));
@@ -184,10 +200,26 @@ export function CardForm({
             />
           </label>
         </div>
-        {!common && groups.length > 0 && (
-          <label>
-            分组
+        {!common && (
+          <div className="card-group-field">
+            <div className="card-group-heading">
+              <label htmlFor="card-group-select">分组</label>
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => {
+                  setCreatingGroup((open) => !open);
+                  setGroupError('');
+                }}
+                aria-expanded={creatingGroup}
+                aria-controls="card-group-create"
+              >
+                <Plus />
+                新建
+              </Button>
+            </div>
             <select
+              id="card-group-select"
               value={draft.groupId ?? ''}
               onChange={(e) => patch({ groupId: e.target.value || undefined })}
             >
@@ -198,7 +230,48 @@ export function CardForm({
                 </option>
               ))}
             </select>
-          </label>
+            {creatingGroup && (
+              <div id="card-group-create" className="card-group-create">
+                <Input
+                  aria-label="新分组名称"
+                  maxLength={30}
+                  placeholder="比如：日常、运动"
+                  value={groupName}
+                  onChange={(e) => {
+                    setGroupName(e.target.value);
+                    setGroupError('');
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.nativeEvent.isComposing) {
+                      e.preventDefault();
+                      createGroup();
+                    }
+                  }}
+                />
+                <div className="card-group-create-actions">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={() => {
+                      setCreatingGroup(false);
+                      setGroupName('');
+                      setGroupError('');
+                    }}
+                  >
+                    取消
+                  </Button>
+                  <Button type="button" onClick={createGroup}>
+                    创建并选中
+                  </Button>
+                </div>
+                {groupError && (
+                  <p role="alert" className="form-error">
+                    {groupError}
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
         )}
         <label>
           给自己的话 <small>可选</small>

@@ -390,7 +390,7 @@ function SmallCard({
           onClick={onOpen}
         >
           {isLater
-            ? '把这个愿望先记在这里'
+            ? '把想做的事先记在这里'
             : latest?.date === today
               ? '✓ 今天已记录'
               : latest
@@ -576,12 +576,12 @@ export function LifeView({
             className="empty-sticker"
           />
           <h2>想从哪件事开始？</h2>
-          <p>一个小愿望，也可以慢慢长成生活的一部分。</p>
+          <p>想做的事、日常的小事，都可以从一张卡片开始。</p>
         </div>
       )}
       <Button className="new-life-card" onClick={onNew}>
         <Plus />
-        添加一件想做的事
+        添加卡片
       </Button>
       {later.length > 0 && (
         <details className="later-section">
@@ -713,7 +713,7 @@ export function MemoryView({
             <MemoryCover card={c} />
             <span>
               <small>
-                {c.ending === 'achieved' ? '愿望实现了' : '这一段，先收好了'}
+                {c.ending === 'achieved' ? '做到了' : '这一段，先收好了'}
               </small>
               <strong>{c.title}</strong>
               <span>

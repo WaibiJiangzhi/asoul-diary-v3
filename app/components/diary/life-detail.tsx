@@ -539,7 +539,7 @@ export function ArchiveForm({
             aria-pressed={ending === 'achieved'}
             onClick={() => setEnding('achieved')}
           >
-            愿望实现了
+            做到了
           </button>
           <button
             type="button"

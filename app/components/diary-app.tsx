@@ -330,6 +330,13 @@ export default function DiaryApp({ preview = false }: { preview?: boolean }) {
           key={panel.draft.id}
           initial={panel.draft}
           groups={state.groups}
+          onCreateGroup={(name) => {
+            const currentState = stateRef.current;
+            if (!currentState) throw new Error('数据尚未准备好，请稍后重试');
+            const next = saveGroup(currentState, name);
+            setState(next);
+            return next.groups![next.groups!.length - 1].id;
+          }}
           isNew={panel.isNew}
           common={panel.common}
           onBack={
@@ -361,7 +368,19 @@ export default function DiaryApp({ preview = false }: { preview?: boolean }) {
             const s = stateRef.current;
             if (s) setState(saveGroup(s, name, id));
           }}
-          onRemove={(id) => setState((s) => s && removeGroup(s, id))}
+          onRemove={(id, onRemoved) => {
+            const name = state.groups?.find((group) => group.id === id)?.name;
+            setConfirmation({
+              title: `删除「${name ?? '这个分组'}」？`,
+              description: '卡片和记录不会删除，组内卡片会回到「未分组」。',
+              confirmLabel: '确认删除',
+              destructive: true,
+              action: () => {
+                setState((s) => s && removeGroup(s, id));
+                onRemoved();
+              },
+            });
+          }}
           onReorder={(a, b) => setState((s) => s && reorderGroups(s, a, b))}
         />
       )}

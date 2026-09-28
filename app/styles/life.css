@@ -2379,6 +2379,32 @@ progress.life-progress::-moz-progress-bar {
   display: grid;
   gap: 8px;
 }
+.card-group-field {
+  display: grid;
+  gap: 8px;
+}
+.card-group-heading,
+.card-group-create-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.card-group-heading > button {
+  color: var(--theme-accent-deep);
+  min-height: 44px;
+}
+.card-group-create {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--theme-border);
+  border-radius: 16px;
+  background: var(--theme-faint);
+}
+.card-group-create-actions {
+  justify-content: flex-end;
+}
 .ungrouped-entry {
   width: 100%;
   height: auto;
