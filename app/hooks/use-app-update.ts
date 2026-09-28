@@ -146,10 +146,15 @@ export function useAppUpdate({
 
   const installApp = useCallback(async () => {
     if (installPrompt) {
-      await installPrompt.prompt();
-      const choice = await installPrompt.userChoice;
-      if (choice.outcome === 'accepted') setInstallPrompt(null);
-      return;
+      // A browser install prompt can only be consumed once, even if dismissed.
+      setInstallPrompt(null);
+      try {
+        await installPrompt.prompt();
+        await installPrompt.userChoice;
+        return;
+      } catch {
+        // Offer the browser menu path when an old prompt is no longer usable.
+      }
     }
     showToast('苹果请点“分享 → 添加到主屏幕”；Android 请打开浏览器菜单安装');
   }, [installPrompt, showToast]);

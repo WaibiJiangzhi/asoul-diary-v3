@@ -191,6 +191,17 @@
   gap: 16px;
   padding-top: 12px;
 }
+.common-card-add {
+  background: var(--theme-soft);
+  color: var(--theme-accent-deep);
+  border-color: var(--theme-border);
+  transition-property: transform, box-shadow;
+}
+.common-card-add:hover,
+.common-card-add:active {
+  background: var(--theme-soft);
+  color: var(--theme-accent-deep);
+}
 .starter-sources {
   width: 100%;
 }
@@ -822,6 +833,18 @@
 .life-form {
   display: grid;
   gap: 20px;
+}
+.record-form-fields {
+  display: contents;
+}
+.week-note {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  color: var(--theme-accent-deep);
+  background: var(--theme-soft);
 }
 .life-form label,
 .life-form legend {

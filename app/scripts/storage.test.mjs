@@ -72,6 +72,9 @@ await test('invalid image decoding and malformed JSON leave both diaries and pho
   const badText = structuredClone(backup);
   badText.state.cards[0].records[0].body = 123;
   variants.push(badText);
+  const badTimestamp = structuredClone(backup);
+  badTimestamp.state.cards[0].archivedAt = 'not-a-date';
+  variants.push(badTimestamp);
   const missing = structuredClone(backup);
   missing.photos = [];
   variants.push(missing);
@@ -83,6 +86,25 @@ await test('invalid image decoding and malformed JSON leave both diaries and pho
     assert.deepEqual(await db.loadState(), state);
     assert.equal((await db.getPhotos([photos[0].id])).length, 1);
   }
+});
+
+await test('restoring the same photo id replaces its bytes and advances the preview generation', async () => {
+  const { db, backup, photos } = await setup();
+  const previous = db.dataGeneration();
+  const incoming = structuredClone(backup);
+  incoming.photos[0].dataUrl =
+    'data:image/png;base64,' +
+    Buffer.from('new photo bytes').toString('base64');
+  const restored = await db.restoreBackup(incoming);
+  assert.equal(db.dataGeneration(), previous + 1);
+  assert.equal(
+    await (await db.getPhotos([photos[0].id]))[0].blob.text(),
+    'new photo bytes',
+  );
+  assert.equal(
+    (await db.createBackup(restored)).photos[0].dataUrl,
+    incoming.photos[0].dataUrl,
+  );
 });
 
 await test('a synchronous write failure after clear rolls back the entire replacement', async () => {

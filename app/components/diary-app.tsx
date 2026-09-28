@@ -532,6 +532,7 @@ export default function DiaryApp({ preview = false }: { preview?: boolean }) {
             await life.saveRecord(current.id, record, files);
             if (!(await flushSave()))
               throw new Error('暂时无法保存到本机，草稿仍保留，请稍后重试');
+            showToast('已经记下了');
           }}
           onClose={closePanel}
         />

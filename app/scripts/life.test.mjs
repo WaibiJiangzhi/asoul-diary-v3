@@ -4,7 +4,7 @@ import { build } from 'esbuild';
 const { outputFiles } = await build({
   stdin: {
     contents:
-      "export * from './lib/life'; export * from './lib/defaults'; export * from './lib/backup-validation'; export * from './lib/card-templates'; export * from './lib/card-edit'; export * from './lib/backup-reminder'; export * from './lib/demo-photos'; export * from './lib/card-groups'; export * from './lib/daily-cards';",
+      "export * from './lib/life'; export * from './lib/defaults'; export * from './lib/backup-validation'; export * from './lib/card-templates'; export * from './lib/card-edit'; export * from './lib/backup-reminder'; export * from './lib/demo-photos'; export * from './lib/card-groups'; export * from './lib/daily-cards'; export * from './lib/memories';",
     resolveDir: process.cwd(),
   },
   bundle: true,
@@ -55,6 +55,65 @@ const entry = (extra = {}) => ({
   ...extra,
 });
 const save = (c, r) => saveLifeRecord(c, r, today);
+await test('memory filters recover from a removed month and sort same-day archives by time', () => {
+  const earlier = {
+    ...card('blank'),
+    location: 'memory',
+    archivedAt: '2026-09-27T01:00:00Z',
+    ending: 'closed',
+  };
+  const later = {
+    ...earlier,
+    id: 'later',
+    title: 'My RUN',
+    groupId: 'sport',
+    archivedAt: '2026-09-27T02:00:00Z',
+    ending: 'achieved',
+  };
+  const cards = [earlier, later];
+  assert.deepEqual(lib.memoryCollection(cards).shown, [later, earlier]);
+  assert.deepEqual(
+    lib.memoryCollection(cards, { order: 'oldest' }).shown,
+    cards,
+  );
+  const removedMonth = lib.memoryCollection(cards, { month: '2026-07' });
+  assert.equal(removedMonth.selectedMonth, 'all');
+  assert.equal(removedMonth.shown.length, 2);
+  assert.deepEqual(
+    lib.memoryCollection(cards, {
+      group: 'sport',
+      query: ' run ',
+      filter: 'achieved',
+    }).shown,
+    [later],
+  );
+  assert.deepEqual(lib.memoryCollection(cards, { group: 'ungrouped' }).shown, [
+    earlier,
+  ]);
+  assert.deepEqual(lib.memoryCollection([], { month: '2026-09' }).shown, []);
+});
+await test('daily completion follows save, removal and archive without changing manual order', () => {
+  const pending = { ...card('progress'), daily: true };
+  const other = card('record');
+  const saved = save(pending, entry({ delta: 3 }));
+  const original = [saved, other];
+  assert.deepEqual(lib.dailyCards(original, today), [other, saved]);
+  assert.deepEqual(original, [saved, other]);
+  assert.equal(
+    lib.hasRecordToday(save(saved, { ...saved.records[0], delta: 0 }), today),
+    false,
+  );
+  assert.deepEqual(
+    lib.dailyCards([{ ...saved, location: 'memory' }, other], today),
+    [other],
+  );
+  assert.equal(
+    lib
+      .dailyCards([saved, other], '2026-09-28')
+      .filter((c) => !lib.hasRecordToday(c, '2026-09-28')).length,
+    2,
+  );
+});
 await test('daily membership defaults, explicit choices and backup validation', () => {
   for (const kind of ['record', 'progress', 'stage', 'blank']) {
     assert.equal(lib.isDailyCard(card(kind)), kind === 'record');

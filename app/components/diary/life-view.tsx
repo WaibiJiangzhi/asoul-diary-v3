@@ -23,6 +23,7 @@ import { usePhotoUrls } from '@/hooks/use-photo-urls';
 import Image from 'next/image';
 import { inGroup } from '@/lib/card-groups';
 import { dailyCards, hasRecordToday } from '@/lib/daily-cards';
+import { memoryCollection } from '@/lib/memories';
 import type { ReactNode } from 'react';
 import { ProgressSummary, RecordText } from './life-detail';
 import {
@@ -276,12 +277,17 @@ function SmallCard({
             const status = card.record?.states.find(
               (s) => s.id === record?.statusId,
             );
+            const recorded = hasRecordToday(card, date);
             return (
               <button
                 key={date}
                 type="button"
                 disabled={!canRecord(card, date, today)}
-                aria-label={date + ' ' + (status?.name ?? '未记录')}
+                aria-label={
+                  date +
+                  ' ' +
+                  (status?.name ?? (recorded ? '已写记录，未选状态' : '未记录'))
+                }
                 className={date === today ? 'is-today' : ''}
                 onClick={() => onRecord(date)}
               >
@@ -293,6 +299,10 @@ function SmallCard({
                 ) : status ? (
                   <span className="week-word" style={{ color: status.color }}>
                     {status.name}
+                  </span>
+                ) : recorded ? (
+                  <span className="week-note">
+                    <Pencil size={16} aria-hidden="true" />
                   </span>
                 ) : (
                   <i className="week-empty" />
@@ -656,25 +666,13 @@ export function MemoryView({
   const [filter, setFilter] = useState('all');
   const [month, setMonth] = useState('all');
   const [order, setOrder] = useState('newest');
-  const archiveDate = (c: LifeCard) =>
-    dateKey(new Date(c.archivedAt ?? c.updatedAt));
-  const memories = cards
-    .filter((c) => c.location === 'memory')
-    .sort((a, b) =>
-      order === 'oldest'
-        ? archiveDate(a).localeCompare(archiveDate(b))
-        : archiveDate(b).localeCompare(archiveDate(a)),
-    );
-  const months = [...new Set(memories.map((c) => archiveDate(c).slice(0, 7)))]
-    .sort()
-    .reverse();
-  const shown = memories.filter(
-    (c) =>
-      inGroup(c, group) &&
-      (filter === 'all' || c.ending === filter) &&
-      (month === 'all' || archiveDate(c).startsWith(month)) &&
-      (c.title + ' ' + c.note + ' ' + (c.summary ?? '')).includes(query),
-  );
+  const { memories, months, selectedMonth, shown } = memoryCollection(cards, {
+    group,
+    query,
+    filter,
+    month,
+    order,
+  });
   return (
     <div className="memory-view">
       <div className="life-section-heading">
@@ -696,7 +694,10 @@ export function MemoryView({
           <div className="memory-time-controls">
             <label>
               收录月份
-              <select value={month} onChange={(e) => setMonth(e.target.value)}>
+              <select
+                value={selectedMonth}
+                onChange={(e) => setMonth(e.target.value)}
+              >
                 <option value="all">全部月份</option>
                 {months.map((m) => (
                   <option value={m} key={m}>
@@ -769,7 +770,7 @@ export function MemoryView({
           <h2>{memories.length ? '还没找到这段经历' : '慢慢走，慢慢收藏'}</h2>
           <p>
             {memories.length
-              ? '换个关键词或月份试试看。'
+              ? '换个关键词、分组或筛选条件试试看。'
               : '完成一件事，或想给一段经历留个纪念时，就把它收在这里。'}
           </p>
         </div>

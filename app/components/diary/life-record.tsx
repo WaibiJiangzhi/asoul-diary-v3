@@ -154,6 +154,7 @@ function RecordFormEditor({
   const [error, setError] = useState('');
   const [host, setHost] = useState<HTMLDivElement | null>(null);
   const stopped = useRef(false);
+  const saving = useRef(false);
   const [recordId] = useState(
     () => initial?.id ?? seed?.recordId ?? createId('record'),
   );
@@ -210,9 +211,9 @@ function RecordFormEditor({
       setDraftNotice('草稿未能清除，请重试');
     }
   }
-  const now = new Date().toISOString();
   const max = dateKey();
   async function save() {
+    if (saving.current) return;
     setError('');
     if (
       !body.trim() &&
@@ -226,7 +227,9 @@ function RecordFormEditor({
       setError('写一点、选一个状态，或放一张照片再保存吧');
       return;
     }
+    saving.current = true;
     setBusy(true);
+    const now = new Date().toISOString();
     try {
       await onSave(
         {
@@ -260,6 +263,7 @@ function RecordFormEditor({
     } catch (e) {
       setError((e as Error).message);
     } finally {
+      saving.current = false;
       setBusy(false);
     }
   }
@@ -281,164 +285,169 @@ function RecordFormEditor({
           void save();
         }}
       >
-        <div className="draft-notice">
-          <output>{draftNotice || '关闭后可继续编辑，确认后才计入记录'}</output>
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            disabled={busy}
-            onClick={() => void discard()}
-          >
-            放弃草稿
-          </Button>
-        </div>
-        <label>
-          记录哪一天
-          <Input
-            type="date"
-            required
-            min={card.startDate}
-            max={max}
-            value={selectedDate}
-            onChange={(e) => setDate(e.target.value)}
-            disabled={busy || card.location === 'memory'}
-          />
-        </label>
-        {card.kind === 'progress' && (
+        <fieldset className="record-form-fields" disabled={busy}>
+          <div className="draft-notice">
+            <output>
+              {draftNotice || '关闭后可继续编辑，确认后才计入记录'}
+            </output>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              disabled={busy}
+              onClick={() => void discard()}
+            >
+              放弃草稿
+            </Button>
+          </div>
           <label>
-            本次调整 <small>填 0 只留文字，负数可减少进度</small>
-            <div className="quantity-field">
-              <Input
-                type="number"
-                step="any"
-                required
-                value={delta}
-                onChange={(e) => setDelta(e.target.value)}
-              />
-              <strong>{card.progress?.unit}</strong>
-            </div>
+            记录哪一天
+            <Input
+              type="date"
+              required
+              min={card.startDate}
+              max={max}
+              value={selectedDate}
+              onChange={(e) => setDate(e.target.value)}
+              disabled={busy || card.location === 'memory'}
+            />
           </label>
-        )}
-        {card.kind === 'record' && (
-          <fieldset>
-            <legend>
-              今天的状态 <small>再点一次可以取消</small>
-            </legend>
-            <div className="status-options">
-              {card.record?.states.map((s) => (
+          {card.kind === 'progress' && (
+            <label>
+              本次调整 <small>填 0 只留文字，负数可减少进度</small>
+              <div className="quantity-field">
+                <Input
+                  type="number"
+                  step="any"
+                  required
+                  value={delta}
+                  onChange={(e) => setDelta(e.target.value)}
+                />
+                <strong>{card.progress?.unit}</strong>
+              </div>
+            </label>
+          )}
+          {card.kind === 'record' && (
+            <fieldset>
+              <legend>
+                今天的状态 <small>再点一次可以取消</small>
+              </legend>
+              <div className="status-options">
+                {card.record?.states.map((s) => (
+                  <button
+                    type="button"
+                    key={s.id}
+                    aria-pressed={status === s.id}
+                    className={status === s.id ? 'selected' : ''}
+                    onClick={() => setStatus(status === s.id ? '' : s.id)}
+                  >
+                    <Decoration value={s.emoji} className="status-emoji" />
+                    <span>{s.name}</span>
+                  </button>
+                ))}
+              </div>
+            </fieldset>
+          )}
+          {card.kind === 'stage' && (
+            <fieldset>
+              <legend>
+                这次走到哪一步 <small>可选</small>
+              </legend>
+              <select
+                aria-label="关联子目标"
+                value={stage}
+                onChange={(e) => {
+                  setStage(e.target.value);
+                  setStageDone(!stageComplete(card, e.target.value));
+                  setCompletionEmoji(stageEmoji(card, e.target.value));
+                }}
+              >
+                <option value="">只写一条记录</option>
+                {card.stages?.map((s) => (
+                  <option value={s.id} key={s.id}>
+                    {s.title}
+                  </option>
+                ))}
+              </select>
+              {stage && (
+                <label className="inline-check">
+                  <input
+                    type="checkbox"
+                    checked={stageDone}
+                    onChange={(e) => setStageDone(e.target.checked)}
+                  />
+                  这一步已完成
+                </label>
+              )}
+              {stage && stageDone && (
+                <DecorationPicker
+                  value={completionEmoji}
+                  onChange={setCompletionEmoji}
+                  label="完成这一步的表情（可选）"
+                />
+              )}
+            </fieldset>
+          )}
+          <div className="record-editor-host">
+            <JournalEditor
+              value={body}
+              onChange={setBody}
+              portalTarget={host}
+              onConfirm={() => form.current?.requestSubmit()}
+              confirmDisabled={busy}
+              readOnly={busy}
+            />
+          </div>
+          <PhotoStrip
+            ids={photoIds}
+            onRemove={(id) => setPhotoIds((ids) => ids.filter((v) => v !== id))}
+          />
+          <div className="pending-photos">
+            {files.map((f, i) => (
+              <div key={i}>
+                <span>{f.name}</span>
                 <button
                   type="button"
-                  key={s.id}
-                  aria-pressed={status === s.id}
-                  className={status === s.id ? 'selected' : ''}
-                  onClick={() => setStatus(status === s.id ? '' : s.id)}
+                  aria-label={'移除待添加照片 ' + f.name}
+                  onClick={() =>
+                    setFiles((values) => values.filter((_, n) => n !== i))
+                  }
                 >
-                  <Decoration value={s.emoji} className="status-emoji" />
-                  <span>{s.name}</span>
+                  <X />
                 </button>
-              ))}
-            </div>
-          </fieldset>
-        )}
-        {card.kind === 'stage' && (
-          <fieldset>
-            <legend>
-              这次走到哪一步 <small>可选</small>
-            </legend>
-            <select
-              aria-label="关联子目标"
-              value={stage}
+              </div>
+            ))}
+          </div>
+          <label className="attach-photo">
+            <Camera />
+            添加照片 <small>{photoIds.length + files.length}/9</small>
+            <input
+              type="file"
+              accept="image/*"
+              multiple
+              disabled={busy || photoIds.length + files.length >= 9}
               onChange={(e) => {
-                setStage(e.target.value);
-                setStageDone(!stageComplete(card, e.target.value));
-                setCompletionEmoji(stageEmoji(card, e.target.value));
-              }}
-            >
-              <option value="">只写一条记录</option>
-              {card.stages?.map((s) => (
-                <option value={s.id} key={s.id}>
-                  {s.title}
-                </option>
-              ))}
-            </select>
-            {stage && (
-              <label className="inline-check">
-                <input
-                  type="checkbox"
-                  checked={stageDone}
-                  onChange={(e) => setStageDone(e.target.checked)}
-                />
-                这一步已完成
-              </label>
-            )}
-            {stage && stageDone && (
-              <DecorationPicker
-                value={completionEmoji}
-                onChange={setCompletionEmoji}
-                label="完成这一步的表情（可选）"
-              />
-            )}
-          </fieldset>
-        )}
-        <div className="record-editor-host">
-          <JournalEditor
-            value={body}
-            onChange={setBody}
-            portalTarget={host}
-            onConfirm={() => form.current?.requestSubmit()}
-            confirmDisabled={busy}
-          />
-        </div>
-        <PhotoStrip
-          ids={photoIds}
-          onRemove={(id) => setPhotoIds((ids) => ids.filter((v) => v !== id))}
-        />
-        <div className="pending-photos">
-          {files.map((f, i) => (
-            <div key={i}>
-              <span>{f.name}</span>
-              <button
-                type="button"
-                aria-label={'移除待添加照片 ' + f.name}
-                onClick={() =>
-                  setFiles((values) => values.filter((_, n) => n !== i))
+                const selected = Array.from(e.target.files ?? []);
+                e.target.value = '';
+                if (selected.some((f) => !f.type.startsWith('image/'))) {
+                  setError('请选择图片文件');
+                  return;
                 }
-              >
-                <X />
-              </button>
-            </div>
-          ))}
-        </div>
-        <label className="attach-photo">
-          <Camera />
-          添加照片 <small>{photoIds.length + files.length}/9</small>
-          <input
-            type="file"
-            accept="image/*"
-            multiple
-            disabled={busy || photoIds.length + files.length >= 9}
-            onChange={(e) => {
-              const selected = Array.from(e.target.files ?? []);
-              e.target.value = '';
-              if (selected.some((f) => !f.type.startsWith('image/'))) {
-                setError('请选择图片文件');
-                return;
-              }
-              setFiles((current) =>
-                [...current, ...selected].slice(0, 9 - photoIds.length),
-              );
-            }}
-          />
-        </label>
-        {error && (
-          <p role="alert" className="form-error">
-            {error}
-          </p>
-        )}
-        <Button type="submit" disabled={busy} className="form-submit">
-          {busy ? '正在保存照片…' : '确认记录'}
-        </Button>
+                setFiles((current) =>
+                  [...current, ...selected].slice(0, 9 - photoIds.length),
+                );
+              }}
+            />
+          </label>
+          {error && (
+            <p role="alert" className="form-error">
+              {error}
+            </p>
+          )}
+          <Button type="submit" disabled={busy} className="form-submit">
+            {busy ? '正在保存…' : '确认记录'}
+          </Button>
+        </fieldset>
       </form>
     </Sheet>
   );

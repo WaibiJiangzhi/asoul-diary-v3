@@ -108,7 +108,6 @@ export function useLifeController({
         }),
       true,
     );
-    showToast('已经记下了');
   }
   function quickStatus(cardId: string, date: string, statusId: string) {
     try {

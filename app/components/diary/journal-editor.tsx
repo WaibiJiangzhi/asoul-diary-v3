@@ -27,12 +27,14 @@ export function JournalEditor({
   portalTarget,
   onConfirm,
   confirmDisabled,
+  readOnly = false,
 }: {
   value: string;
   onChange: (text: string) => void;
   portalTarget?: HTMLElement | null;
   onConfirm?: () => void;
   confirmDisabled?: boolean;
+  readOnly?: boolean;
 }) {
   const editor = useRef<HTMLDivElement>(null);
   const dock = useRef<HTMLDivElement>(null);
@@ -209,7 +211,8 @@ export function JournalEditor({
       <div
         className="journal-editor"
         ref={editor}
-        contentEditable
+        contentEditable={!readOnly}
+        aria-readonly={readOnly}
         suppressContentEditableWarning
         // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- Inline images require contenteditable.
         role="textbox"
@@ -282,6 +285,7 @@ export function JournalEditor({
           <div
             ref={dock}
             className={`journal-composer-dock ${panel ? 'is-expanded' : ''}`}
+            inert={readOnly}
             style={
               {
                 '--keyboard-bottom': `${viewport.bottom}px`,

@@ -4,6 +4,8 @@ type Rule = (value: unknown) => boolean;
 const text: Rule = (v) => typeof v === 'string';
 const nonempty: Rule = (v) => text(v) && !!(v as string).trim();
 const date: Rule = (v) => text(v) && isDateKey(v as string);
+const timestamp: Rule = (v) =>
+  text(v) && Number.isFinite(Date.parse(v as string));
 const num: Rule = (v) => typeof v === 'number' && Number.isFinite(v);
 const positive: Rule = (v) => num(v) && (v as number) > 0;
 const integer: Rule = (v) =>
@@ -46,8 +48,8 @@ const record = shape({
   date,
   body: text,
   photoIds: list(nonempty),
-  createdAt: text,
-  updatedAt: text,
+  createdAt: timestamp,
+  updatedAt: timestamp,
   delta: optional(num),
   statusId: optional(nonempty),
   stageId: optional(nonempty),
@@ -66,9 +68,9 @@ const card = shape({
   location: oneOf('active', 'later', 'memory'),
   startDate: date,
   expectedDate: optional(date),
-  createdAt: text,
-  updatedAt: text,
-  archivedAt: optional(text),
+  createdAt: timestamp,
+  updatedAt: timestamp,
+  archivedAt: optional(timestamp),
   ending: optional(oneOf('achieved', 'closed')),
   summary: optional(text),
   records: list(record),

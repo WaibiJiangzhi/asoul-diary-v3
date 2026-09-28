@@ -1,20 +1,22 @@
 import { createContext, useContext, useEffect, useState } from 'react';
-import { getPhotos } from '@/lib/db';
+import { dataGeneration, getPhotos } from '@/lib/db';
 type PhotoUrl = { id: string; url: string; name: string };
 export const PreviewPhotosContext = createContext<PhotoUrl[] | null>(null);
 
 export function usePhotoUrls(ids: string[]) {
   const preview = useContext(PreviewPhotosContext);
-  const key = ids.join('|');
+  const idsKey = JSON.stringify(ids);
+  const generation = dataGeneration();
+  const key = generation + ':' + idsKey;
   const [loaded, setLoaded] = useState<{ key: string; photos: PhotoUrl[] }>({
     key: '',
     photos: [],
   });
   useEffect(() => {
-    if (preview || !key) return;
+    if (preview || idsKey === '[]') return;
     let disposed = false;
     let urls: string[] = [];
-    void getPhotos(key.split('|'))
+    void getPhotos(JSON.parse(idsKey) as string[])
       .then((items) => {
         if (disposed) return;
         const photos = items.map((p) => ({
@@ -32,8 +34,8 @@ export function usePhotoUrls(ids: string[]) {
       disposed = true;
       urls.forEach((url) => URL.revokeObjectURL(url));
     };
-  }, [key, preview]);
+  }, [key, idsKey, preview]);
   if (preview)
     return ids.flatMap((id) => preview.filter((photo) => photo.id === id));
-  return key && loaded.key === key ? loaded.photos : [];
+  return ids.length && loaded.key === key ? loaded.photos : [];
 }

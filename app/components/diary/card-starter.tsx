@@ -103,7 +103,12 @@ export function CardStarter({
         )}
         {managing ? (
           <>
-            <Button variant="outline" onClick={() => onEdit(createLifeCard())}>
+            <Button
+              key="new-common-card"
+              className="common-card-add"
+              variant="outline"
+              onClick={() => onEdit(createLifeCard())}
+            >
               <Plus />
               新增常用卡片
             </Button>
@@ -111,7 +116,11 @@ export function CardStarter({
           </>
         ) : (
           <>
-            <Button disabled={!count} onClick={() => onAdd(selected)}>
+            <Button
+              key="add-selected-cards"
+              disabled={!count}
+              onClick={() => onAdd(selected)}
+            >
               添加已选 {count} 张
             </Button>
             <button className="starter-blank" type="button" onClick={onWrite}>
