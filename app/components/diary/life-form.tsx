@@ -24,7 +24,7 @@ import { CARD_COLORS } from './constants';
 import { createId, createLifeCard } from '@/lib/defaults';
 import { recordEnd, elapsedDays } from '@/lib/life';
 
-import type { CardKind, LifeCard } from '@/lib/types';
+import type { CardGroup, CardKind, LifeCard } from '@/lib/types';
 export const CARD_KINDS = [
   { id: 'record', name: '记录卡', hint: '每天的状态', Icon: CalendarDays },
   { id: 'progress', name: '进度卡', hint: '一点点积累', Icon: TrendingUp },
@@ -89,6 +89,7 @@ export function CardForm({
   onClose,
   isNew = false,
   common = false,
+  groups = [],
   onBack,
 }: {
   initial: LifeCard;
@@ -96,6 +97,7 @@ export function CardForm({
   onClose: () => void;
   isNew?: boolean;
   common?: boolean;
+  groups?: CardGroup[];
   onBack?: () => void;
 }) {
   const [draft, setDraft] = useState(() => structuredClone(initial));
@@ -173,6 +175,22 @@ export function CardForm({
             />
           </label>
         </div>
+        {!common && groups.length > 0 && (
+          <label>
+            分组
+            <select
+              value={draft.groupId ?? ''}
+              onChange={(e) => patch({ groupId: e.target.value || undefined })}
+            >
+              <option value="">未分组</option>
+              {groups.map((g) => (
+                <option key={g.id} value={g.id}>
+                  {g.name}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
         <label>
           给自己的话 <small>可选</small>
           <textarea

@@ -8,7 +8,7 @@ import {
   type ClipboardEvent,
   type CSSProperties,
 } from 'react';
-import { createPortal } from 'react-dom';
+import { createPortal, flushSync } from 'react-dom';
 import { Keyboard, Smile, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { stickerTextToHtml } from '@/lib/stickers';
@@ -25,10 +25,14 @@ export function JournalEditor({
   value,
   onChange,
   portalTarget,
+  onConfirm,
+  confirmDisabled,
 }: {
   value: string;
   onChange: (text: string) => void;
   portalTarget?: HTMLElement | null;
+  onConfirm?: () => void;
+  confirmDisabled?: boolean;
 }) {
   const editor = useRef<HTMLDivElement>(null);
   const dock = useRef<HTMLDivElement>(null);
@@ -287,6 +291,22 @@ export function JournalEditor({
           >
             <div className="journal-composer-toolbar">
               <span>留下这一刻</span>
+              {onConfirm && (
+                <Button
+                  type="button"
+                  size="sm"
+                  disabled={confirmDisabled}
+                  onPointerDown={(e) => e.preventDefault()}
+                  onClick={() => {
+                    editor.current?.blur();
+                    composing.current = false;
+                    flushSync(() => emit());
+                    onConfirm();
+                  }}
+                >
+                  确认记录
+                </Button>
+              )}
               <Button
                 type="button"
                 variant="ghost"

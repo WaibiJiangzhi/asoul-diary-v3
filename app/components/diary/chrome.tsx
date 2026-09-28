@@ -52,7 +52,7 @@ export function AppHeader({
     <header className="top-bar">
       <div className="top-bar-copy">
         <div className="top-bar-line">
-          <p className="eyebrow">一个魂生活</p>
+          <p className="eyebrow">一个魂日记</p>
           <span className={`save-state is-${saveStatus}`}>
             <i />
             {preview ? '示例体验' : saveLabel}
@@ -257,7 +257,7 @@ export function SettingsDrawer({
         <section className="settings-section">
           <h3>数据与备份</h3>
           <p className="setting-note">
-            记录和照片保存在当前浏览器，不会自动同步。清空浏览器数据或更换设备前，记得下载完整备份。
+            记录和照片保存在当前浏览器，不会自动同步。清空浏览器数据或更换设备前，记得下载完整备份。备份包含已确认的记录和照片，未提交草稿仅保留在本机。
           </p>
           <div className="settings-buttons">
             <Button onClick={onExport}>
@@ -295,7 +295,7 @@ export function SettingsDrawer({
           </p>
         </section>
         <footer className="settings-footer">
-          <strong>Asoul一个魂生活日记</strong>
+          <strong>一个魂日记</strong>
           <span>作者：就一枝匠纸 · AI 生成</span>
           <span>V3.0 · 预览版</span>
         </footer>

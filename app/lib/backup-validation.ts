@@ -55,6 +55,7 @@ const record = shape({
   stageEmoji: optional(text),
 });
 const card = shape({
+  groupId: optional(nonempty),
   id: nonempty,
   kind: oneOf('record', 'progress', 'stage', 'blank'),
   title: nonempty,
@@ -91,6 +92,7 @@ const card = shape({
 });
 const stateShape = shape({
   version: oneOf(1),
+  groups: optional(list(shape({ id: nonempty, name: nonempty }))),
   cards: list(card),
   commonCards: optional(list(card)),
   companions: list(
@@ -117,6 +119,19 @@ export function validateState(value: unknown): asserts value is AppState {
   if (!stateShape(value))
     throw new Error('数据格式不完整或版本不匹配，原有记录未替换');
   const state = value as AppState;
+  const groups = state.groups ?? [];
+  if (
+    !unique(groups.map((g) => g.id)) ||
+    !unique(groups.map((g) => g.name.trim())) ||
+    groups.some((g) => g.name.length > 30)
+  )
+    throw new Error('分组名称或编号无效');
+  if (
+    [...state.cards, ...(state.commonCards ?? [])].some(
+      (c) => c.groupId && !groups.some((g) => g.id === c.groupId),
+    )
+  )
+    throw new Error('卡片分组不存在');
   if (
     !unique(state.cards.map((c) => c.id)) ||
     !unique(state.companions.map((c) => c.id)) ||

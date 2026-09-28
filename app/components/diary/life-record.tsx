@@ -1,7 +1,7 @@
 'use client';
 import Image from 'next/image';
 import { Dialog } from '@base-ui/react/dialog';
-import { useState } from 'react';
+import { useEffect, useEffectEvent, useRef, useState } from 'react';
 import { Camera, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,7 +13,8 @@ import { usePhotoUrls } from '@/hooks/use-photo-urls';
 import { createId } from '@/lib/defaults';
 import { dateKey } from '@/lib/date';
 import { canRecord, stageComplete, stageEmoji } from '@/lib/life';
-import type { LifeCard, LifeRecord } from '@/lib/types';
+import { draftKey, useRecordDraft } from '@/hooks/use-record-draft';
+import type { RecordDraft, LifeCard, LifeRecord } from '@/lib/types';
 export function PhotoStrip({
   ids,
   onRemove,
@@ -82,35 +83,133 @@ export function PhotoStrip({
     </>
   );
 }
-export function RecordForm({
+type RecordFormProps = {
+  card: LifeCard;
+  date: string;
+  initial?: LifeRecord;
+  preview?: boolean;
+  onSave: (r: LifeRecord, files: File[]) => Promise<void>;
+  onClose: () => void;
+};
+export function RecordForm(props: RecordFormProps) {
+  const { loaded, persist } = useRecordDraft(
+    draftKey(props.card.id, props.initial?.id),
+    !!props.preview,
+    props.initial?.updatedAt,
+  );
+  if (!loaded)
+    return (
+      <Sheet title="打开记录" onClose={props.onClose}>
+        <p>正在读取草稿…</p>
+      </Sheet>
+    );
+  return (
+    <RecordFormEditor
+      {...props}
+      seed={
+        !props.initial &&
+        loaded.draft?.recordId &&
+        props.card.records.some((r) => r.id === loaded.draft?.recordId)
+          ? undefined
+          : loaded.draft
+      }
+      draftError={loaded.error}
+      persist={persist}
+    />
+  );
+}
+function RecordFormEditor({
   card,
   date,
   initial,
   onSave,
   onClose,
-}: {
-  card: LifeCard;
-  date: string;
-  initial?: LifeRecord;
-  onSave: (r: LifeRecord, files: File[]) => Promise<void>;
-  onClose: () => void;
+  seed,
+  draftError,
+  persist,
+}: RecordFormProps & {
+  seed?: RecordDraft;
+  draftError?: string;
+  persist: (draft?: RecordDraft) => Promise<void>;
 }) {
-  const [body, setBody] = useState(initial?.body ?? '');
-  const [selectedDate, setDate] = useState(initial?.date ?? date);
+  const [body, setBody] = useState(seed?.body ?? initial?.body ?? '');
+  const [selectedDate, setDate] = useState(seed?.date ?? initial?.date ?? date);
   const [delta, setDelta] = useState(
-    String(initial?.delta ?? (initial ? 0 : (card.progress?.step ?? 1))),
+    seed?.delta ??
+      String(initial?.delta ?? (initial ? 0 : (card.progress?.step ?? 1))),
   );
-  const [status, setStatus] = useState(initial?.statusId ?? '');
-  const [stage, setStage] = useState(initial?.stageId ?? '');
-  const [stageDone, setStageDone] = useState(initial?.stageDone ?? true);
+  const [status, setStatus] = useState(seed?.status ?? initial?.statusId ?? '');
+  const [stage, setStage] = useState(seed?.stage ?? initial?.stageId ?? '');
+  const [stageDone, setStageDone] = useState(
+    seed?.stageDone ?? initial?.stageDone ?? true,
+  );
   const [completionEmoji, setCompletionEmoji] = useState(
-    initial?.stageEmoji ?? '',
+    seed?.completionEmoji ?? initial?.stageEmoji ?? '',
   );
-  const [photoIds, setPhotoIds] = useState(initial?.photoIds ?? []);
-  const [files, setFiles] = useState<File[]>([]);
+  const [photoIds, setPhotoIds] = useState(
+    seed?.photoIds ?? initial?.photoIds ?? [],
+  );
+  const [files, setFiles] = useState<File[]>(seed?.files ?? []);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [host, setHost] = useState<HTMLDivElement | null>(null);
+  const stopped = useRef(false);
+  const [recordId] = useState(
+    () => initial?.id ?? seed?.recordId ?? createId('record'),
+  );
+  const form = useRef<HTMLFormElement>(null);
+  const [draftNotice, setDraftNotice] = useState(
+    draftError ?? (seed ? '已恢复未提交的草稿' : ''),
+  );
+  const snapshot: RecordDraft = {
+    cardId: card.id,
+    recordId,
+    body,
+    date: selectedDate,
+    delta,
+    status,
+    stage,
+    stageDone,
+    completionEmoji,
+    photoIds,
+    files,
+    sourceUpdatedAt: initial?.updatedAt,
+  };
+  const first = useRef(true);
+  const retainDraft = useEffectEvent(() => {
+    if (stopped.current) return;
+    if (first.current) {
+      first.current = false;
+      return;
+    }
+    void persist(snapshot).then(
+      () => setDraftNotice('草稿已保留，确认后才计入记录'),
+      () => setDraftNotice('草稿仅暂存在本页，请及时确认记录'),
+    );
+  });
+  useEffect(() => {
+    retainDraft();
+  }, [
+    body,
+    selectedDate,
+    delta,
+    status,
+    stage,
+    stageDone,
+    completionEmoji,
+    photoIds,
+    files,
+  ]);
+  async function discard() {
+    stopped.current = true;
+    try {
+      await persist();
+      onClose();
+    } catch {
+      stopped.current = false;
+      setDraftNotice('草稿未能清除，请重试');
+    }
+  }
   const now = new Date().toISOString();
   const max = dateKey();
   async function save() {
@@ -131,7 +230,7 @@ export function RecordForm({
     try {
       await onSave(
         {
-          id: initial?.id ?? createId('record'),
+          id: recordId,
           date: selectedDate,
           body,
           photoIds,
@@ -151,6 +250,12 @@ export function RecordForm({
         },
         files,
       );
+      stopped.current = true;
+      try {
+        await persist();
+      } catch {
+        /* A saved record supersedes this draft on reopening. */
+      }
       onClose();
     } catch (e) {
       setError((e as Error).message);
@@ -169,12 +274,25 @@ export function RecordForm({
       composerHost={setHost}
     >
       <form
+        ref={form}
         className="life-form record-form"
         onSubmit={(e) => {
           e.preventDefault();
           void save();
         }}
       >
+        <div className="draft-notice">
+          <output>{draftNotice || '关闭后可继续编辑，确认后才计入记录'}</output>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            disabled={busy}
+            onClick={() => void discard()}
+          >
+            放弃草稿
+          </Button>
+        </div>
         <label>
           记录哪一天
           <Input
@@ -264,7 +382,13 @@ export function RecordForm({
           </fieldset>
         )}
         <div className="record-editor-host">
-          <JournalEditor value={body} onChange={setBody} portalTarget={host} />
+          <JournalEditor
+            value={body}
+            onChange={setBody}
+            portalTarget={host}
+            onConfirm={() => form.current?.requestSubmit()}
+            confirmDisabled={busy}
+          />
         </div>
         <PhotoStrip
           ids={photoIds}

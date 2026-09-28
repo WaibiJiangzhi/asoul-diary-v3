@@ -84,7 +84,16 @@ export function createDefaultState(): AppState {
         emoji: '[2026贝拉的冒险动态表情包_恰！]',
         color: '#DB7D74',
       },
+      {
+        id: 'companion-share',
+        kind: 'quote',
+        title: '今天，有什么想分享的吗？',
+        note: '开心的事、烦心的事，都可以留在这里。',
+        emoji: '[2026乃琳的酒馆动态表情包_喏咖啡]',
+        color: '#576690',
+      },
     ],
+    groups: [],
     settings: {
       theme: 'wallpaper',
       accent: 'jiaran',
@@ -318,6 +327,18 @@ export function createDemoState(today = dateKey()): AppState {
       record(-73, '不勉强自己做满一整本，这一周也值得留下。'),
     ],
   };
+  state.groups = [
+    { id: 'demo-daily', name: '日常' },
+    { id: 'demo-sport', name: '运动' },
+    { id: 'demo-interest', name: '兴趣' },
+  ];
+  sleep.groupId = paused.groupId = 'demo-daily';
+  run.groupId = 'demo-sport';
+  trip.groupId =
+    drawing.groupId =
+    travel.groupId =
+    memory.groupId =
+      'demo-interest';
   state.cards = [sleep, run, trip, drawing, travel, memory, paused];
   for (const card of state.cards) {
     card.createdAt = new Date(card.startDate + 'T12:00:00').toISOString();

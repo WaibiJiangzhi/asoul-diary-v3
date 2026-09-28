@@ -4,7 +4,7 @@ import { build } from 'esbuild';
 const { outputFiles } = await build({
   stdin: {
     contents:
-      "export * from './lib/life'; export * from './lib/defaults'; export * from './lib/backup-validation'; export * from './lib/card-templates'; export * from './lib/card-edit'; export * from './lib/backup-reminder'; export * from './lib/demo-photos';",
+      "export * from './lib/life'; export * from './lib/defaults'; export * from './lib/backup-validation'; export * from './lib/card-templates'; export * from './lib/card-edit'; export * from './lib/backup-reminder'; export * from './lib/demo-photos'; export * from './lib/card-groups';",
     resolveDir: process.cwd(),
   },
   bundle: true,
@@ -461,4 +461,46 @@ await test('memory edits preserve structure and only update existing records', (
   assert.equal(result.kind, memory.kind);
   assert.equal(result.startDate, memory.startDate);
   assert.deepEqual(result.records, memory.records);
+});
+
+await test('groups preserve cards, records and backup compatibility', () => {
+  const original = createDefaultState();
+  const old = { ...original };
+  delete old.groups;
+  validateState(old);
+  let state = lib.saveGroup(original, '钢琴');
+  state = lib.saveGroup(state, '运动');
+  const piano = state.groups[0].id,
+    sport = state.groups[1].id;
+  const c = {
+    ...card('blank'),
+    groupId: piano,
+    title: '钢琴日常',
+    records: [],
+  };
+  state.cards = [c];
+  validateState(state);
+  assert.throws(() => lib.saveGroup(state, ' 钢琴 '));
+  state = lib.saveGroup(state, '练琴', piano);
+  assert.equal(state.cards[0].groupId, piano);
+  state = lib.reorderGroups(state, sport, piano);
+  assert.equal(state.groups[0].id, sport);
+  assert.equal(lib.inGroup(c, piano), true);
+  assert.equal(lib.inGroup(c, 'ungrouped'), false);
+  const roundTrip = JSON.parse(JSON.stringify(state));
+  validateState(roundTrip);
+  assert.deepEqual(roundTrip.groups, state.groups);
+  state = lib.removeGroup(state, piano);
+  assert.equal(state.cards.length, 1);
+  assert.equal(state.cards[0].groupId, undefined);
+  validateState(state);
+});
+await test('initial companion cards cover all three members without repopulating saved choices', () => {
+  const state = createDefaultState();
+  assert.equal(state.companions.length, 3);
+  assert.ok(state.companions.some((c) => c.emoji.includes('乃琳')));
+  assert.equal(
+    lib.normalizeState({ ...state, companions: [] }).companions.length,
+    0,
+  );
 });

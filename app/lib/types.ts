@@ -35,7 +35,12 @@ export interface LifeRecord {
   createdAt: string;
   updatedAt: string;
 }
+export interface CardGroup {
+  id: string;
+  name: string;
+}
 export interface LifeCard {
+  groupId?: string;
   id: string;
   kind: CardKind;
   title: string;
@@ -85,6 +90,7 @@ export interface AppSettings {
 }
 export interface AppState {
   version: 1;
+  groups?: CardGroup[];
   cards: LifeCard[];
   commonCards?: LifeCard[];
   companions: CompanionCard[];
@@ -107,4 +113,19 @@ export interface DiaryBackup {
   exportedAt: string;
   state: AppState;
   photos: BackupPhoto[];
+}
+
+export interface RecordDraft {
+  cardId?: string;
+  recordId?: string;
+  body: string;
+  date: string;
+  delta: string;
+  status: string;
+  stage: string;
+  stageDone: boolean;
+  completionEmoji: string;
+  photoIds: string[];
+  files: File[];
+  sourceUpdatedAt?: string;
 }

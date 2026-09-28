@@ -11,6 +11,7 @@ export function saveCardDraft(state: AppState, draft: LifeCard): AppState {
       emoji: draft.emoji,
       color: draft.color,
       summary: draft.summary,
+      groupId: draft.groupId,
     };
   }
   const card = {

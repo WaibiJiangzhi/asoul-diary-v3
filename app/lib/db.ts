@@ -159,6 +159,28 @@ export function saveState(state: AppState): Promise<void> {
     await writeTransaction(
       (transaction) => {
         transaction.objectStore('state').put(state, STATE_KEY);
+        const drafts = transaction.objectStore('state').openCursor();
+        drafts.onsuccess = () => {
+          const cursor = drafts.result;
+          if (!cursor) return;
+          if (
+            typeof cursor.key === 'string' &&
+            cursor.key.startsWith('draft:')
+          ) {
+            const draft = cursor.value as import('./types').RecordDraft;
+            if (draft.cardId) {
+              const card = state.cards.find((c) => c.id === draft.cardId);
+              const record = card?.records.find((r) => r.id === draft.recordId);
+              if (
+                !card ||
+                (record && record.updatedAt !== draft.sourceUpdatedAt) ||
+                (draft.sourceUpdatedAt && !record)
+              )
+                cursor.delete();
+            }
+          }
+          cursor.continue();
+        };
         if (removed.length)
           removed.forEach((id) => transaction.objectStore('photos').delete(id));
       },
@@ -332,4 +354,36 @@ export async function clearAllData(): Promise<AppState> {
     ),
   );
   return fresh;
+}
+
+// Drafts share the local database lifecycle, but are never counted as records.
+export async function readRecordDraft(
+  key: string,
+): Promise<import('./types').RecordDraft | undefined> {
+  await writes;
+  const database = await openDatabase();
+  try {
+    return await requestResult(
+      database
+        .transaction('state', 'readonly')
+        .objectStore('state')
+        .get('draft:' + key),
+    );
+  } finally {
+    database.close();
+  }
+}
+export function writeRecordDraft(
+  key: string,
+  draft?: import('./types').RecordDraft,
+) {
+  const generation = replacementGeneration;
+  return queueWrite(async () => {
+    if (generation !== replacementGeneration) return;
+    await writeTransaction((transaction) => {
+      const store = transaction.objectStore('state');
+      if (draft) store.put(draft, 'draft:' + key);
+      else store.delete('draft:' + key);
+    });
+  });
 }

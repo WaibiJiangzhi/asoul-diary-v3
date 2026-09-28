@@ -2311,3 +2311,73 @@ progress.life-progress::-moz-progress-bar {
   background: var(--paper);
   box-shadow: 0 5px 18px rgb(35 20 50 / 10%);
 }
+.group-filter {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 16px;
+  min-width: 0;
+}
+.group-filter > fieldset {
+  min-width: 0;
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  flex: 1;
+  padding: 3px 0;
+}
+.group-filter > fieldset::-webkit-scrollbar {
+  display: none;
+}
+.group-filter button {
+  flex-shrink: 0;
+  min-height: 44px;
+}
+.group-filter > fieldset button {
+  padding: 0 14px;
+  border-radius: 16px;
+  background: var(--theme-surface);
+  border: 1px solid var(--theme-border);
+  font-size: 13px;
+  white-space: nowrap;
+}
+.group-filter button[aria-pressed='true'] {
+  background: var(--theme-soft);
+  color: var(--theme-accent-deep);
+  font-weight: 700;
+  border-color: var(--theme-accent);
+}
+.group-manage-list {
+  display: grid;
+  gap: 8px;
+}
+.group-manage-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px;
+  background: var(--theme-faint);
+  border-radius: 14px;
+}
+.group-manage-row > button:first-child {
+  flex: 1;
+  text-align: left;
+  min-height: 44px;
+  overflow-wrap: anywhere;
+}
+.card-history-link[data-recorded-today='true'] {
+  color: color-mix(in srgb, var(--card-accent) 75%, #3f3945);
+  font-weight: 700;
+}
+.draft-notice {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--soft-ink);
+}
+.draft-notice button {
+  flex-shrink: 0;
+}

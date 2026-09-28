@@ -270,3 +270,65 @@ await test('heavy-data backup restores and re-exports all records and 1152 photo
   exported.photos.forEach((p) => assert.deepEqual(p, expected.get(p.id)));
   assert.deepEqual(await db.loadState(), restored);
 });
+
+await test('drafts retain text and photo blobs across reload, stay out of records and clear with data replacement', async () => {
+  const { db, state, backup } = await setup();
+  const key = state.cards[0].id + ':new';
+  const draft = {
+    recordId: 'draft-record',
+    body: '还没确认的文字',
+    date: '2026-09-27',
+    delta: '3',
+    status: '',
+    stage: '',
+    stageDone: true,
+    completionEmoji: '',
+    photoIds: [],
+    files: [new Blob(['photo bytes'], { type: 'image/png' })],
+  };
+  await db.writeRecordDraft(key, draft);
+  const reloaded = await page();
+  await reloaded.loadState();
+  const restored = await reloaded.readRecordDraft(key);
+  assert.equal(restored.body, draft.body);
+  assert.equal(await restored.files[0].text(), 'photo bytes');
+  assert.deepEqual((await reloaded.loadState()).cards, state.cards);
+  await reloaded.writeRecordDraft(key, { ...draft, body: '修改后' });
+  await reloaded.writeRecordDraft(key);
+  assert.equal(await reloaded.readRecordDraft(key), undefined);
+  await reloaded.writeRecordDraft(key, draft);
+  await reloaded.restoreBackup(backup);
+  assert.equal(await reloaded.readRecordDraft(key), undefined);
+  await reloaded.writeRecordDraft(key, draft);
+  await reloaded.clearAllData();
+  assert.equal(await reloaded.readRecordDraft(key), undefined);
+});
+
+await test('committing a draft or deleting its card also removes its temporary photos', async () => {
+  const { db, state } = await setup();
+  const card = state.cards[0];
+  const key = card.id + ':new';
+  const draft = {
+    cardId: card.id,
+    recordId: 'pending',
+    body: '草稿',
+    date: '2026-09-27',
+    delta: '0',
+    status: '',
+    stage: '',
+    stageDone: true,
+    completionEmoji: '',
+    photoIds: [],
+    files: [new Blob(['temporary'])],
+  };
+  await db.writeRecordDraft(key, draft);
+  const saved = { ...record('确认后的记录', []), id: 'pending' };
+  await db.saveState({
+    ...state,
+    cards: [{ ...card, records: [...card.records, saved] }],
+  });
+  assert.equal(await db.readRecordDraft(key), undefined);
+  await db.writeRecordDraft(key, { ...draft, recordId: 'another' });
+  await db.saveState({ ...state, cards: [] });
+  assert.equal(await db.readRecordDraft(key), undefined);
+});

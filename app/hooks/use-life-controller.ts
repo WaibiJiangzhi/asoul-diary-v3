@@ -235,12 +235,13 @@ export function useLifeController({
     );
     showToast('已从常用卡片移除，生活里的卡片不受影响');
   }
-  function addCommonCards(ids: string[]) {
+  function addCommonCards(ids: string[], groupId?: string) {
     const state = stateRef.current;
     if (!state) return;
     const cards = getCommonCards(state)
       .filter((c) => ids.includes(c.id))
-      .map(restartLifeCard);
+      .map(restartLifeCard)
+      .map((c) => ({ ...c, groupId }));
     if (!cards.length) return;
     const next = { ...state, cards: [...state.cards, ...cards] };
     validateState(next);

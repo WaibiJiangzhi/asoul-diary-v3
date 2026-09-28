@@ -32,6 +32,8 @@ import {
   type Confirmation,
 } from '@/components/diary/confirm-dialog';
 import { CardForm, Sheet } from '@/components/diary/life-form';
+import { GroupFilter, GroupManager } from './diary/card-groups';
+import { saveGroup, removeGroup, reorderGroups } from '@/lib/card-groups';
 import { CardStarter } from '@/components/diary/card-starter';
 import { CardDetail, ArchiveForm } from '@/components/diary/life-detail';
 import { RecordForm, StageCompletion } from '@/components/diary/life-record';
@@ -75,7 +77,7 @@ type Panel =
       record?: LifeRecord;
       returnTo?: string;
     }
-  | { kind: 'companions' }
+  | { kind: 'companions' | 'groups' }
   | null;
 
 export default function DiaryApp({ preview = false }: { preview?: boolean }) {
@@ -95,6 +97,8 @@ export default function DiaryApp({ preview = false }: { preview?: boolean }) {
   );
   const [tab, setTab] = useState<AppTab>('life');
   const [panel, setPanel] = useState<Panel>(null);
+  const [selectedGroup, setSelectedGroup] = useState('all');
+  const [memoryGroup, setMemoryGroup] = useState('all');
   const [settings, setSettings] = useState(false);
   const [confirmation, setConfirmation] = useState<Confirmation | null>(null);
   const positions = useRef<Record<AppTab, number>>({ life: 0, memories: 0 });
@@ -164,7 +168,10 @@ export default function DiaryApp({ preview = false }: { preview?: boolean }) {
       return;
     }
     setPanel({
-      kind: card.kind === 'record' && !record && !full ? 'status' : 'record',
+      kind:
+        card.kind === 'record' && !!date && !record && !full
+          ? 'status'
+          : 'record',
       id,
       date: target,
       record:
@@ -186,6 +193,11 @@ export default function DiaryApp({ preview = false }: { preview?: boolean }) {
         <p>翻开生活，慢慢来…</p>
       </main>
     );
+  const group =
+    selectedGroup === 'ungrouped' ||
+    state.groups?.some((g) => g.id === selectedGroup)
+      ? selectedGroup
+      : 'all';
   const current =
     panel && 'id' in panel
       ? state.cards.find((c) => c.id === panel.id)
@@ -201,7 +213,7 @@ export default function DiaryApp({ preview = false }: { preview?: boolean }) {
       className={`app-shell theme-${state.settings.accent} ${state.settings.theme === 'wallpaper' ? 'has-wallpaper' : ''}`}
       style={wallpaperStyle}
     >
-      <section className="diary-page" aria-label="一个魂生活">
+      <section className="diary-page" aria-label="一个魂日记">
         <AppHeader
           saveStatus={saveStatus}
           preview={preview}
@@ -233,6 +245,15 @@ export default function DiaryApp({ preview = false }: { preview?: boolean }) {
           <LifeView
             cards={state.cards}
             companions={state.companions}
+            group={group}
+            groupControls={
+              <GroupFilter
+                groups={state.groups ?? []}
+                value={group}
+                onChange={setSelectedGroup}
+                onManage={() => setPanel({ kind: 'groups' })}
+              />
+            }
             today={todayDate}
             onNew={() => setPanel({ kind: 'starter' })}
             onOpen={(id) => setPanel({ kind: 'detail', id })}
@@ -247,6 +268,26 @@ export default function DiaryApp({ preview = false }: { preview?: boolean }) {
         </div>
         <div className="app-tab-panel" hidden={tab !== 'memories'}>
           <MemoryView
+            group={
+              memoryGroup === 'ungrouped' ||
+              state.groups?.some((g) => g.id === memoryGroup)
+                ? memoryGroup
+                : 'all'
+            }
+            groupControls={
+              !!state.groups?.length && (
+                <GroupFilter
+                  groups={state.groups}
+                  value={
+                    memoryGroup === 'ungrouped' ||
+                    state.groups.some((g) => g.id === memoryGroup)
+                      ? memoryGroup
+                      : 'all'
+                  }
+                  onChange={setMemoryGroup}
+                />
+              )
+            }
             cards={state.cards}
             onOpen={(id) => setPanel({ kind: 'detail', id })}
           />
@@ -260,14 +301,26 @@ export default function DiaryApp({ preview = false }: { preview?: boolean }) {
           onClose={closePanel}
           onManage={(managing) => setPanel({ kind: 'starter', managing })}
           onAdd={(ids) => {
-            life.addCommonCards(ids);
+            life.addCommonCards(
+              ids,
+              state.groups?.some((g) => g.id === group) ? group : undefined,
+            );
             setPanel(null);
           }}
           onEdit={(draft) => setPanel({ kind: 'card', draft, common: true })}
           onRemove={life.removeCommonCard}
           onReorder={life.reorderCommonCards}
           onWrite={() =>
-            setPanel({ kind: 'card', draft: createLifeCard(), isNew: true })
+            setPanel({
+              kind: 'card',
+              draft: {
+                ...createLifeCard(),
+                groupId: state.groups?.some((g) => g.id === group)
+                  ? group
+                  : undefined,
+              },
+              isNew: true,
+            })
           }
         />
       )}
@@ -275,6 +328,7 @@ export default function DiaryApp({ preview = false }: { preview?: boolean }) {
         <CardForm
           key={panel.draft.id}
           initial={panel.draft}
+          groups={state.groups}
           isNew={panel.isNew}
           common={panel.common}
           onBack={
@@ -291,6 +345,18 @@ export default function DiaryApp({ preview = false }: { preview?: boolean }) {
             }
           }}
           onClose={closePanel}
+        />
+      )}
+      {panel?.kind === 'groups' && (
+        <GroupManager
+          groups={state.groups ?? []}
+          onClose={closePanel}
+          onSave={(name, id) => {
+            const s = stateRef.current;
+            if (s) setState(saveGroup(s, name, id));
+          }}
+          onRemove={(id) => setState((s) => s && removeGroup(s, id))}
+          onReorder={(a, b) => setState((s) => s && reorderGroups(s, a, b))}
         />
       )}
       {panel?.kind === 'companions' && (
@@ -409,8 +475,13 @@ export default function DiaryApp({ preview = false }: { preview?: boolean }) {
           key={current.id + panel.date + (panel.record?.id ?? '')}
           card={current}
           date={panel.date}
+          preview={preview}
           initial={panel.record}
-          onSave={(record, files) => life.saveRecord(current.id, record, files)}
+          onSave={async (record, files) => {
+            await life.saveRecord(current.id, record, files);
+            if (!(await flushSave()))
+              throw new Error('暂时无法保存到本机，草稿仍保留，请稍后重试');
+          }}
           onClose={closePanel}
         />
       )}

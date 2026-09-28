@@ -20,6 +20,8 @@ import { Sheet } from './life-form';
 import { CARD_COLORS } from './constants';
 import { usePhotoUrls } from '@/hooks/use-photo-urls';
 import Image from 'next/image';
+import { inGroup } from '@/lib/card-groups';
+import type { ReactNode } from 'react';
 import { ProgressSummary, RecordText } from './life-detail';
 import {
   SortableList,
@@ -33,7 +35,6 @@ import {
   priorityCompanions,
   canRecord,
   completed,
-  elapsedDays,
   lastRecord,
   recentDays,
   stageComplete,
@@ -41,7 +42,7 @@ import {
   progressValue,
   statusRecord,
 } from '@/lib/life';
-import { dateKey, formatShortDate } from '@/lib/date';
+import { dateKey, formatShortDate, moveDate } from '@/lib/date';
 import type { CompanionCard, LifeCard } from '@/lib/types';
 export function CompanionShelf({
   cards,
@@ -382,16 +383,22 @@ function SmallCard({
         </button>
       )}
       <div className="life-card-footer">
-        <button type="button" className="card-history-link" onClick={onOpen}>
+        <button
+          type="button"
+          className="card-history-link"
+          data-recorded-today={latest?.date === today}
+          onClick={onOpen}
+        >
           {isLater
             ? '把这个愿望先记在这里'
-            : completed(card)
-              ? '做到了，看看这一段'
-              : card.kind === 'stage'
-                ? '已走过 ' + elapsedDays(card.startDate, today) + ' 天'
-                : latest
-                  ? '最近 · ' + formatShortDate(latest.date)
-                  : '从今天留下一点记录'}
+            : latest?.date === today
+              ? '✓ 今天已记录'
+              : latest
+                ? '最近记录 · ' +
+                  (latest.date === moveDate(today, -1)
+                    ? '昨天'
+                    : formatShortDate(latest.date))
+                : '还没有记录'}
           <ChevronRight />
         </button>
         <Button
@@ -425,9 +432,13 @@ export function LifeView({
   onStart,
   onReorder,
   onCompanions,
+  group = 'all',
+  groupControls,
 }: {
   cards: LifeCard[];
   companions: CompanionCard[];
+  group?: string;
+  groupControls?: ReactNode;
   today: string;
   onNew: () => void;
   onOpen: (id: string) => void;
@@ -463,8 +474,12 @@ export function LifeView({
   ]
     .filter((c) => [0, 1].includes(deadlineDistance(c.date, today)))
     .sort((a, b) => a.date.localeCompare(b.date));
-  const active = cards.filter((c) => c.location === 'active');
-  const later = cards.filter((c) => c.location === 'later');
+  const active = cards.filter(
+    (c) => c.location === 'active' && inGroup(c, group),
+  );
+  const later = cards.filter(
+    (c) => c.location === 'later' && inGroup(c, group),
+  );
   const show = (card: LifeCard, handle?: SortableHandle) => (
     <SmallCard
       key={card.id}
@@ -540,6 +555,7 @@ export function LifeView({
           )}
         </div>
       </div>
+      {groupControls}
       {active.length ? (
         <SortableList
           className="life-card-list"
@@ -598,8 +614,12 @@ function MemoryCover({ card }: { card: LifeCard }) {
 export function MemoryView({
   cards,
   onOpen,
+  group = 'all',
+  groupControls,
 }: {
   cards: LifeCard[];
+  group?: string;
+  groupControls?: ReactNode;
   onOpen: (id: string) => void;
 }) {
   const [query, setQuery] = useState('');
@@ -620,6 +640,7 @@ export function MemoryView({
     .reverse();
   const shown = memories.filter(
     (c) =>
+      inGroup(c, group) &&
       (filter === 'all' || c.ending === filter) &&
       (month === 'all' || archiveDate(c).startsWith(month)) &&
       (c.title + ' ' + c.note + ' ' + (c.summary ?? '')).includes(query),
@@ -633,6 +654,7 @@ export function MemoryView({
         </div>
         <span>{memories.length} 段经历</span>
       </div>
+      {groupControls}
       {memories.length > 0 && (
         <>
           <Input
