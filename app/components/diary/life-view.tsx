@@ -562,6 +562,7 @@ export function LifeView({
             <Button
               variant="outline"
               size="icon"
+              className="life-add-card"
               aria-label="添加卡片"
               onClick={onNew}
             >

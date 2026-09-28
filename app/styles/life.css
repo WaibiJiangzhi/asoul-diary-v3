@@ -1927,6 +1927,11 @@ progress.life-progress::-moz-progress-bar {
   align-items: center;
   gap: 5px;
 }
+.life-section-tools .life-add-card {
+  color: var(--theme-accent-deep);
+  background: var(--theme-faint);
+  border-color: var(--theme-border);
+}
 .has-wallpaper .life-section-tools button {
   background: rgb(255 250 248 / 82%);
   text-shadow: none;
